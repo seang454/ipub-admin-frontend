@@ -35,7 +35,7 @@ export async function middleware(req: NextRequest) {
     req.nextUrl.pathname.startsWith("/papers") ||
     req.nextUrl.pathname.startsWith("/proposals")
   ) {
-    const allowedRoles = ["ADMIN"];
+    const allowedRoles = ["ADMIN", "STUDENT", "ADVISER"];
     const roles = token?.user?.roles || [];
     const hasRole = roles.some((role) => allowedRoles.includes(role));
 
