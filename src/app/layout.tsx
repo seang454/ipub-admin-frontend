@@ -9,6 +9,7 @@ import Breadcrumb from "@/components/sidebar/breadcrumb";
 import AuthProvider from "@/lib/auth-provider";
 import { Layout } from "lucide-react";
 import LayoutWraper from "@/components/layout/LayoutWrapper";
+import AuthDebug from "@/components/debug/AuthDebug";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <LayoutWraper>{children}</LayoutWraper>
+          <AuthDebug />
         </AuthProvider>
       </body>
     </html>

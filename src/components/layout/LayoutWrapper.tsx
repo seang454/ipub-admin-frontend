@@ -12,7 +12,7 @@ const LayoutWraper = ({
   children: React.ReactNode;
 }>) => {
   const pathname = usePathname();
-  return pathname === "/login" ? (
+  return pathname === "/login" || pathname === "/unauthorized" ? (
     children
   ) : (
     <SidebarProvider>
