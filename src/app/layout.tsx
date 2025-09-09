@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import ReduxProvider from "@/lib/Provider";
 import Breadcrumb from "@/components/sidebar/breadcrumb";
+
+import AuthProvider from "@/lib/auth-provider";
+import { Layout } from "lucide-react";
+import LayoutWraper from "@/components/layout/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,16 +34,10 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >  
-      <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-      <Breadcrumb/> 
-      <main>
-        <ReduxProvider>{children}</ReduxProvider>
-      </main>
-      </SidebarInset>
-    </SidebarProvider>
+      >
+        <AuthProvider>
+          <LayoutWraper>{children}</LayoutWraper>
+        </AuthProvider>
       </body>
     </html>
   );

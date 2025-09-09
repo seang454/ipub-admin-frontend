@@ -1,10 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
-import counterReducer from "@/feature/counter/counterSlice";
-
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+      },
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
