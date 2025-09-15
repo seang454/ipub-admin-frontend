@@ -1,9 +1,11 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import PageHome from "@/components/home/page";
+import { useSession } from "next-auth/react";
 
 export default function HomePage() {
   const { data } = useSession();
-  return redirect(data ? "/dashboard" : "/login");
+  console.log('data :>> ', data);
+  // return redirect(data ? "/dashboard" : "/login");
+  return <PageHome/>
 }

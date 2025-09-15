@@ -1,63 +1,24 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken, JWT } from "next-auth/jwt";
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+export default async function middleware(req: NextRequest) {
+  const token: JWT | null = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const isLoggedIn = !!token?.access_token && (!token.expires_at || Date.now() / 1000 < token.expires_at);
 
-  console.log("Middleware - Token:", !!token);
-  console.log("Middleware - Path:", req.nextUrl.pathname);
+  const authRoute = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/signup");
+  const protectedRoute = req.nextUrl.pathname.startsWith("/dashboard");
 
-  // Allow access to login page and auth routes
-  if (
-    req.nextUrl.pathname.startsWith("/login") ||
-    req.nextUrl.pathname.startsWith("/api/auth")
-  ) {
-    return NextResponse.next();
+  if (authRoute && isLoggedIn) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (!token) {
-    console.log("No token found, redirecting to login");
-    const signInUrl = new URL("/login", req.url);
-    signInUrl.searchParams.set("callbackUrl", req.url);
-    return NextResponse.redirect(signInUrl);
-  }
-
-  // Check role-based access for protected routes
-  if (
-    req.nextUrl.pathname.startsWith("/dashboard") ||
-    req.nextUrl.pathname.startsWith("/users") ||
-    req.nextUrl.pathname.startsWith("/students") ||
-    req.nextUrl.pathname.startsWith("/advisers") ||
-    req.nextUrl.pathname.startsWith("/papers") ||
-    req.nextUrl.pathname.startsWith("/proposals")
-  ) {
-    const allowedRoles = ["ADMIN", "STUDENT", "ADVISER"];
-    const roles = token?.user?.roles || [];
-    const hasRole = roles.some((role) => allowedRoles.includes(role));
-
-    if (!hasRole) {
-      console.log("User doesn't have required role, redirecting to home");
-      return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
+  if (!isLoggedIn && protectedRoute) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (NextAuth routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - login (login page)
-     */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/dashboard/:path*", "/login", "/signup", "/user-profile/:path*"],
 };
