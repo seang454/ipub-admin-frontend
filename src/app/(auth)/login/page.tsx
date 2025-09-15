@@ -6,7 +6,6 @@ import { useSession, signIn } from "next-auth/react";
 export default function LoginPage() {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     setLoading(false);
   }, []);
