@@ -1,5 +1,4 @@
-import { NavbarType } from '@/types/navType';
-
+import { NavbarType } from "@/types/navType";
 export const navLink: NavbarType[] = [
   {
     path: '/',
