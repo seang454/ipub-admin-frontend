@@ -47,7 +47,7 @@ jobs:
             node -v
             npm -v
 
-            # 3️⃣ Build the Next.js app
+            # 3️⃣ Build the Next.js app in the VM
             echo "🛠️ Installing dependencies..."
             npm install
 
