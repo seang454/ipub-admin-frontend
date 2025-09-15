@@ -1,0 +1,76 @@
+name: Deploy Next.js to VM
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2️⃣ SSH into VM and deploy
+      - name: SSH into VM and deploy
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.GCE_VM_IP }}
+          username: ${{ secrets.GCE_VM_USER }}
+          key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            set -o pipefail
+            echo "🚀 Starting deployment of docuhub-frontend..."
+
+            # 1️⃣ Clone or update repo
+            if [ -d "$HOME/docuhub-frontend/.git" ]; then
+              echo "📂 Repo exists, updating..."
+              cd $HOME/docuhub-frontend
+              git fetch origin
+              git reset --hard origin/main
+            else
+              echo "📂 Cloning repo..."
+              git clone https://${{ secrets.PAT_TOKEN }}@github.com/FSWD-GEN-01/ipub-admin-frontend.git $HOME/docuhub-frontend
+              cd $HOME/docuhub-frontend
+            fi
+
+            # 2️⃣ Install Node.js (if not installed)
+            if ! node -v | grep -q "20"; then
+              echo "🟢 Installing Node.js 20..."
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            node -v
+            npm -v
+
+            # 3️⃣ Build the Next.js app
+            echo "🛠️ Installing dependencies..."
+            npm install
+
+            echo "📦 Building Next.js..."
+            npm run build
+
+            # 4️⃣ Stop and remove old Docker container (if any)
+            echo "🐳 Stopping old container (if any)..."
+            docker stop docuhub-frontend-container || true
+            docker rm docuhub-frontend-container || true
+
+            # 5️⃣ Remove old Docker image
+            echo "🗑️ Removing old Docker image (if any)..."
+            docker rmi docuhub-frontend || true
+
+            # 6️⃣ Build new Docker image
+            echo "📦 Building Docker image..."
+            docker build -t docuhub-frontend .
+
+            # 7️⃣ Run the container
+            echo "🚀 Running new Docker container..."
+            docker run -d -p 3000:3000 --name docuhub-frontend-container --restart unless-stopped docuhub-frontend
+
+            # 8️⃣ Verify deployment
+            echo "✅ Deployment finished successfully!"
+            docker ps | grep docuhub-frontend || echo "⚠️ Container not running!"
