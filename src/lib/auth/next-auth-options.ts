@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextAuthOptions } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import { refreshTokenRequest } from "./oidc";
-
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,26 +15,37 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       // Initial sign-in
       if (account) {
         return {
           ...token,
-          access_token: account.access_token,
-          refresh_token: account.refresh_token,
-          expires_at: Math.floor(Date.now() / 1000 + (typeof account.expires_in === "number" ? account.expires_in : 3600)),
+          accessToken: account.access_token ?? token.accessToken,
+          refreshToken: account.refresh_token ?? token.refreshToken,
+          expiresAt: Math.floor(
+            Date.now() / 1000 +
+              (typeof account.expires_in === "number"
+                ? account.expires_in
+                : 3600)
+          ),
+          roles:
+            (profile as any)?.realm_access?.roles ??
+            (profile as any)?.resource_access?.account?.roles ??
+            [],
         };
       }
 
       // Refresh if expired
-      if (token.expires_at && Date.now() / 1000 > token.expires_at - 60) {
+      if (token.expiresAt && Date.now() / 1000 > token.expiresAt - 60) {
         try {
-          const refreshed = await refreshTokenRequest(token.refresh_token);
+          const refreshed = await refreshTokenRequest(token.refreshToken);
           return {
             ...token,
-            access_token: refreshed.access_token,
-            refresh_token: refreshed.refresh_token ?? token.refresh_token,
-            expires_at: Math.floor(Date.now() / 1000 + (refreshed.expires_in || 3600)),
+            accessToken: refreshed.access_token ?? token.accessToken,
+            refreshToken: refreshed.refresh_token ?? token.refreshToken,
+            expiresAt: Math.floor(
+              Date.now() / 1000 + (refreshed.expires_in || 3600)
+            ),
           };
         } catch {
           return { ...token, error: "RefreshAccessTokenError" };
@@ -44,25 +55,28 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      session.access_token = token.access_token;
-      session.refresh_token = token.refresh_token;
+      session.accessToken = token.accessToken;
+      session.refreshToken = token.refreshToken;
       session.error = token.error;
+      session.roles = token.roles;
       return session;
     },
   },
   events: {
     async signOut({ token }) {
-      // Optional: Call Keycloak logout
-      if (token.refresh_token) {
-        await fetch(`${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            client_id: process.env.KEYCLOAK_CLIENT_ID!,
-            client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
-            refresh_token: token.refresh_token,
-          }),
-        }).catch(console.error);
+      if (token.refreshToken) {
+        await fetch(
+          `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              client_id: process.env.KEYCLOAK_CLIENT_ID!,
+              client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+              refresh_token: token.refreshToken!,
+            }),
+          }
+        ).catch(console.error);
       }
     },
   },
@@ -72,28 +86,22 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-
-  // Simplified types
+// ---------- Type Augmentation ----------
 declare module "next-auth" {
   interface Session {
-    access_token: string;
-    refresh_token: string;
+    accessToken: string;
+    refreshToken: string;
+    roles?: string[];
     error?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    access_token: string;
-    refresh_token: string;
-    expires_at: number;
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+    roles?: string[];
     error?: string;
   }
 }
-
-
-
-
-
-
-

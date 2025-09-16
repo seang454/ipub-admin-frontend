@@ -121,7 +121,7 @@ export default function NavbarGuest() {
               {currentLang.toUpperCase()}
             </span>
           </div>
-          {!data?.access_token ? (
+          {!data?.accessToken ? (
             <Button
               asChild
               className="bg-accent text-white hover:bg-accent/90 font-semibold"
@@ -194,7 +194,7 @@ export default function NavbarGuest() {
                   {currentLang.toUpperCase()}
                 </span>
               </div>
-              {data?.access_token ? (
+              {data?.accessToken ? (
                 <Button
                   asChild
                   className="bg-accent text-white hover:bg-accent/90 font-semibold"
