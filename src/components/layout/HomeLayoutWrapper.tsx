@@ -1,9 +1,10 @@
-'use client';
+"use client";
 import { usePathname } from "next/navigation";
 import React from "react";
 import PageHome from "../home/page";
 import LayoutWraper from "./LayoutWrapper";
 import HomeWrapper from "../home/HomeWrapper";
+import DisplayPdfPage from "@/app/display/page";
 
 export default function HomeLayoutWrapper({
   children,
@@ -19,9 +20,14 @@ export default function HomeLayoutWrapper({
     "/students",
     "/advisers",
   ];
+  const editePdf = ["/display"];
   const shouldHideNavbar = hiddenPaths.some(
     (path) => pathName === path || pathName.startsWith(`${path}/`)
   );
+  const should = editePdf.some(
+    (path) => pathName === path || pathName.startsWith(`${path}/`)
+  );
   if (shouldHideNavbar) return <LayoutWraper>{children}</LayoutWraper>;
+  else if (should) return <DisplayPdfPage />;
   return <HomeWrapper>{children}</HomeWrapper>;
 }

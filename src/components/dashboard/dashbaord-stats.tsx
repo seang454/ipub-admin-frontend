@@ -5,49 +5,86 @@ import { Users, FileText, UserCheck, BookCheck } from "lucide-react";
 import { Card } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { useGetUserQuery } from "@/lib/api/userSlice";
-
+import {
+  useGetAllMentorQuery,
+  useGetAllStudentQuery,
+  useGetUserQuery,
+} from "@/lib/api/userSlice";
+import { useGetPaperQuery } from "@/lib/api/paperSlice";
 export function DashboardStats() {
   const { data: session, status: sessionStatus } = useSession();
 
   console.log("session :>> ", session);
   // Pass token only when authenticated
   const getToken = session?.accessToken;
-  console.log('token :>> ', getToken);
+  console.log("token :>> ", getToken);
   const {
-    data: user,
+    data: userData,
+    error,
     isLoading,
     isFetching,
-    error,
-  } = useGetUserQuery({ page: 0, size: 5, token: getToken! }, { skip: !getToken });
+  } = useGetUserQuery(
+    { page: 0, size: 5, token: getToken! },
+    { skip: !getToken }
+  );
+  const {
+    data: StudentData,
+    error: studentError,
+    isLoading: studentLoading,
+    isFetching: studentFetching,
+  } = useGetAllMentorQuery(
+    { page: 0, size: 3, token: getToken! },
+    { skip: !getToken }
+  );
+  const {
+    data: MentorData,
+    error: mentorError,
+    isLoading: mentorLoading,
+    isFetching: mentorFetching,
+  } = useGetAllStudentQuery(
+    { page: 0, size: 3, token: getToken! },
+    { skip: !getToken }
+  );
 
-  if (isLoading || isFetching) return <div>Loading...</div>;
+  const { data: paperData, isLoading: isPaperLoading } = useGetPaperQuery();
+
+  if (
+    isLoading ||
+    isFetching ||
+    isPaperLoading ||
+    studentLoading ||
+    mentorLoading
+  )
+    return <div>Loading...</div>;
   if (error) return <div className="text-red-500">Error loading users</div>;
 
-  console.log("user :>> ", user);
+  console.log("paperData :>> ", paperData);
+  console.log("user from token :>> ", userData);
+  console.log('student :>> ', StudentData);
+  console.log('mentor :>> ', MentorData);
 
   const stats = [
     {
       title: "Total Users",
-      value: user?.totalElements ?? 0, // ✅ backend total count
+      value: userData?.totalElements ?? 0, // ✅ backend total count
       icon: Users,
       iconColor: "text-blue-500",
     },
     {
-      title: "Papers",
-      value: 234, // TODO: replace with real papers API
+      title: "Total Papers",
+      value: paperData?.papers.numberOfElements ?? 0, // ✅ backend total count
       icon: FileText,
       iconColor: "text-gray-600",
     },
     {
-      title: "Active Users",
-      value: user?.content?.filter((u: any) => u.isUser)?.length ?? 0, // ✅ example: active count
+      title: "Total Students",
+      value: StudentData?.totalElements ?? 0, // ✅ example: active count
       icon: UserCheck,
       iconColor: "text-green-500",
     },
     {
-      title: "Publications",
-      value: 24, // TODO: replace with real publications API
+      title: "Total Mentors",
+      value: MentorData?.totalElements ?? 0, // ✅ example: active count
       icon: BookCheck,
       iconColor: "text-purple-500",
     },

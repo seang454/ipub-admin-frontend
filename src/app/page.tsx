@@ -1,5 +1,4 @@
 "use client";
-
 import PageHome from "@/components/home/page";
 import { useSession } from "next-auth/react";
 export default function HomePage() {
