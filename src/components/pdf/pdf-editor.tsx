@@ -76,7 +76,7 @@ export default function PDFEditor() {
   const [undoStack, setUndoStack] = useState<Annotation[][]>([]);
   const [redoStack, setRedoStack] = useState<Annotation[][]>([]);
   const [showThumbnails, setShowThumbnails] = useState(true);
-  const [viewMode, setViewMode] = useState<"original" | "edited" | "comparison">("edited");
+  const [viewMode, setViewMode] = useState<"original" | "edited" | "comparison">();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -1076,7 +1076,7 @@ export default function PDFEditor() {
                               handleCanvasMouseUp();
                             }}
                           />
-                          {viewMode === "edited" &&
+                          {viewMode ==="comparison" &&
                             annotations
                               .filter(
                                 (annotation) => annotation.page === currentPage
