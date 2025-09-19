@@ -1,5 +1,5 @@
 import { PaperStats } from '@/components/papers/paper-stats'
-import { PaperTable } from '@/components/papers/paper-table'
+import PaperManagement from '@/components/papers/paper-table'
 import React from 'react'
 
 export default function page() {
@@ -13,7 +13,7 @@ export default function page() {
                     <h2 className="text-2xl font-semibold text-primary mb-2">Papers</h2>
                     <p className="text-muted">Manage Approved, Rejected, and Submitted</p>
                   </div>
-                  <PaperTable />
+                   <PaperManagement/>
                 </div>
               </div>
             </div>

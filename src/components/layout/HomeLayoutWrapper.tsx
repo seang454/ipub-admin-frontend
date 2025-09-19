@@ -4,8 +4,6 @@ import React from "react";
 import PageHome from "../home/page";
 import LayoutWraper from "./LayoutWrapper";
 import HomeWrapper from "../home/HomeWrapper";
-import DisplayPdfPage from "@/app/display/page";
-
 export default function HomeLayoutWrapper({
   children,
 }: Readonly<{
@@ -28,6 +26,5 @@ export default function HomeLayoutWrapper({
     (path) => pathName === path || pathName.startsWith(`${path}/`)
   );
   if (shouldHideNavbar) return <LayoutWraper>{children}</LayoutWraper>;
-  else if (should) return <DisplayPdfPage />;
   return <HomeWrapper>{children}</HomeWrapper>;
 }
