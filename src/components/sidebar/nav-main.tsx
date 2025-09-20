@@ -34,7 +34,7 @@ export function NavMain({
       <SidebarGroupLabel className="font-semibold">Navigation</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible hover:text-white hover:bg-primary rounded-md font-semibold">
+          <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible hover:text-white hover:bg-accent-hover rounded-md font-semibold">
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip={item.title} asChild>

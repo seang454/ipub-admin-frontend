@@ -5,6 +5,7 @@
 :root {
   /* Brand Colors */
   --primary: #1e2a38;
+  --primary2:#3559AF;
   --secondary: #2563eb;
   --accent: #f59e0b;
   --accent-hover: #e38519;
@@ -41,6 +42,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary2:var(--primary2);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);

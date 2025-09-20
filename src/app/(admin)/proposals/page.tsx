@@ -1,4 +1,4 @@
-import { Proposals } from '@/components/proposals/proposal-table'
+import { EnhancedProposals } from '@/components/proposals/proposal-table'
 import React from 'react'
 
 export default function page() {
@@ -9,7 +9,7 @@ export default function page() {
                     <h2 className="text-3xl font-semibold text-primary">Proposals Management</h2>
                     <p className="text-gray-600">Manage all proposal statments</p>
                   </div>
-                  <Proposals/>
+                  <EnhancedProposals/>
                 </div>
             </div>
   )

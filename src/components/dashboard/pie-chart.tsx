@@ -2,29 +2,11 @@
 
 import * as React from "react"
 import { Label, Pie, PieChart, Sector } from "recharts"
-import { PieSectorDataItem } from "recharts/types/polar/Pie"
+import type { PieSectorDataItem } from "recharts/types/polar/Pie"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartStyle,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { type ChartConfig, ChartContainer, ChartStyle, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export const description = "An interactive pie chart"
 
@@ -72,28 +54,31 @@ export function DashboardPieChart() {
   const id = "pie-interactive"
   const [activeMonth, setActiveMonth] = React.useState(desktopData[0].month)
 
-  const activeIndex = React.useMemo(
-    () => desktopData.findIndex((item) => item.month === activeMonth),
-    [activeMonth]
-  )
+  const activeIndex = React.useMemo(() => desktopData.findIndex((item) => item.month === activeMonth), [activeMonth])
   const months = React.useMemo(() => desktopData.map((item) => item.month), [])
 
   return (
-    <Card data-chart={id} className="flex flex-col border-none shadow-none">
+    <Card
+      data-chart={id}
+      className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm"
+    >
       <ChartStyle id={id} config={chartConfig} />
-      <CardHeader className="flex-row items-start space-y-0 pb-0">
-        <div className="grid gap-1">
-          <CardTitle>Pie Chart - Interactive</CardTitle>
-          <CardDescription>January - June 2024</CardDescription>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none" />
+      <CardHeader className="relative flex-row items-start space-y-0 pb-4">
+        <div className="grid gap-2">
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Interactive Pie Chart
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">January - June 2024</CardDescription>
         </div>
         <Select value={activeMonth} onValueChange={setActiveMonth}>
           <SelectTrigger
-            className="ml-auto h-7 w-[130px] rounded-lg pl-2.5"
+            className="ml-auto h-9 w-[140px] rounded-xl border-border/50 bg-white/80 backdrop-blur-sm shadow-sm"
             aria-label="Select a value"
           >
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
-          <SelectContent align="end" className="rounded-xl">
+          <SelectContent align="end" className="rounded-xl border-border/50 bg-white/95 backdrop-blur-sm">
             {months.map((key) => {
               const config = chartConfig[key as keyof typeof chartConfig]
 
@@ -102,14 +87,10 @@ export function DashboardPieChart() {
               }
 
               return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  className="rounded-lg [&_span]:flex"
-                >
+                <SelectItem key={key} value={key} className="rounded-lg [&_span]:flex hover:bg-muted/50">
                   <div className="flex items-center gap-2 text-xs">
                     <span
-                      className="flex h-3 w-3 shrink-0 rounded-xs"
+                      className="flex h-3 w-3 shrink-0 rounded-full shadow-sm"
                       style={{
                         backgroundColor: `var(--color-${key})`,
                       }}
@@ -122,34 +103,28 @@ export function DashboardPieChart() {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="flex flex-1 justify-center pb-0">
-        <ChartContainer
-          id={id}
-          config={chartConfig}
-          className="mx-auto aspect-square w-full max-w-[300px]"
-        >
+      <CardContent className="relative flex flex-1 justify-center pb-6">
+        <ChartContainer id={id} config={chartConfig} className="mx-auto aspect-square w-full max-w-[320px]">
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent hideLabel className="bg-white/95 backdrop-blur-sm border-border/50" />}
             />
             <Pie
               data={desktopData}
               dataKey="desktop"
               nameKey="month"
-              innerRadius={60}
-              strokeWidth={5}
+              innerRadius={70}
+              strokeWidth={2}
               activeIndex={activeIndex}
-              activeShape={({
-                outerRadius = 0,
-                ...props
-              }: PieSectorDataItem) => (
+              activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
                 <g>
-                  <Sector {...props} outerRadius={outerRadius + 10} />
+                  <Sector {...props} outerRadius={outerRadius + 12} className="drop-shadow-lg" />
                   <Sector
                     {...props}
-                    outerRadius={outerRadius + 25}
-                    innerRadius={outerRadius + 12}
+                    outerRadius={outerRadius + 28}
+                    innerRadius={outerRadius + 16}
+                    className="opacity-30"
                   />
                 </g>
               )}
@@ -158,24 +133,11 @@ export function DashboardPieChart() {
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                     return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-3xl font-bold"
-                        >
+                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                        <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-4xl font-bold">
                           {desktopData[activeIndex].desktop.toLocaleString()}
                         </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
+                        <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 28} className="fill-muted-foreground text-sm">
                           Visitors
                         </tspan>
                       </text>

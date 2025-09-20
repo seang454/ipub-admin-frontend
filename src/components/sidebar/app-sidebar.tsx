@@ -11,7 +11,6 @@ const data = {
     name: "Admin User",
     email: "admin@company.com",
     avatar: "/placeholder.svg?height=32&width=32",
-  
   },
   navMain: [
     {
@@ -50,22 +49,26 @@ const data = {
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props} className="border-none bg-white font-medium text-primary shadow-none">
+    <Sidebar
+      collapsible="icon"
+      {...props}
+      className="border-none bg-sidebar font-medium text-sidebar-foreground shadow-lg"
+    >
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Shield className="h-4 w-4" />
+        <div className="flex items-center gap-3 px-4 py-4 bg-gradient-to-r from-sidebar-primary/10 to-sidebar-accent/10 rounded-lg mx-2 mt-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-accent text-sidebar-primary-foreground shadow-lg">
+            <Shield className="h-5 w-5" />
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold text-title">Admin Panel</span>
-            <span className="truncate text-xs text-description">Management System</span>
+          <div className="grid flex-1 text-left leading-tight">
+            <span className="truncate font-bold text-lg text-sidebar-foreground">Admin Panel</span>
+            <span className="truncate text-sm text-sidebar-foreground/70">Management System</span>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-2">
         <NavMain items={data.navMain} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="px-2 pb-4">
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
