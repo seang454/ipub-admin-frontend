@@ -1,124 +1,130 @@
-'use client';
+"use client"
 
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Paper } from '@/types/paperType/paperType';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Download, Eye, MessageSquare, Calendar, Star, Bookmark } from "lucide-react"
+import Link from "next/link"
 
 interface PaperCardProps {
-  paper: Paper;
-  authorName?: string;
-  onDownloadPDF?: () => void;
-  onToggleBookmark?: () => void;
-  isBookmarked?: boolean;
+  paper: {
+    uuid: string
+    title: string
+    authors?: string[]
+    abstract?: string
+    publishedDate?: string
+    categories?: string[]
+    fileUrl?: string
+    views?: number
+    downloads?: number
+    comments?: number
+    rating?: number
+  }
+  onDownloadPDF: () => void
+  onToggleBookmark: () => void
+  isBookmarked: boolean
 }
 
-export default function PaperCard({ 
-  paper, 
-  authorName, 
-  onDownloadPDF, 
-  onToggleBookmark, 
-  isBookmarked = false 
-}: PaperCardProps) {
-  const handleDownload = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (onDownloadPDF) {
-      onDownloadPDF();
-    } else {
-      window.open(paper.fileUrl, '_blank');
-    }
-  };
-
-  const handleBookmark = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (onToggleBookmark) {
-      onToggleBookmark();
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+export default function PaperCard({ paper, onDownloadPDF, onToggleBookmark, isBookmarked }: PaperCardProps) {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Unknown date"
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-      <Link href={`/papers/${paper.uuid}`} className="no-underline">
-        <CardHeader className="space-y-2">
-          <div className="relative w-full h-48 bg-gray-100 rounded-md overflow-hidden">
-            {paper.thumbnailUrl ? (
-              <Image
-                src={paper.thumbnailUrl}
-                alt={paper.title}
-                fill
-                className="object-cover"
-                unoptimized
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder.svg';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                <div className="text-4xl text-gray-400">📄</div>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <CardTitle className="text-lg leading-tight mb-2">
+              <Link href={`/paper/${paper.uuid}`} className="hover:text-primary transition-colors">
+                {paper.title}
+              </Link>
+            </CardTitle>
+
+            {paper.authors && paper.authors.length > 0 && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="text-xs">
+                    {paper.authors[0]
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{paper.authors.slice(0, 2).join(", ")}</span>
+                {paper.authors.length > 2 && <span>+{paper.authors.length - 2} more</span>}
               </div>
             )}
-            <div className="absolute top-2 right-2">
-              <Badge variant={paper.isApproved ? 'default' : 'secondary'}>
-                {paper.status}
-              </Badge>
+
+            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>{formatDate(paper.publishedDate)}</span>
+              </div>
+              {paper.views && (
+                <div className="flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  <span>{paper.views}</span>
+                </div>
+              )}
+              {paper.comments && (
+                <div className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{paper.comments}</span>
+                </div>
+              )}
             </div>
-          </div>
-          
-          <CardTitle className="line-clamp-2 text-lg leading-tight">
-            {paper.title}
-          </CardTitle>
-          
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>By: {authorName || 'Unknown Author'}</p>
-            <p>Published: {formatDate(paper.publishedAt || paper.createdAt)}</p>
-          </div>
-        </CardHeader>
-      </Link>
 
-      <CardContent className="space-y-4">
-        <CardDescription className="line-clamp-3">
-          {paper.abstractText}
-        </CardDescription>
+            {paper.categories && paper.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {paper.categories.slice(0, 3).map((category, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {category}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* Categories */}
-        <div className="flex flex-wrap gap-2">
-          {paper.categoryNames.map((category, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {category}
-            </Badge>
-          ))}
+          <div className="flex flex-col gap-1">
+            <Button variant="ghost" size="sm" onClick={onToggleBookmark} className="h-8 w-8 p-0">
+              <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+            </Button>
+            {paper.rating && (
+              <div className="flex items-center gap-1">
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs text-muted-foreground">{paper.rating.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
         </div>
+      </CardHeader>
 
-        {/* Action buttons */}
-        <div className="flex gap-2 pt-2">
-          <Button 
-            onClick={handleDownload} 
-            className="flex-1" 
-            variant="default"
-          >
-            Download PDF
-          </Button>
-          <Button
-            onClick={handleBookmark}
-            variant="outline"
-            size="sm"
-            className={isBookmarked ? 'text-yellow-600 border-yellow-600' : ''}
-          >
-            {isBookmarked ? '★' : '☆'}
-          </Button>
+      <CardContent>
+        {paper.abstract && <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{paper.abstract}</p>}
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {paper.downloads && <span className="text-xs text-muted-foreground">{paper.downloads} downloads</span>}
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onDownloadPDF} className="text-xs bg-transparent">
+              <Download className="h-3 w-3 mr-1" />
+              Download
+            </Button>
+            <Button variant="default" size="sm" asChild className="text-xs">
+              <Link href={`/paper/${paper.uuid}`}>View Details</Link>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -653,7 +653,7 @@ export function EnhancedProposals() {
                 {selectedPaper?.title}
               </DialogTitle>
             </DialogHeader>
-
+           {/* hello */}
             {selectedPaper && (
               <div className="space-y-6">
                 {/* Paper Thumbnail */}
