@@ -156,7 +156,7 @@ export function EnhancedProposals() {
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-0">
                     <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="Artificial Intelligence">AI</SelectItem>
                     <SelectItem value="Environmental Science">
@@ -179,7 +179,7 @@ export function EnhancedProposals() {
                   <SelectTrigger className="w-full sm:w-40 border-slate-200">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-0">
                     <SelectItem value="date">Date</SelectItem>
                     <SelectItem value="title">Title</SelectItem>
                     <SelectItem value="author">Author</SelectItem>
@@ -326,7 +326,7 @@ export function EnhancedProposals() {
                           setAssigningPaper(proposal);
                           setShowAssignModal(true);
                         }}
-                        className="bg-gradient-to-r from-[#2B7FFF] to-[#3559AF] hover:from-[#2B7FFF]/90 hover:to-[#3559AF]/90 text-white"
+                        className="bg-gradient-to-r bg-primary2 hover:bg-secondary text-white"
                       >
                         <UserCheck className="w-4 h-4 mr-2" />
                         Assign Advisor
@@ -419,7 +419,7 @@ export function EnhancedProposals() {
         <Dialog open={showAssignModal} onOpenChange={setShowAssignModal}>
           <DialogContent className="bg-gradient-to-br from-white to-blue-50 border-0 shadow-2xl rounded-2xl p-6 max-w-lg sm:max-w-2xl">
             <DialogHeader className="pb-4 border-b border-gray-200/50">
-              <DialogTitle className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 pr-10">
+              <DialogTitle className="text-xl sm:text-2xl font-bold  bg-clip-text text-primary2">
                 Assign Advisor to {assigningPaper?.author.name}
               </DialogTitle>
               <p className="text-gray-500 mt-1 text-sm">

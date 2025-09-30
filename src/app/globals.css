@@ -3,37 +3,46 @@
 
 /* Theme configuration */
 :root {
-  /* Brand Colors */
-  --primary: #1e2a38;
-  --primary2:#3559AF;
-  --secondary: #2563eb;
+  /* Light mode (default) */
+  --primary: #2563eb;          /* Light primary */
+  --primary2: #3559AF;
+  --secondary: #1e2a38;        /* Light secondary */
   --accent: #f59e0b;
   --accent-hover: #e38519;
   --secondary-hover: #1951cc;
-  --background-light: #f3f4f6;
-  --background-dark: #0f172a;
-  --text-white: #ffffff;
-  --text-dark: #4b4b4b;
+
+  --background: #f3f4f6;
+  --foreground: #4b4b4b;
+
+  --card: #ffffff;
+  --card-foreground: #4b4b4b;
+
+  --border: #e5e7eb;
+  --radius: 0.625rem;
+
   --dynamic: var(--secondary);
 
   --font-english: var(--font-english); /* Poppins */
-  --font-khmer: var(--font-khmer); /* Kantumroy Pro */
-
-  /* General UI Tokens */
-  --background: var(--background-light);
-  --foreground: var(--text-dark);
-  --card: #ffffff;
-  --card-foreground: var(--text-dark);
-  --border: #e5e7eb;
-  --radius: 0.625rem;
+  --font-khmer: var(--font-khmer);     /* Kantumroy Pro */
 }
 
 .dark {
-  --background: var(--background-dark);
-  --foreground: var(--text-white);
+  /* Dark mode */
+  --primary: #1e2a38;          /* Dark primary */
+  --primary2: #2563eb;
+  --secondary: #3559AF;        /* Dark secondary */
+  --accent: #e38519;
+  --accent-hover: #f59e0b;
+  --secondary-hover: #2563eb;
+
+  --background: #0f172a;
+  --foreground: #ffffff;
+
   --card: #1e293b;
-  --card-foreground: var(--text-white);
+  --card-foreground: #ffffff;
+
   --border: #334155;
+
   --dynamic: var(--primary);
 }
 
@@ -42,7 +51,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
-  --color-primary2:var(--primary2);
+  --color-primary2: var(--primary2);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
@@ -64,9 +73,11 @@
     @apply bg-background text-foreground font-sans;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+
   body {
     font-family: var(--font-english), sans-serif;
   }
+
   /* Switch base font automatically by current document language */
   html[lang='kh'] body {
     font-family: var(--font-khmer), sans-serif;
@@ -74,140 +85,8 @@
   html[lang='en'] body {
     font-family: var(--font-english), sans-serif;
   }
+
   .font-khmer {
     font-family: var(--font-khmer), sans-serif;
-  }
-}
-
-/* Typography utilities */
-@layer utilities {
-  .text-hero-title {
-    font-size: 60px;
-    line-height: 120px;
-    @apply font-bold;
-  }
-  .text-hero-subtitle {
-    font-size: 24px;
-    line-height: normal;
-    @apply font-semibold;
-  }
-  .text-section-headings {
-    font-size: 36px;
-    line-height: normal;
-    @apply font-bold;
-  }
-  .text-subheadings {
-    font-size: 20px;
-    line-height: normal;
-    @apply font-semibold;
-  }
-  .text-body-text {
-    font-size: 18px;
-    line-height: normal;
-    @apply font-normal;
-  }
-  .text-small-text {
-    font-size: 14px;
-    line-height: normal;
-    @apply font-normal;
-  }
-  .text-buttons {
-    font-size: 18px;
-    line-height: normal;
-    @apply font-medium;
-  }
-  .text-navigation-links {
-    font-size: 16px;
-    line-height: normal;
-    @apply font-medium;
-  }
-  .text-footer-links {
-    font-size: 16px;
-    line-height: normal;
-    @apply font-normal;
-  }
-  .text-quote {
-    font-size: 20px;
-    line-height: normal;
-    @apply italic;
-  }
-  .text-descriptions {
-    font-size: 20px;
-    line-height: normal;
-    @apply font-normal;
-  }
-  .text-display-large {
-    font-size: 96px;
-    line-height: normal;
-    @apply font-bold;
-  }
-  .text-display-alt {
-    font-size: 60px;
-    line-height: 120px;
-    @apply font-bold;
-  }
-
-  /* Color */
-  /* Active link text */
-  .sidebar-active-text {
-    @apply font-medium;
-    color: white; /* Light mode default */
-  }
-  .dark .sidebar-active-text {
-    color: var(--color-primary); /* Dark mode override */
-  }
-
-  /* Inactive link text */
-  .sidebar-inactive-text {
-    @apply font-medium;
-    color: var(--color-primary); /* Light mode default */
-  }
-  .dark .sidebar-inactive-text {
-    color: white; /* Dark mode override */
-  }
-}
-
-
-
-/* Components */
-@layer components {
-  .card {
-    @apply bg-card text-card-foreground p-6 rounded-lg border;
-  }
-}
-/* Removed duplicate body font that overrode language-specific rules */
-.khmer-text {
-  font-family: var(--font-khmer), serif;
-}
-@keyframes infinite-scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-infinite-scroll {
-  display: flex;
-  animation: infinite-scroll 30s linear infinite;
-}
-
-
-@layer base {
-  :root {
-    --chart-1: blue;
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(22.506% 0.09535 260.682);  
-    --chart-5: oklch(0.769 0.188 70.08);
-  }
-
-  .dark {
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
   }
 }

@@ -217,7 +217,7 @@ export function AdviserTable() {
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 bg-white border-0">
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedStudent(row.original);
@@ -227,6 +227,7 @@ export function AdviserTable() {
               >
                 View Details
               </DropdownMenuItem>
+
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedStudent(row.original);
@@ -333,7 +334,7 @@ export function AdviserTable() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="  ">
       <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-indigo-100 rounded-lg">
@@ -370,7 +371,7 @@ export function AdviserTable() {
                   {statusFilter} <ChevronDown className="ml-2 w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40">
+              <DropdownMenuContent className="w-40 bg-white border-0">
                 <DropdownMenuItem
                   onClick={() => setStatusFilter("All")}
                   className="cursor-pointer"
@@ -393,8 +394,8 @@ export function AdviserTable() {
             </DropdownMenu>
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm">
-                  <Plus className="w-4 h-4 mr-2" /> Add Student
+                <Button className="text-white bg-primary2 hover:bg-secondary shadow-sm">
+                  <Plus className="w-4 h-4 mr-2" /> Add Advisor
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg">
@@ -636,7 +637,7 @@ export function AdviserTable() {
               <SelectTrigger className="w-32 h-8 border-slate-300">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border-0">
                 {[10, 20, 30].map((size) => (
                   <SelectItem key={size} value={size.toString()}>
                     Show {size}
@@ -652,7 +653,7 @@ export function AdviserTable() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-slate-900">
-              Student Details
+              Advisor Details
             </DialogTitle>
           </DialogHeader>
           {selectedStudent && (

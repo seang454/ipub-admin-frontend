@@ -190,26 +190,27 @@ export function UserTable() {
         header: "User",
         cell: (info) => (
           <div className="flex items-center gap-4">
-            <Avatar className="w-12 h-12 ring-2 ring-slate-100 shadow-sm">
+            <Avatar className="w-12 h-12 ring-2 ring-border shadow-sm">
               <AvatarImage
                 src={
                   info.row.original.imageUrl ||
-                  "/placeholder.svg?height=48&width=48"
+                  "/placeholder.svg?height=48&width=48" ||
+                  "/placeholder.svg"
                 }
               />
-              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
                 {info.row.original.firstName?.[0]}
                 {info.row.original.lastName?.[0]}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-900 truncate">
+              <p className="font-semibold text-foreground truncate">
                 {info.getValue<string>()}
               </p>
-              <p className="text-sm text-slate-500 truncate">
+              <p className="text-sm text-muted-foreground truncate">
                 @{info.row.original.userName}
               </p>
-              <p className="text-xs text-slate-400 truncate">
+              <p className="text-xs text-muted-foreground/80 truncate">
                 {info.row.original.email}
               </p>
             </div>
@@ -224,8 +225,8 @@ export function UserTable() {
             variant="secondary"
             className={
               info.getValue<boolean>() === true
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+                : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
             }
           >
             <div
@@ -247,7 +248,7 @@ export function UserTable() {
             {row.original.isAdmin && (
               <Badge
                 variant="outline"
-                className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
               >
                 <Shield className="w-3 h-3 mr-1" />
                 Admin
@@ -256,7 +257,7 @@ export function UserTable() {
             {row.original.isAdvisor && (
               <Badge
                 variant="outline"
-                className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800"
               >
                 <TrendingUp className="w-3 h-3 mr-1" />
                 Advisor
@@ -265,7 +266,7 @@ export function UserTable() {
             {row.original.isStudent && (
               <Badge
                 variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
               >
                 <UserIcon className="w-3 h-3 mr-1" />
                 Student
@@ -277,7 +278,7 @@ export function UserTable() {
               !row.original.isStudent && (
                 <Badge
                   variant="outline"
-                  className="bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  className="bg-muted text-muted-foreground border-border hover:bg-muted/80"
                 >
                   <UserIcon className="w-3 h-3 mr-1" />
                   User
@@ -290,7 +291,7 @@ export function UserTable() {
         accessorKey: "gender",
         header: "Gender",
         cell: (info) => (
-          <div className="text-sm text-slate-600">
+          <div className="text-sm text-muted-foreground">
             {info.getValue<string>() || "Not specified"}
           </div>
         ),
@@ -299,7 +300,7 @@ export function UserTable() {
         accessorKey: "createDate",
         header: "Joined",
         cell: (info) => (
-          <div className="text-sm text-slate-600">
+          <div className="text-sm text-muted-foreground">
             {info.getValue<string>()}
           </div>
         ),
@@ -313,14 +314,17 @@ export function UserTable() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 hover:bg-slate-100"
+                className="h-8 w-8 p-0 hover:bg-muted"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white border-0">
+            <DropdownMenuContent
+              align="end"
+              className=" bg-card/90 shadow-sm hover:shadow-md transition-all duration-200  backdrop-blur-sm w-48 bg-popover border-border "
+            >
               <DropdownMenuItem
-                className="hover:text-white"
+                className="hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setSelectedUser(row.original);
                   setViewOpen(true);
@@ -329,7 +333,7 @@ export function UserTable() {
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="hover:text-white"
+                className="hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setSelectedUser(row.original);
                   setEditFormData({
@@ -351,7 +355,7 @@ export function UserTable() {
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="hover:text-white"
+                className="hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setSelectedUser(row.original);
                   setPromoteOpen(true);
@@ -364,7 +368,7 @@ export function UserTable() {
                   setSelectedUser(row.original);
                   setDeleteOpen(true);
                 }}
-                className="text-red-600 hover:text-white"
+                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 Delete
               </DropdownMenuItem>
@@ -476,18 +480,18 @@ export function UserTable() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 p-6">
+      <div className="bg-gradient-to-r from-muted/50 to-muted/30 border-b border-border p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <Users className="w-6 h-6 text-indigo-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Users className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-foreground">
               User Management
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Manage and track user information
             </p>
           </div>
@@ -495,12 +499,12 @@ export function UserTable() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search users by name, username, or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+              className="pl-10 border-input focus:border-ring focus:ring-ring bg-background shadow-sm"
             />
           </div>
           <div className="flex gap-3">
@@ -508,13 +512,13 @@ export function UserTable() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="bg-white border-slate-300 hover:bg-slate-50"
+                  className="bg-background border-border hover:bg-muted"
                 >
                   <Filter className="w-4 h-4 mr-2" />
                   {statusFilter} <ChevronDown className="ml-2 w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40 bg-white border-0">
+              <DropdownMenuContent className="w-40 bg-whitep-6 bg-card shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm border-border">
                 <DropdownMenuItem onClick={() => setStatusFilter("All")}>
                   All Status
                 </DropdownMenuItem>
@@ -529,22 +533,24 @@ export function UserTable() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary2 text-white hover:bg-secondary shadow-sm">
+                <Button className="bg-primary2 text-white  hover:bg-secondary shadow-sm">
                   <Plus className="w-4 h-4 mr-2" /> Add User
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
+              <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold text-slate-900">
+                  <DialogTitle className="text-lg font-semibold text-popover-foreground">
                     Add New User
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>First Name</Label>
+                      <Label className="text-popover-foreground">
+                        First Name
+                      </Label>
                       <Input
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                         value={createFormData.firstname}
                         onChange={(e) =>
                           setCreateFormData({
@@ -555,9 +561,11 @@ export function UserTable() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Last Name</Label>
+                      <Label className="text-popover-foreground">
+                        Last Name
+                      </Label>
                       <Input
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                         value={createFormData.lastname}
                         onChange={(e) =>
                           setCreateFormData({
@@ -569,9 +577,9 @@ export function UserTable() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Username</Label>
+                    <Label className="text-popover-foreground">Username</Label>
                     <Input
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                      className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                       value={createFormData.username}
                       onChange={(e) =>
                         setCreateFormData({
@@ -582,9 +590,9 @@ export function UserTable() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Email</Label>
+                    <Label className="text-popover-foreground">Email</Label>
                     <Input
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                      className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                       type="email"
                       value={createFormData.email}
                       onChange={(e) =>
@@ -597,9 +605,11 @@ export function UserTable() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Password</Label>
+                      <Label className="text-popover-foreground">
+                        Password
+                      </Label>
                       <Input
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                         type="password"
                         value={createFormData.password}
                         onChange={(e) =>
@@ -611,9 +621,11 @@ export function UserTable() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Confirm Password</Label>
+                      <Label className="text-popover-foreground">
+                        Confirm Password
+                      </Label>
                       <Input
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                         type="password"
                         value={createFormData.confirmedPassword}
                         onChange={(e) =>
@@ -628,15 +640,15 @@ export function UserTable() {
                 </div>
                 <DialogFooter>
                   <Button
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                     variant="outline"
                     onClick={() => setAddOpen(false)}
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleAddUser}
-                    className="bg-primary2 hover:bg-secondary text-white"
+                    className=" focus:border-indigo-500 bg-primary2 text-white hover:bg-secondary focus:ring-indigo-500 rounded-lg"
                   >
                     Add User
                   </Button>
@@ -650,14 +662,14 @@ export function UserTable() {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-muted/50 border-b border-border">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted/80 transition-colors"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div className="flex items-center gap-2">
@@ -680,12 +692,12 @@ export function UserTable() {
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-slate-200">
+          <tbody className="bg-card divide-y divide-border">
             {table.getRowModel().rows.map((row, index) => (
               <tr
                 key={row.id}
-                className={`hover:bg-slate-50 transition-colors ${
-                  index % 2 === 0 ? "bg-white" : "bg-slate-25"
+                className={`hover:bg-muted/50 transition-colors ${
+                  index % 2 === 0 ? "bg-card" : "bg-muted/20"
                 }`}
               >
                 {row.getVisibleCells().map((cell) => (
@@ -700,14 +712,14 @@ export function UserTable() {
       </div>
 
       {/* Pagination */}
-      <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 sm:flex flex-col items-center justify-between gap-4">
+      <div className="bg-muted/30 border-t border-border px-6 py-4 sm:flex flex-col items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            className="border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm resize-none hover:text-white overflow-y-auto whitespace-pre-wrap break-words"
+            className="border-border hover:bg-muted hover:text-muted-foreground"
           >
             First
           </Button>
@@ -716,7 +728,7 @@ export function UserTable() {
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm resize-none hover:text-white overflow-y-auto whitespace-pre-wrap break-words"
+            className="border-border hover:bg-muted hover:text-muted-foreground"
           >
             Previous
           </Button>
@@ -725,7 +737,7 @@ export function UserTable() {
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm resize-none hover:text-white overflow-y-auto whitespace-pre-wrap break-words "
+            className="border-border hover:bg-muted hover:text-muted-foreground"
           >
             Next
           </Button>
@@ -734,14 +746,14 @@ export function UserTable() {
             size="sm"
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
-            className=" border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm resize-none hover:text-white overflow-y-auto whitespace-pre-wrap break-words"
+            className="border-border hover:bg-muted hover:text-muted-foreground"
           >
             Last
           </Button>
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-muted-foreground">
             Showing{" "}
             {table.getState().pagination.pageIndex *
               table.getState().pagination.pageSize +
@@ -755,17 +767,19 @@ export function UserTable() {
             of {filteredUsers.length} users
           </span>
 
-          <div className="flex items-center gap-2 bg-white">
-            <span className="text-sm text-slate-600">Rows per page:</span>
-            <Select 
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Rows per page:
+            </span>
+            <Select
               value={table.getState().pagination.pageSize.toString()}
               onValueChange={(v) => table.setPageSize(Number(v))}
             >
-              <SelectTrigger className="w-20 h-8 border-slate-300 bg-white">
+              <SelectTrigger className="w-20 h-8 border-border bg-background">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border-0">
-                {[5,10, 20, 30].map((size) => (
+              <SelectContent className="bg-popover border-border">
+                {[5, 10, 20, 30].map((size) => (
                   <SelectItem key={size} value={size.toString()}>
                     {size}
                   </SelectItem>
@@ -778,27 +792,27 @@ export function UserTable() {
 
       {/* Promote/Role Management Dialog */}
       <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold  text-primary2">
+            <DialogTitle className="text-lg font-semibold text-primary2">
               Manage User Roles
             </DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4 py-4">
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <p className="text-slate-700">
-                  <span className="font-semibold text-slate-900">
+              <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                <p className="text-popover-foreground">
+                  <span className="font-semibold text-foreground">
                     {selectedUser.fullName}
                   </span>
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   @{selectedUser.userName}
                 </p>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-slate-700">
+                  <Label className="text-sm font-medium text-popover-foreground">
                     Admin Role
                   </Label>
                   <Button
@@ -808,14 +822,16 @@ export function UserTable() {
                       handlePromoteUser("isAdmin", !selectedUser.isAdmin)
                     }
                     className={
-                      selectedUser.isAdmin ? "bg-red-600 hover:bg-red-700 border-0 hover:text-white" : "border-0 hover:text-white"
+                      selectedUser.isAdmin
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : "border-border hover:bg-muted"
                     }
                   >
                     {selectedUser.isAdmin ? "Remove" : "Grant"}
                   </Button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-slate-700">
+                  <Label className="text-sm font-medium text-popover-foreground">
                     Advisor Role
                   </Label>
                   <Button
@@ -826,19 +842,18 @@ export function UserTable() {
                     }
                     className={
                       selectedUser.isAdvisor
-                        ? "bg-purple-600 hover:bg-purple-700 border-0 hover:text-white"
-                        : "border-0 hover:text-white"
+                        ? "bg-purple-600 hover:bg-purple-700 text-white"
+                        : "border-border hover:bg-muted"
                     }
                   >
                     {selectedUser.isAdvisor ? "Remove" : "Grant"}
                   </Button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-slate-700">
+                  <Label className="text-sm font-medium text-popover-foreground">
                     Student Role
                   </Label>
-                  <Button 
-                    
+                  <Button
                     variant={selectedUser.isStudent ? "default" : "outline"}
                     size="sm"
                     onClick={() =>
@@ -846,8 +861,8 @@ export function UserTable() {
                     }
                     className={
                       selectedUser.isStudent
-                        ? "bg-blue-600 hover:bg-blue-700 border-0 hover:text-white "
-                        : " border-0 hover:text-white"
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "border-border hover:bg-muted"
                     }
                   >
                     {selectedUser.isStudent ? "Remove" : "Grant"}
@@ -860,7 +875,7 @@ export function UserTable() {
             <Button
               variant="outline"
               onClick={() => setPromoteOpen(false)}
-              className="border-slate-300 hover:bg-slate-50"
+              className="border-border hover:bg-muted"
             >
               Close
             </Button>
@@ -870,17 +885,19 @@ export function UserTable() {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className=" p-6 bg-card border-border shadow-sm  transition-all duration-200  backdrop-blur-sm ">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle className="text-popover-foreground">
+              Edit User
+            </DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Username</Label>
+                  <Label className="text-popover-foreground">Username</Label>
                   <Input
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     value={editFormData.userName}
                     onChange={(e) =>
                       setEditFormData({
@@ -890,18 +907,18 @@ export function UserTable() {
                     }
                   />
                 </div>
-                <div className="space-y-2 border-0">
-                  <Label>Gender</Label>
+                <div className="space-y-2">
+                  <Label className="text-popover-foreground">Gender</Label>
                   <Select
                     value={editFormData.gender}
                     onValueChange={(v) =>
                       setEditFormData({ ...editFormData, gender: v })
                     }
                   >
-                    <SelectTrigger className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                    <SelectTrigger className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
-                    <SelectContent className="border-0 bg-white border-gray-300 rounded-lg px-3 py-2 text-sm ">
+                    <SelectContent className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                       <SelectItem value="Male">Male</SelectItem>
                       <SelectItem value="Female">Female</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
@@ -910,9 +927,9 @@ export function UserTable() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label className="text-popover-foreground">Email</Label>
                 <Input
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   type="email"
                   value={editFormData.email}
                   onChange={(e) =>
@@ -921,9 +938,9 @@ export function UserTable() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label className="text-popover-foreground">Full Name</Label>
                 <Input
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   value={editFormData.fullName}
                   onChange={(e) =>
                     setEditFormData({
@@ -935,9 +952,9 @@ export function UserTable() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>First Name</Label>
+                  <Label className="text-popover-foreground">First Name</Label>
                   <Input
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     value={editFormData.firstName}
                     onChange={(e) =>
                       setEditFormData({
@@ -948,9 +965,9 @@ export function UserTable() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Last Name</Label>
+                  <Label className="text-popover-foreground">Last Name</Label>
                   <Input
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     value={editFormData.lastName}
                     onChange={(e) =>
                       setEditFormData({
@@ -962,24 +979,25 @@ export function UserTable() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label className="text-popover-foreground">Status</Label>
                 <Select
                   value={editFormData.status.toString()}
                   onValueChange={(v) =>
                     setEditFormData({ ...editFormData, status: v === "true" })
                   }
                 >
-                  <SelectTrigger className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                  <SelectTrigger className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <Label className="text-popover-foreground">Bio</Label>
               <Textarea
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm resize-none h-32 overflow-y-auto whitespace-pre-wrap break-words"
+                className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                 value={editFormData.bio}
                 onChange={(e: any) =>
                   setEditFormData({ ...editFormData, bio: e.target.value })
@@ -988,9 +1006,9 @@ export function UserTable() {
               />
 
               <div className="space-y-2">
-                <Label>Address</Label>
+                <Label className="text-popover-foreground">Address</Label>
                 <Input
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   value={editFormData.address}
                   onChange={(e) =>
                     setEditFormData({
@@ -998,14 +1016,15 @@ export function UserTable() {
                       address: e.target.value,
                     })
                   }
-                  placeholder="User address..."
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Contact Number</Label>
+                  <Label className="text-popover-foreground">
+                    Contact Number
+                  </Label>
                   <Input
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     value={editFormData.contactNumber}
                     onChange={(e) =>
                       setEditFormData({
@@ -1017,9 +1036,9 @@ export function UserTable() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Telegram ID</Label>
+                  <Label className="text-popover-foreground">Telegram ID</Label>
                   <Input
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     value={editFormData.telegramId}
                     onChange={(e) =>
                       setEditFormData({
@@ -1035,14 +1054,14 @@ export function UserTable() {
           )}
           <DialogFooter>
             <Button
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+              className="border-border bg-transparent"
               variant="outline"
               onClick={() => setEditOpen(false)}
             >
               Cancel
             </Button>
             <Button
-              className="border bg-primary2 hover:bg-secondary text-white border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+              className="bg-primary2 hover:bg-secondary text-primary-foreground"
               onClick={handleEditUser}
             >
               Save Changes
@@ -1053,15 +1072,20 @@ export function UserTable() {
 
       {/* Delete Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle className="text-popover-foreground">
+              Delete User
+            </DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="py-4">
-              <p>
+              <p className="text-popover-foreground">
                 Are you sure you want to delete{" "}
-                <span className="font-semibold">{selectedUser.fullName}</span>?
+                <span className="font-semibold text-foreground">
+                  {selectedUser.fullName}
+                </span>
+                ?
               </p>
             </div>
           )}
@@ -1069,13 +1093,13 @@ export function UserTable() {
             <Button
               variant="outline"
               onClick={() => setDeleteOpen(false)}
-              className="border-slate-300"
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               onClick={handleDeleteUser}
-              className="bg-red-600 hover:bg-red-700"
+              className="hover:bg-destructive/90 bg-red-500"
             >
               Delete
             </Button>
@@ -1085,71 +1109,76 @@ export function UserTable() {
 
       {/* View Dialog */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm ">
           <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle className="text-popover-foreground">
+              User Details
+            </DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-6 py-4">
               <div className="flex items-center gap-4">
-                <Avatar className="w-16 h-16 ring-2 ring-slate-100 shadow-sm">
+                <Avatar className="w-16 h-16 ring-2 ring-border shadow-sm">
                   <AvatarImage
                     src={
                       selectedUser.imageUrl ||
-                      "/placeholder.svg?height=64&width=64"
+                      "/placeholder.svg?height=64&width=64" ||
+                      "/placeholder.svg"
                     }
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold text-lg">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold text-lg">
                     {selectedUser.firstName?.[0]}
                     {selectedUser.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold text-slate-900 text-lg">
+                  <p className="font-semibold text-foreground text-lg">
                     {selectedUser.fullName}
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     @{selectedUser.userName}
                   </p>
-                  <p className="text-sm text-slate-500">{selectedUser.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedUser.email}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Status
                   </Label>
                   <Badge
                     variant="secondary"
                     className={
                       selectedUser.status === true
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 mt-1"
-                        : "bg-red-50 text-red-700 border-red-200 mt-1"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 mt-1 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+                        : "bg-red-50 text-red-700 border-red-200 mt-1 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
                     }
                   >
                     {selectedUser.status === true ? "Active" : "Inactive"}
                   </Badge>
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Gender
                   </Label>
-                  <p className="text-sm text-slate-900 mt-1">
+                  <p className="text-sm text-foreground mt-1">
                     {selectedUser.gender || "Not specified"}
                   </p>
                 </div>
               </div>
 
               <div>
-                <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Roles
                 </Label>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {selectedUser.isAdmin && (
                     <Badge
                       variant="outline"
-                      className="bg-red-50 text-red-700 border-red-200"
+                      className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
                     >
                       <Shield className="w-3 h-3 mr-1" />
                       Admin
@@ -1158,7 +1187,7 @@ export function UserTable() {
                   {selectedUser.isAdvisor && (
                     <Badge
                       variant="outline"
-                      className="bg-purple-50 text-purple-700 border-purple-200"
+                      className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800"
                     >
                       <TrendingUp className="w-3 h-3 mr-1" />
                       Advisor
@@ -1167,7 +1196,7 @@ export function UserTable() {
                   {selectedUser.isStudent && (
                     <Badge
                       variant="outline"
-                      className="bg-blue-50 text-blue-700 border-blue-200"
+                      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
                     >
                       <UserIcon className="w-3 h-3 mr-1" />
                       Student
@@ -1179,7 +1208,7 @@ export function UserTable() {
                     !selectedUser.isStudent && (
                       <Badge
                         variant="outline"
-                        className="bg-slate-50 text-slate-700 border-slate-200"
+                        className="bg-muted text-muted-foreground border-border hover:bg-muted/80"
                       >
                         <UserIcon className="w-3 h-3 mr-1" />
                         User
@@ -1190,10 +1219,10 @@ export function UserTable() {
 
               {selectedUser.bio && (
                 <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Bio
                   </Label>
-                  <p className="text-sm text-slate-900 mt-1">
+                  <p className="text-sm text-foreground mt-1">
                     {selectedUser.bio}
                   </p>
                 </div>
@@ -1203,29 +1232,29 @@ export function UserTable() {
                 selectedUser.contactNumber ||
                 selectedUser.telegramId) && (
                 <div className="space-y-3">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Contact Information
                   </Label>
                   {selectedUser.address && (
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm text-slate-900">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">
                         {selectedUser.address}
                       </span>
                     </div>
                   )}
                   {selectedUser.contactNumber && (
                     <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm text-slate-900">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">
                         {selectedUser.contactNumber}
                       </span>
                     </div>
                   )}
                   {selectedUser.telegramId && (
                     <div className="flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm text-slate-900">
+                      <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">
                         {selectedUser.telegramId}
                       </span>
                     </div>
@@ -1233,20 +1262,20 @@ export function UserTable() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                 <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Joined
                   </Label>
-                  <p className="text-sm text-slate-900 mt-1">
+                  <p className="text-sm text-foreground mt-1">
                     {selectedUser.createDate}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Last Updated
                   </Label>
-                  <p className="text-sm text-slate-900 mt-1">
+                  <p className="text-sm text-foreground mt-1">
                     {selectedUser.updateDate}
                   </p>
                 </div>
@@ -1257,7 +1286,7 @@ export function UserTable() {
             <Button
               variant="outline"
               onClick={() => setViewOpen(false)}
-              className="border-slate-300"
+              className="border-border hover:bg-muted"
             >
               Close
             </Button>

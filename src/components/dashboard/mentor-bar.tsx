@@ -1,11 +1,10 @@
 "use client"
-
 import { TrendingUp } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-
+import type { User } from "@/types/userType/userType"
 export const description = "A bar chart with a label"
 
 const chartData = [
@@ -24,14 +23,16 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function MentorChartBarLabel() {
+export function MentorChartBarLabel({
+  students,
+}: {
+  students: User[] | undefined
+}) {
   return (
-    <Card className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
-      <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none" />
+    <Card className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card via-card/80 to-muted/20 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-br from-background/10 to-transparent pointer-events-none" />
       <CardHeader className="relative">
-        <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-          Bar Chart - Label
-        </CardTitle>
+        <CardTitle className="text-xl font-bold text-primary">Bar Chart - Total Student</CardTitle>
         <CardDescription className="text-muted-foreground">January - June 2024</CardDescription>
       </CardHeader>
       <CardContent className="relative">
@@ -55,7 +56,7 @@ export function MentorChartBarLabel() {
             <ChartTooltip
               cursor={false}
               content={
-                <ChartTooltipContent hideLabel className="bg-white/95 backdrop-blur-sm border-border/50 shadow-lg" />
+                <ChartTooltipContent hideLabel className="bg-popover/95 backdrop-blur-sm border-border/50 shadow-lg" />
               }
             />
             <Bar dataKey="desktop" fill="var(--color-desktop)" radius={12} className="drop-shadow-sm">
@@ -64,7 +65,7 @@ export function MentorChartBarLabel() {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="relative flex-col items-start gap-3 text-sm border-t border-border/20 bg-muted/20">
+      <CardFooter className="relative flex-col items-start gap-3 text-sm border-t border-border/20 bg-muted/10">
         <div className="flex gap-2 leading-none font-semibold text-primary">
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { UsersResponse } from "@/types/userType/userType";
+import { User, UsersResponse } from "@/types/userType/userType";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const userApi = createApi({
@@ -10,6 +10,15 @@ export const userApi = createApi({
   tagTypes: ["User", "Mentor", "Student"],
   endpoints: (builder) => ({
     // ⬇️ Accept token as an argument from the component
+    getAllUsers: builder.query<User[], { token: string }>({
+      query: ({token}) => ({
+        url: "/users",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        providesTags: ["User"],
+      }),
+    }),
     getUser: builder.query<
       UsersResponse,
       { page: number; size: number; token: string }
@@ -49,4 +58,5 @@ export const userApi = createApi({
   }),
 });
 
-export const { useGetUserQuery, useGetAllMentorQuery, useGetAllStudentQuery } = userApi;
+export const { useGetUserQuery, useGetAllMentorQuery, useGetAllStudentQuery,useGetAllUsersQuery } =
+  userApi;

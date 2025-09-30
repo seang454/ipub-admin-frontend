@@ -360,11 +360,11 @@ export default function PaperManagement() {
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-indigo-50">
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-indigo-50 bg-white">
                 <MoreHorizontal className="w-3.5 h-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="w-44 bg-white border-0">
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedPaper(row.original)
@@ -568,14 +568,14 @@ export default function PaperManagement() {
                   Regenerate Data
                 </Button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="bg-white border-slate-300 hover:bg-slate-50">
-                      <Filter className="w-4 h-4 mr-2" />
-                      {statusFilter} <ChevronDown className="ml-2 w-4 h-4" />
+                <DropdownMenu >
+                  <DropdownMenuTrigger asChild className="bg-white">
+                    <Button variant="outline" className=" border-slate-300 hover:bg-slate-50 bg-white">
+                      <Filter className="w-4 h-4 mr-2 bg-white" />
+                      {statusFilter} <ChevronDown className="ml-2 w-4 h-4 " />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-40">
+                  <DropdownMenuContent className="w-40 bg-white border-0">
                     {statusOptions.map((status) => (
                       <DropdownMenuItem key={status} onClick={() => setStatusFilter(status)} className="cursor-pointer">
                         {status}
@@ -587,7 +587,7 @@ export default function PaperManagement() {
                 <Dialog open={addOpen} onOpenChange={setAddOpen}>
                   <DialogTrigger asChild>
                     <Button
-                      className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+                      className="bg-primary2 hover:bg-secondary text-white  shadow-sm"
                       aria-label="Add new paper"
                     >
                       <Plus className="w-4 h-4 mr-2" /> Add Paper
@@ -596,7 +596,7 @@ export default function PaperManagement() {
                   <DialogContent className="sm:max-w-lg" ref={dialogRef} tabIndex={-1}>
                     <DialogHeader>
                       <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                        <Plus className="w-5 h-5 text-indigo-600" />
+                        <Plus className="w-5 h-5" />
                         Add New Paper
                       </DialogTitle>
                     </DialogHeader>
@@ -612,7 +612,7 @@ export default function PaperManagement() {
                               title: undefined,
                             }))
                           }}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                           placeholder="Enter paper title"
                           aria-required="true"
                         />
@@ -637,7 +637,7 @@ export default function PaperManagement() {
                               abstractText: undefined,
                             }))
                           }}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                           rows={4}
                           placeholder="Enter paper abstract"
                           aria-required="true"
@@ -661,7 +661,7 @@ export default function PaperManagement() {
                               fileUrl: undefined,
                             }))
                           }}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                           placeholder="https://example.com/paper.pdf"
                           aria-required="true"
                         />
@@ -678,7 +678,7 @@ export default function PaperManagement() {
                           value={createFormData.categoryNames.join(", ")}
                           onChange={handleCreateCategoryChange}
                           placeholder="e.g. Machine Learning, AI, Data Science"
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                           aria-required="true"
                         />
                         {formErrors.categoryNames && (
@@ -701,7 +701,7 @@ export default function PaperManagement() {
                       >
                         Cancel
                       </Button>
-                      <Button onClick={handleAddPaper} className="bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                      <Button onClick={handleAddPaper} className="bg-primary2 hover:bg-secondary text-white  shadow-sm">
                         <Plus className="w-4 h-4 mr-2" />
                         Add Paper
                       </Button>
@@ -818,7 +818,7 @@ export default function PaperManagement() {
                   Last
                 </Button>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 border-0">
                 <span className="text-sm text-slate-600">
                   Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
                   {Math.min(
@@ -834,9 +834,9 @@ export default function PaperManagement() {
                   <SelectTrigger className="w-32 h-8 border-slate-300">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-0">
                     {[10, 20, 30].map((size) => (
-                      <SelectItem key={size} value={size.toString()}>
+                      <SelectItem className="bg-white border-0" key={size} value={size.toString()}>
                         Show {size}
                       </SelectItem>
                     ))}

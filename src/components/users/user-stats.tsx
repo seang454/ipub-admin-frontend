@@ -25,7 +25,7 @@ const stats = [
     change: "-4%",
     trend: "down",
     icon: UserX,
-    iconColor: "text-gray-500",
+    iconColor: "text-muted-foreground",
   },
   {
     title: "Admin Users",
@@ -43,12 +43,12 @@ export function UserStats() {
       {stats.map((stat) => (
         <Card
           key={stat.title}
-          className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+          className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-              <p className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{stat.title}</p>
+              <p className="text-2xl font-bold text-foreground mb-2">{stat.value}</p>
               <div className="flex items-center gap-1">
                 {stat.trend === "up" && <TrendingUp className="w-4 h-4 text-green-500" />}
                 {stat.trend === "down" && <TrendingDown className="w-4 h-4 text-red-500" />}
@@ -57,12 +57,12 @@ export function UserStats() {
                     "text-sm font-medium",
                     stat.trend === "up" && "text-green-600",
                     stat.trend === "down" && "text-red-600",
-                    stat.trend === "neutral" && "text-gray-500",
+                    stat.trend === "neutral" && "text-muted-foreground",
                   )}
                 >
                   {stat.change}
                 </span>
-                <span className="text-sm text-gray-500">from last month</span>
+                <span className="text-sm text-muted-foreground">from last month</span>
               </div>
             </div>
             <div className="flex-shrink-0">

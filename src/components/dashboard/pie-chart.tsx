@@ -7,16 +7,9 @@ import type { PieSectorDataItem } from "recharts/types/polar/Pie"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { type ChartConfig, ChartContainer, ChartStyle, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { PapersResponse } from "@/types/paperType/paperType"
 
 export const description = "An interactive pie chart"
-
-const desktopData = [
-  { month: "january", desktop: 186, fill: "var(--color-january)" },
-  { month: "february", desktop: 305, fill: "var(--color-february)" },
-  { month: "march", desktop: 237, fill: "var(--color-march)" },
-  { month: "april", desktop: 173, fill: "var(--color-april)" },
-  { month: "may", desktop: 209, fill: "var(--color-may)" },
-]
 
 const chartConfig = {
   visitors: {
@@ -50,35 +43,76 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function DashboardPieChart() {
+export function DashboardPieChart({
+  papers,
+}: {
+  papers: PapersResponse | undefined
+}) {
   const id = "pie-interactive"
-  const [activeMonth, setActiveMonth] = React.useState(desktopData[0].month)
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ]
 
-  const activeIndex = React.useMemo(() => desktopData.findIndex((item) => item.month === activeMonth), [activeMonth])
-  const months = React.useMemo(() => desktopData.map((item) => item.month), [])
+  // generate 2-month combined chart data
+  const desktopData = React.useMemo(() => {
+    if (!papers?.papers.content) return []
+    const year = new Date().getFullYear() // use current year dynamically
+    const data = []
+    for (let i = 0; i < 12; i += 2) {
+      if (!months[i + 1]) break
+      const monthLabel = `${months[i]}-${months[i + 1]}`
+      const month1Str = (i + 1).toString().padStart(2, "0")
+      const month2Str = (i + 2).toString().padStart(2, "0")
+
+      const usersInMonth1 = papers.papers.content.filter((p) => p.publishedAt?.startsWith(`${year}-${month1Str}-`))
+      const usersInMonth2 = papers.papers.content.filter((p) => p.publishedAt?.startsWith(`${year}-${month2Str}-`))
+
+      data.push({
+        month: monthLabel,
+        desktop: usersInMonth1.length + usersInMonth2.length, // renamed key to match Pie dataKey
+        fill: `var(--color-${months[i].toLowerCase()})`,
+      })
+    }
+    return data
+  }, [papers])
+
+  const [activeMonth, setActiveMonth] = React.useState(desktopData[0]?.month ?? "")
+  const activeIndex = React.useMemo(
+    () => desktopData.findIndex((item) => item.month === activeMonth),
+    [activeMonth, desktopData],
+  )
 
   return (
     <Card
       data-chart={id}
-      className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm"
+      className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card via-card/80 to-muted/20 backdrop-blur-sm"
     >
       <ChartStyle id={id} config={chartConfig} />
-      <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background/10 to-transparent pointer-events-none" />
       <CardHeader className="relative flex-row items-start space-y-0 pb-4">
         <div className="grid gap-2">
-          <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Interactive Pie Chart
-          </CardTitle>
+          <CardTitle className="text-xl font-bold text-primary">Interactive Pie Chart - Total Papers</CardTitle>
           <CardDescription className="text-muted-foreground">January - June 2024</CardDescription>
         </div>
         <Select value={activeMonth} onValueChange={setActiveMonth}>
           <SelectTrigger
-            className="ml-auto h-9 w-[140px] rounded-xl border-border/50 bg-white/80 backdrop-blur-sm shadow-sm"
+            className="ml-auto h-9 w-[140px] rounded-xl border-border/50 bg-card/80 backdrop-blur-sm shadow-sm"
             aria-label="Select a value"
           >
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
-          <SelectContent align="end" className="rounded-xl border-border/50 bg-white/95 backdrop-blur-sm">
+          <SelectContent align="end" className="rounded-xl border-border/50 bg-popover/95 backdrop-blur-sm">
             {months.map((key) => {
               const config = chartConfig[key as keyof typeof chartConfig]
 
@@ -108,7 +142,7 @@ export function DashboardPieChart() {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel className="bg-white/95 backdrop-blur-sm border-border/50" />}
+              content={<ChartTooltipContent hideLabel className="bg-popover/95 backdrop-blur-sm border-border/50" />}
             />
             <Pie
               data={desktopData}

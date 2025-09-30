@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeProvider } from "next-themes";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/lib/i18nClient";
 import { useEffect } from "react";
@@ -28,16 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ReduxProvider>
       <I18nextProvider i18n={i18n} defaultNS="common">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
           <AuthProvider>
             <NotificationProvider>{children}</NotificationProvider>
           </AuthProvider>
-        </ThemeProvider>
       </I18nextProvider>
     </ReduxProvider>
   );

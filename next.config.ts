@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["as1.ftcdn.net"], // whitelist the host
   },
+  experimental: {
+    optimizeCss: true, // Enable CSS optimization
+  },
 };
 
 export default nextConfig;

@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { FileText, FilePlus, Send, Clock, CheckCircle, XCircle } from "lucide-react"
@@ -8,7 +9,7 @@ const stats = [
     value: "25",
     icon: FileText,
     iconColor: "text-blue-600",
-    bgColor: "bg-gradient-to-br from-blue-50 to-blue-100",
+    bgColor: "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm",
     borderColor: "border-blue-200",
   },
   {
@@ -16,7 +17,7 @@ const stats = [
     value: "3",
     icon: FilePlus,
     iconColor: "text-amber-600",
-    bgColor: "bg-gradient-to-br from-amber-50 to-amber-100",
+    bgColor: "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm",
     borderColor: "border-amber-200",
   },
   {
@@ -24,7 +25,7 @@ const stats = [
     value: "12",
     icon: Send,
     iconColor: "text-indigo-600",
-    bgColor: "bg-gradient-to-br from-indigo-50 to-indigo-100",
+    bgColor: "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm",
     borderColor: "border-indigo-200",
   },
   {
@@ -32,7 +33,7 @@ const stats = [
     value: "8",
     icon: Clock,
     iconColor: "text-orange-600",
-    bgColor: "bg-gradient-to-br from-orange-50 to-orange-100",
+    bgColor: "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm",
     borderColor: "border-orange-200",
   },
   {
@@ -40,7 +41,7 @@ const stats = [
     value: "9",
     icon: CheckCircle,
     iconColor: "text-emerald-600",
-    bgColor: "bg-gradient-to-br from-emerald-50 to-emerald-100",
+    bgColor: "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm",
     borderColor: "border-emerald-200",
   },
   {
@@ -48,7 +49,7 @@ const stats = [
     value: "1",
     icon: XCircle,
     iconColor: "text-red-600",
-    bgColor: "bg-gradient-to-br from-red-50 to-red-100",
+    bgColor: "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm",
     borderColor: "border-red-200",
   },
 ]
@@ -60,7 +61,7 @@ export function PaperStats() {
         <Card
           key={stat.title}
           className={cn(
-            "p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer border-2",
+            " hover:-translate-y-1 cursor-pointer border-2",
             stat.bgColor,
             stat.borderColor,
           )}

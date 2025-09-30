@@ -5,8 +5,8 @@ import { Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import AuthProvider from "@/lib/auth-provider";
 import HomeLayoutWrapper from "@/components/layout/HomeLayoutWrapper";
-import AuthDebug from "@/components/debug/AuthDebug";
 import { ThemeProvider } from "next-themes";
+// import AuthDebug from "@/components/debug/AuthDebug";
 
 // English: Poppins
 const poppins = Poppins({
@@ -154,12 +154,14 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${poppins.variable} ${kantumroyPro.variable} antialiased`}
       >
-        <Providers>
-          <AuthProvider>
-            <HomeLayoutWrapper>{children}</HomeLayoutWrapper>
-            {/* <AuthDebug /> */}
-          </AuthProvider>
-        </Providers>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Providers>
+            <AuthProvider>
+              <HomeLayoutWrapper>{children}</HomeLayoutWrapper>
+              {/* <AuthDebug /> */}
+            </AuthProvider>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

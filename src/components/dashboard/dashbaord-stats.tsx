@@ -3,33 +3,41 @@
 import { Users, FileText, UserCheck, BookCheck } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import type { PapersResponse } from "@/types/paperType/paperType"
+import type { User } from "@/types/userType/userType"
 
-export function DashboardStats() {
+export interface DashboardStatsProps {
+  papers: PapersResponse | undefined
+  user: User[] | undefined
+  students: User[]
+  mentors: User[]
+}
+export function DashboardStats({ papers, user, students, mentors }: DashboardStatsProps) {
   const stats = [
     {
       title: "Total Users",
-      value: 1247,
+      value: user?.length,
       icon: Users,
       iconColor: "text-primary",
       bgGradient: "from-primary/10 to-primary/5",
     },
     {
       title: "Total Papers",
-      value: 89,
+      value: papers?.papers.content.length,
       icon: FileText,
       iconColor: "text-secondary",
       bgGradient: "from-secondary/10 to-secondary/5",
     },
     {
       title: "Total Students",
-      value: 892,
+      value: students.length,
       icon: UserCheck,
       iconColor: "text-chart-2",
       bgGradient: "from-chart-2/10 to-chart-2/5",
     },
     {
       title: "Total Mentors",
-      value: 45,
+      value: mentors.length,
       icon: BookCheck,
       iconColor: "text-chart-3",
       bgGradient: "from-chart-3/10 to-chart-3/5",
@@ -48,7 +56,7 @@ export function DashboardStats() {
             "backdrop-blur-sm hover:scale-105",
           )}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/30 to-transparent" />
           <div className="relative p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
@@ -57,7 +65,7 @@ export function DashboardStats() {
                   {stat.value}
                 </p>
               </div>
-              <div className={cn("p-3 rounded-xl bg-white/80 shadow-sm", "ring-1 ring-border/20")}>
+              <div className={cn("p-3 rounded-xl bg-card/80 shadow-sm", "ring-1 ring-border/20")}>
                 <stat.icon className={cn("w-6 h-6", stat.iconColor)} />
               </div>
             </div>

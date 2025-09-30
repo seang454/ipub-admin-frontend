@@ -1,4 +1,4 @@
-import { AdviserStats } from '@/components/advisers/adviser-stats'
+import AdviserStats from '@/components/advisers/adviser-stats'
 import { AdviserTable } from '@/components/advisers/adviser-table'
 import React from 'react'
 
