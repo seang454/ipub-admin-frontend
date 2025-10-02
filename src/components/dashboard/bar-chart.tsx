@@ -3,16 +3,28 @@
 import { TrendingUp } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import type { User } from "@/types/userType/userType"
 
 export const description = "A bar chart with a custom label"
 
 const chartConfig = {
   users: {
-    label: "users",
-    color: "var(--chart-1)",
+    label: "Users",
+    color: "#3b82f6", // Tailwind blue-500
   },
   mobile: {
     label: "Mobile",
@@ -23,7 +35,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
+export function ChartBarLabelCustom({
+  users,
+}: {
+  users: User[] | undefined
+}) {
   const months = [
     "January",
     "February",
@@ -46,8 +62,10 @@ export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
     const month1Str = (i + 1).toString().padStart(2, "0") // "01"
     const month2Str = (i + 2).toString().padStart(2, "0") // "02"
 
-    const usersInMonth1 = users?.filter((u) => u.createDate.startsWith(`2025-${month1Str}-`)) ?? []
-    const usersInMonth2 = users?.filter((u) => u.createDate.startsWith(`2025-${month2Str}-`)) ?? []
+    const usersInMonth1 =
+      users?.filter((u) => u.createDate.startsWith(`2025-${month1Str}-`)) ?? []
+    const usersInMonth2 =
+      users?.filter((u) => u.createDate.startsWith(`2025-${month2Str}-`)) ?? []
 
     chartData.push({
       month: monthLabel,
@@ -59,10 +77,14 @@ export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
     <Card className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card via-card/80 to-muted/20 backdrop-blur-sm">
       <div className="absolute inset-0 bg-gradient-to-br from-background/10 to-transparent pointer-events-none" />
       <CardHeader className="relative">
-        <CardTitle className="text-xl font-bold text-primary">Bar Chart - Total Users</CardTitle>
-        <CardDescription className="text-muted-foreground">January - June 2024</CardDescription>
+        <CardTitle className="text-xl font-bold text-primary">
+          Bar Chart - Total Users
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          January - June 2024
+        </CardDescription>
       </CardHeader>
-      <CardContent className="relative">
+      <CardContent className="relative ">
         <ChartContainer config={chartConfig}>
           <BarChart
             accessibilityLayer
@@ -72,7 +94,11 @@ export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
               right: 16,
             }}
           >
-            <CartesianGrid horizontal={false} stroke="var(--border)" strokeOpacity={0.3} />
+            <CartesianGrid
+              horizontal={false}
+              stroke="var(--border)"
+              strokeOpacity={0.3}
+            />
             <YAxis
               dataKey="month"
               type="category"
@@ -92,7 +118,13 @@ export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
                 />
               }
             />
-            <Bar dataKey="users" layout="vertical" fill="var(--color-users)" radius={8} className="drop-shadow-sm">
+            <Bar
+              dataKey="users"
+              layout="vertical"
+              fill={chartConfig.users.color} // Blue bar
+              radius={8}
+              className="drop-shadow-sm"
+            >
               <LabelList
                 dataKey="month"
                 position="insideLeft"
@@ -102,7 +134,7 @@ export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
               />
               <LabelList
                 dataKey="users"
-                position="right"
+                position="left"
                 offset={8}
                 className="fill-foreground font-medium"
                 fontSize={12}
@@ -115,7 +147,9 @@ export function ChartBarLabelCustom({ users }: { users: User[] | undefined }) {
         <div className="flex gap-2 leading-none font-semibold text-primary">
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>
-        <div className="text-muted-foreground leading-none">Showing total visitors for the last 6 months</div>
+        <div className="text-muted-foreground leading-none">
+          Showing total visitors for the last 6 months
+        </div>
       </CardFooter>
     </Card>
   )

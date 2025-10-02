@@ -1,12 +1,12 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 /* Theme configuration */
 :root {
   /* Light mode (default) */
-  --primary: #2563eb;          /* Light primary */
-  --primary2: #3559AF;
-  --secondary: #1e2a38;        /* Light secondary */
+  --primary: #2563eb;
+  --primary2: #3559af;
+  --secondary: #1e2a38;
   --accent: #f59e0b;
   --accent-hover: #e38519;
   --secondary-hover: #1951cc;
@@ -22,15 +22,17 @@
 
   --dynamic: var(--secondary);
 
-  --font-english: var(--font-english); /* Poppins */
-  --font-khmer: var(--font-khmer);     /* Kantumroy Pro */
+  --table-foreground: #000; /* light mode */
+
+  --font-english: var(--font-english);
+  --font-khmer: var(--font-khmer);
 }
 
 .dark {
   /* Dark mode */
-  --primary: #1e2a38;          /* Dark primary */
+  --primary: #1e2a38;
   --primary2: #2563eb;
-  --secondary: #3559AF;        /* Dark secondary */
+  --secondary: #3559af;
   --accent: #e38519;
   --accent-hover: #f59e0b;
   --secondary-hover: #2563eb;
@@ -44,6 +46,7 @@
   --border: #334155;
 
   --dynamic: var(--primary);
+  --table-foreground: #fff; /* dark mode */
 }
 
 /* Tailwind theme bindings */
@@ -55,7 +58,7 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
-  --secondary-hover: var(--secondary-hover);
+  --color-secondary-hover: var(--secondary-hover); /* ✅ fixed */
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
@@ -78,11 +81,10 @@
     font-family: var(--font-english), sans-serif;
   }
 
-  /* Switch base font automatically by current document language */
-  html[lang='kh'] body {
+  html[lang="kh"] body {
     font-family: var(--font-khmer), sans-serif;
   }
-  html[lang='en'] body {
+  html[lang="en"] body {
     font-family: var(--font-english), sans-serif;
   }
 

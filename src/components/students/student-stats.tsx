@@ -50,14 +50,14 @@ export function StudentStats() {
       {stats.map((stat) => (
         <Card
           key={stat.title}
-          className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+          className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
         >
           <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600 mb-1">
+            <div className="flex-1 gap-1.5">
+              <p className=" bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                 {stat.title}
               </p>
-              <p className="text-2xl font-bold text-gray-900 mb-2">
+              <p className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                 {stat.value}
               </p>
               <div className="flex items-center gap-1">

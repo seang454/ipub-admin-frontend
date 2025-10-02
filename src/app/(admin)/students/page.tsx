@@ -3,9 +3,9 @@ import { StudentTable } from "@/components/students/student-table";
 
 export default function Page() {
   return (
-    <div className="p-6">
+    <div className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
       <div>
-        <h1 className="text-3xl font-semibold text-primary mb-6">
+        <h1 className="text-3xl font-semibold py-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
           Student Management
         </h1>
         <StudentStats />

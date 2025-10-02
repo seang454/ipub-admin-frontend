@@ -116,11 +116,11 @@ export function EnhancedProposals() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 sm:p-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl py-6 bg-card border-border transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
             Research Proposals
           </h1>
           <p className="text-slate-600 text-base sm:text-lg">
@@ -653,7 +653,7 @@ export function EnhancedProposals() {
                 {selectedPaper?.title}
               </DialogTitle>
             </DialogHeader>
-           {/* hello */}
+            {/* hello */}
             {selectedPaper && (
               <div className="space-y-6">
                 {/* Paper Thumbnail */}

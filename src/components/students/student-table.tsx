@@ -333,8 +333,8 @@ export function StudentTable() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-slate-200 p-6">
+    <div className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+      <div className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-indigo-100 rounded-lg">
             <Users className="w-6 h-6 text-indigo-600" />
@@ -356,7 +356,7 @@ export function StudentTable() {
               placeholder="Search students by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+              className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
             />
           </div>
           <div className="flex gap-3">
@@ -525,14 +525,14 @@ export function StudentTable() {
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-muted/50 border-b border-border">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted/80 transition-colors"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div className="flex items-center gap-2">
@@ -555,16 +555,16 @@ export function StudentTable() {
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-slate-200">
+          <tbody className="bg-card divide-y divide-border">
             {table.getRowModel().rows.map((row, index) => (
               <tr
                 key={row.id}
-                className={`hover:bg-slate-50 transition-colors ${
-                  index % 2 === 0 ? "bg-white" : "bg-slate-25"
+                className={`hover:bg-muted/50 transition-colors ${
+                  index % 2 === 0 ? "bg-card" : "bg-muted/20"
                 }`}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                  <td key={cell.id} className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -773,7 +773,7 @@ export function StudentTable() {
                       userName: e.target.value,
                     })
                   }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -786,13 +786,10 @@ export function StudentTable() {
                     setEditFormData({ ...editFormData, gender: v })
                   }
                 >
-                  <SelectTrigger                                                className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-
->
+                  <SelectTrigger className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
-                  <SelectContent                         className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
->
+                  <SelectContent className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
@@ -810,7 +807,7 @@ export function StudentTable() {
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, email: e.target.value })
                 }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
               />
             </div>
             <div className="space-y-2">
@@ -822,7 +819,7 @@ export function StudentTable() {
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, fullName: e.target.value })
                 }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -838,7 +835,7 @@ export function StudentTable() {
                       firstName: e.target.value,
                     })
                   }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -853,7 +850,7 @@ export function StudentTable() {
                       lastName: e.target.value,
                     })
                   }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                 />
               </div>
             </div>
@@ -867,12 +864,10 @@ export function StudentTable() {
                   setEditFormData({ ...editFormData, course: v })
                 }
               >
-                <SelectTrigger                         className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
->
+                <SelectTrigger className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                   <SelectValue placeholder="Select a course" />
                 </SelectTrigger>
-                <SelectContent                  className="bg-white border-0"
->
+                <SelectContent className="bg-white border-0">
                   {courseOptions.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -892,12 +887,10 @@ export function StudentTable() {
                     setEditFormData({ ...editFormData, status: v === "true" })
                   }
                 >
-                  <SelectTrigger                         className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
->
+                  <SelectTrigger className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent                    className="bg-white border-0"
->
+                  <SelectContent className="bg-white border-0">
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
                   </SelectContent>
@@ -916,13 +909,12 @@ export function StudentTable() {
                     })
                   }
                 >
-                  <SelectTrigger                         className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
->
+                  <SelectTrigger className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-0">
                     {roleOptions.map((r) => (
-                      <SelectItem  key={r} value={r}>
+                      <SelectItem key={r} value={r}>
                         {r}
                       </SelectItem>
                     ))}
@@ -937,7 +929,7 @@ export function StudentTable() {
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, bio: e.target.value })
                 }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                 placeholder="Student bio..."
               />
             </div>
@@ -950,7 +942,7 @@ export function StudentTable() {
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, address: e.target.value })
                 }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                 placeholder="Student address..."
               />
             </div>
@@ -967,7 +959,7 @@ export function StudentTable() {
                       contactNumber: e.target.value,
                     })
                   }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                   placeholder="+855..."
                 />
               </div>
@@ -983,7 +975,7 @@ export function StudentTable() {
                       telegramId: e.target.value,
                     })
                   }
-                        className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  className="border-0 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                   placeholder="@username"
                 />
               </div>
