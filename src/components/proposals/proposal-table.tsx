@@ -116,22 +116,22 @@ export function EnhancedProposals() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 sm:p-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+    <div className=" min-h-screen rounded-2xl sm:p-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-3xl py-6 bg-card border-border transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+          <h1 className="text-3xl py-6  border-border transition-all duration-200">
             Research Proposals
           </h1>
-          <p className="text-slate-600 text-base sm:text-lg">
+          <p className="text-base sm:text-lg text-dynamic2">
             Review and assign advisors to pending research proposals
           </p>
         </div>
 
         {/* Filters and Search */}
-        <Card className="mb-6 sm:mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+        <Card className="mb-6 sm:mb-8 border-0 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+          <CardContent className="p-4 sm:p-6 ">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center ">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
@@ -141,7 +141,7 @@ export function EnhancedProposals() {
                     setSearchTerm(e.target.value);
                     setCurrentPaperPage(1); // Reset to first page when searching
                   }}
-                  className="pl-10 border-slate-200 focus:border-[#2B7FFF] focus:ring-[#2B7FFF]"
+                  className="pl-10 text-dynamic2 focus:border-[#2B7FFF] focus:ring-[#2B7FFF] border-slate-300  rounded-lg"
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -152,11 +152,11 @@ export function EnhancedProposals() {
                     setCurrentPaperPage(1); // Reset to first page when filtering
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-48 border-slate-200">
+                  <SelectTrigger className="w-full sm:w-48 border-slate-200 border-slate-300  rounded-lg">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-0">
+                  <SelectContent className=" bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                     <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="Artificial Intelligence">AI</SelectItem>
                     <SelectItem value="Environmental Science">
@@ -176,10 +176,10 @@ export function EnhancedProposals() {
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-40 border-slate-200">
+                  <SelectTrigger className="w-full sm:w-40 border-slate-200 border-slate-300  rounded-lg">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-0">
+                  <SelectContent className=" border-0 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                     <SelectItem value="date">Date</SelectItem>
                     <SelectItem value="title">Title</SelectItem>
                     <SelectItem value="author">Author</SelectItem>
@@ -192,9 +192,9 @@ export function EnhancedProposals() {
 
         {/* Results Count */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="text-slate-600">
+          <p className=" text-dynamic2">
             Showing{" "}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-dynamic2">
               {filteredProposals.length}
             </span>{" "}
             pending proposals

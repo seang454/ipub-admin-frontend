@@ -2,6 +2,7 @@
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { FileText, FilePlus, Send, Clock, CheckCircle, XCircle } from "lucide-react"
+import { Paper, PapersResponse } from "@/types/paperType/paperType"
 
 const stats = [
   {
@@ -54,7 +55,8 @@ const stats = [
   },
 ]
 
-export function PaperStats() {
+export function PaperStats({papers}:{papers:PapersResponse}) {
+  console.log('papers in stats:>> ', papers);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {stats.map((stat) => (
@@ -68,8 +70,8 @@ export function PaperStats() {
         >
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600 mb-2">{stat.title}</p>
-              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-sm font-medium mb-2 text-foreground">{stat.title}</p>
+              <p className="text-3xl font-bold text-foreground">{stat.value}</p>
             </div>
             <div
               className={cn(

@@ -1,6 +1,15 @@
-import { cn } from "@/lib/utils"
-import { Card } from "@/components/ui/card"
-import { Users, UserCheck, UserX, Shield, TrendingUp, TrendingDown } from "lucide-react"
+import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  Shield,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
+import { User } from "@/types/userType/userType";
+import { useEffect, useState } from "react";
 
 const stats = [
   {
@@ -35,9 +44,30 @@ const stats = [
     icon: Shield,
     iconColor: "text-purple-500",
   },
-]
+];
 
-export function UserStats() {
+export function UserStats({ allUsers }: { allUsers: User[] | undefined }) {
+  const [active, setActive] = useState<User[]>([]);
+  const [inactive, setInactive] = useState<User[]>([]);
+  const [admin, setAdmin] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (allUsers) {
+      const admins = allUsers.filter((u) => {
+        return u.isAdmin === false;
+      });
+      const activeusre = allUsers.filter((u) => {
+        return u.isActive;
+      });
+      setAdmin(admins);
+      setActive(activeusre);
+      console.log("admins filtered :>> ", admins); // correct immediately
+    }
+  }, [allUsers]);
+
+  console.log("users in firt fetch :>> ", allUsers);
+  console.log("admin :>> ", admin);
+  console.log("active :>> ", active);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => (
@@ -47,22 +77,32 @@ export function UserStats() {
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground mb-1">{stat.title}</p>
-              <p className="text-2xl font-bold text-foreground mb-2">{stat.value}</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">
+                {stat.title}
+              </p>
+              <p className="text-2xl font-bold text-foreground mb-2">
+                {stat.value}
+              </p>
               <div className="flex items-center gap-1">
-                {stat.trend === "up" && <TrendingUp className="w-4 h-4 text-green-500" />}
-                {stat.trend === "down" && <TrendingDown className="w-4 h-4 text-red-500" />}
+                {stat.trend === "up" && (
+                  <TrendingUp className="w-4 h-4 text-green-500" />
+                )}
+                {stat.trend === "down" && (
+                  <TrendingDown className="w-4 h-4 text-red-500" />
+                )}
                 <span
                   className={cn(
                     "text-sm font-medium",
                     stat.trend === "up" && "text-green-600",
                     stat.trend === "down" && "text-red-600",
-                    stat.trend === "neutral" && "text-muted-foreground",
+                    stat.trend === "neutral" && "text-muted-foreground"
                   )}
                 >
                   {stat.change}
                 </span>
-                <span className="text-sm text-muted-foreground">from last month</span>
+                <span className="text-sm text-muted-foreground">
+                  from last month
+                </span>
               </div>
             </div>
             <div className="flex-shrink-0">
@@ -72,5 +112,5 @@ export function UserStats() {
         </Card>
       ))}
     </div>
-  )
+  );
 }

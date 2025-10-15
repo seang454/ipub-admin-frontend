@@ -3,16 +3,18 @@ export interface Paper {
   title: string;
   abstractText: string;
   fileUrl: string;
-  thumbnailUrl: string | null;
+  thumbnailUrl: string;
   authorUuid: string;
   categoryNames: string[];
-  status: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
   isApproved: boolean;
-  submittedAt: string; // Could be Date if you parse it
-  createdAt: string;
+  submittedAt: string; // ISO date string
+  createdAt: string;   // ISO date string
   isPublished: boolean;
   publishedAt: string | null;
+  downloads: number;
 }
+
 
 export interface Pageable {
   pageNumber: number;
@@ -48,21 +50,7 @@ export interface PapersResponse {
   };
   message: string;
 }
-export interface Paper {
-  uuid: string;
-  title: string;
-  abstractText: string;
-  fileUrl: string;
-  thumbnailUrl: string | null;
-  authorUuid: string;
-  categoryNames: string[];
-  status: string;
-  isApproved: boolean;
-  submittedAt: string;
-  createdAt: string;
-  isPublished: boolean;
-  publishedAt: string | null;
-}
+
 
 export interface ResearchPaper {
   id: string;
@@ -116,21 +104,6 @@ export interface GetPapersResponse {
   papers: PapersData;
 }
 
-export interface Paper {
-  uuid: string;
-  title: string;
-  abstractText: string;
-  fileUrl: string;
-  thumbnailUrl: string | null;
-  authorUuid: string;
-  categoryNames: string[];
-  status: string;
-  isApproved: boolean;
-  submittedAt: string;
-  createdAt: string;
-  isPublished: boolean;
-  publishedAt: string | null;
-}
 
 export interface ResearchPaper {
   id: string;

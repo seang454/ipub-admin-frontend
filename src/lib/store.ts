@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage"; // import the correct storage e
 import persistStore from "redux-persist/es/persistStore";
 import { paperApi } from "./api/paperSlice";
 import { userApi } from "./api/userSlice";
+import { studentApi } from "./api/studentSlice";
 
 const persistConfig = {
   key: "root",
@@ -14,6 +15,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
    [paperApi.reducerPath]:paperApi.reducer,
    [userApi.reducerPath]:userApi.reducer,
+   [studentApi.reducerPath]:studentApi.reducer, // add the studentApi reducer
 })
 const persistedReducer = persistReducer(persistConfig, rootReducer); // wrap the root reducer with persistReducer and use for store to persist the store and store the data in local storage
 export const store = configureStore({
@@ -23,7 +25,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ["persist/PERSIST", "persist/REHYDRATE","persist/PAUSE","persist/PURGE","persist/FLUSH","persist/REGISTER"],  //disable the serializable check for these actions in redux persist
       },
-    }).concat(paperApi.middleware,userApi.middleware), // add the api middleware to the store
+    }).concat(paperApi.middleware,userApi.middleware,studentApi.middleware), // add the api middleware to the store
 });
 
 export const persistor=persistStore(store); // create a persistor for the store

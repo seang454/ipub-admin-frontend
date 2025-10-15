@@ -3,7 +3,7 @@ import React from "react";
 
 export default function page() {
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background-root">
       <div>
         <div className="mb-6">
           <h2 className="text-3xl font-semibold py-6">

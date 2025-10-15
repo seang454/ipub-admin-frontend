@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
-import { useState, useMemo } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Eye, EyeOff } from "lucide-react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,29 +57,24 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
-
-export interface User {
-  slug: string;
-  uuid: string;
-  userName: string;
-  gender: string | null;
-  email: string;
-  fullName: string;
-  firstName: string;
-  lastName: string;
-  imageUrl: string | null;
-  status: boolean | null;
-  createDate: string;
-  updateDate: string;
-  bio: string | null;
-  address: string | null;
-  contactNumber: string | null;
-  telegramId: string | null;
-  isUser: boolean;
-  isAdmin: boolean;
-  isStudent: boolean;
-  isAdvisor: boolean;
-}
+import {
+  useCreateNewUserMutation,
+  useDeleteUserMutation,
+  useUpdateUserMutation,
+} from "@/lib/api/userSlice";
+import {
+  RegisterRequest,
+  UpdateUserType,
+  User,
+} from "@/types/userType/userType";
+import { useForm } from "react-hook-form";
+import {
+  AddUserFormData,
+  addUserSchema,
+  editUserSchema,
+  EditUserSchema,
+} from "./zodvalidation";
+import { useSession } from "next-auth/react";
 
 export interface CreateUserData {
   username: string;
@@ -93,49 +92,57 @@ export interface UpdateUserData {
   fullName: string;
   firstName: string;
   lastName: string;
-  status: boolean;
+  status: string;
   bio: string;
   address: string;
   contactNumber: string;
   telegramId: string;
+  isActive: boolean;
 }
 
-export const generateFakeUsers = (count: number): User[] =>
-  Array.from({ length: count }, (_, i) => ({
-    slug: `user-${i + 1}`,
-    uuid: `uuid-${i + 1}`,
-    userName: `user${i + 1}`,
-    gender: Math.random() > 0.5 ? "Male" : "Female",
-    email: `user${i + 1}@example.com`,
-    fullName: `User ${i + 1}`,
-    firstName: `User`,
-    lastName: `${i + 1}`,
-    imageUrl: null,
-    status: Math.random() > 0.3,
-    createDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000))
-      .toISOString()
-      .split("T")[0],
-    updateDate: new Date().toISOString().split("T")[0],
-    bio: Math.random() > 0.5 ? `Bio for user ${i + 1}` : null,
-    address: Math.random() > 0.5 ? `Address ${i + 1}` : null,
-    contactNumber:
-      Math.random() > 0.5
-        ? `+855${Math.floor(Math.random() * 100000000)}`
-        : null,
-    telegramId: Math.random() > 0.5 ? `@user${i + 1}` : null,
-    isUser: true,
-    isAdmin: Math.random() > 0.9,
-    isStudent: Math.random() > 0.7,
-    isAdvisor: Math.random() > 0.8,
-  }));
+// export const generateFakeUsers = (count: number): User[] =>
+//   Array.from({ length: count }, (_, i) => ({
+//     slug: `user-${i + 1}`,
+//     uuid: `uuid-${i + 1}`,
+//     userName: `user${i + 1}`,
+//     gender: Math.random() > 0.5 ? "Male" : "Female",
+//     email: `user${i + 1}@example.com`,
+//     fullName: `User ${i + 1}`,
+//     firstName: `User`,
+//     lastName: `${i + 1}`,
+//     imageUrl: null,
+//     status: "Manager",
+//     createDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000))
+//       .toISOString()
+//       .split("T")[0],
+//     updateDate: new Date().toISOString().split("T")[0],
+//     bio: Math.random() > 0.5 ? `Bio for user ${i + 1}` : null,
+//     address: Math.random() > 0.5 ? `Address ${i + 1}` : null,
+//     contactNumber:
+//       Math.random() > 0.5
+//         ? `+855${Math.floor(Math.random() * 100000000)}`
+//         : null,
+//     telegramId: Math.random() > 0.5 ? `@user${i + 1}` : null,
+//     isUser: true,
+//     isAdmin: Math.random() > 0.9,
+//     isStudent: Math.random() > 0.7,
+//     isAdvisor: Math.random() > 0.8,
+//     isActive:true
+//   }));
 
-export function UserTable() {
-  const mockUsers = generateFakeUsers(50);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+export function UserTable({ allUsers }: { allUsers: User[] }) {
+  const [users, setUsers] = useState<User[]>([]);
+  useEffect(() => {
+    setUsers(allUsers);
+  }, [allUsers]);
+  console.log("users :>> ", users);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Active" | "Inactive"
   >("All");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
@@ -143,6 +150,8 @@ export function UserTable() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
+  const [currentId, setCurrentId] = useState<string>("");
+  console.log("currentId :>> ", currentId);
 
   const [createFormData, setCreateFormData] = useState<CreateUserData>({
     username: "",
@@ -160,27 +169,28 @@ export function UserTable() {
     fullName: "",
     firstName: "",
     lastName: "",
-    status: true,
+    status: "",
     bio: "",
     address: "",
     contactNumber: "",
     telegramId: "",
+    isActive: true,
   });
 
   const filteredUsers = useMemo(
     () =>
-      users.filter((u) => {
+      allUsers.filter((u) => {
         const matchesSearch =
           u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           u.userName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus =
           statusFilter === "All" ||
-          (statusFilter === "Active" && u.status === true) ||
-          (statusFilter === "Inactive" && u.status === false);
+          (statusFilter === "Active" && u.isActive) ||
+          (statusFilter === "Inactive" && !u.isActive);
         return matchesSearch && matchesStatus;
       }),
-    [users, searchTerm, statusFilter]
+    [allUsers, searchTerm, statusFilter]
   );
 
   const columns = useMemo<ColumnDef<User, any>[]>(
@@ -336,6 +346,7 @@ export function UserTable() {
                 className="hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setSelectedUser(row.original);
+                  setCurrentId(row.original.uuid);
                   setEditFormData({
                     userName: row.original.userName,
                     gender: row.original.gender || "",
@@ -343,11 +354,12 @@ export function UserTable() {
                     fullName: row.original.fullName,
                     firstName: row.original.firstName,
                     lastName: row.original.lastName,
-                    status: row.original.status || false,
+                    status: row.original.status,
                     bio: row.original.bio || "",
                     address: row.original.address || "",
                     contactNumber: row.original.contactNumber || "",
                     telegramId: row.original.telegramId || "",
+                    isActive: true,
                   });
                   setEditOpen(true);
                 }}
@@ -382,6 +394,7 @@ export function UserTable() {
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [token, setToken] = useState<string>("");
 
   const table = useReactTable({
     data: filteredUsers,
@@ -393,72 +406,202 @@ export function UserTable() {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
   });
+  
+  //checking session
+  const { data: session, status } = useSession();
 
-  const handleAddUser = () => {
-    const newUser: User = {
-      slug: createFormData.username.toLowerCase().replace(/\s+/g, "-"),
-      uuid: `uuid-${Date.now()}`,
-      userName: createFormData.username,
-      gender: null,
+  useEffect(() => {
+    if (status === "authenticated" && session?.accessToken) {
+      setToken(session.accessToken);
+    } else {
+      setToken("");
+    }
+  }, [status, session]);
+  //Register User with Zode using Reack Hook Form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<AddUserFormData>({
+    resolver: zodResolver(addUserSchema),
+  });
+
+  //RDk handdle for Create User
+  const [createNewUser, { isLoading }] = useCreateNewUserMutation();
+  //for Update User
+  const [updateUser, { isLoading: updateIsLoading }] = useUpdateUserMutation();
+  const [deletedUser, { isLoading: deleteIsLoading }] = useDeleteUserMutation();
+
+  const onSubmit = async (createFormData: AddUserFormData) => {
+    const createUser: RegisterRequest = {
+      username: createFormData.username,
       email: createFormData.email,
-      fullName: `${createFormData.firstname} ${createFormData.lastname}`,
-      firstName: createFormData.firstname,
-      lastName: createFormData.lastname,
-      imageUrl: null,
-      status: true,
-      createDate: new Date().toISOString().split("T")[0],
-      updateDate: new Date().toISOString().split("T")[0],
-      bio: null,
-      address: null,
-      contactNumber: null,
-      telegramId: null,
-      isUser: true,
-      isAdmin: false,
-      isStudent: false,
-      isAdvisor: false,
+      firstname: createFormData.firstname,
+      lastname: createFormData.lastname,
+      password: createFormData.password,
+      confirmedPassword: createFormData.confirmedPassword,
     };
-    setUsers([...users, newUser]);
-    setCreateFormData({
-      username: "",
-      email: "",
-      firstname: "",
-      lastname: "",
-      password: "",
-      confirmedPassword: "",
-    });
-    setAddOpen(false);
+
+    console.log("createUser :>> ", createUser);
+
+    try {
+      const response = await createNewUser(createUser).unwrap(); // ✅ safe usage
+
+      // ✅ show toast programmatically
+      toast.success("User created successfully!", {
+        position: "top-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+
+      console.log("✅ User created successfully:", response);
+    } catch (error) {
+      toast.error("Error creating user!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+
+      console.error("❌ Error creating user:", error);
+    }
+
+    reset(); // ✅ make sure reset() is defined (probably from react-hook-form)
   };
 
-  const handleEditUser = () => {
+  // Edite User configuration
+
+  const {
+    register: registerEdit,
+    handleSubmit: handleEditSubmit,
+    setValue: setEditValue,
+    formState: { errors: editErrors },
+    reset: resetEditForm,
+  } = useForm<EditUserSchema>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      userName: selectedUser?.userName ?? "",
+      gender:
+        selectedUser?.gender === "Male" ||
+        selectedUser?.gender === "Female" ||
+        selectedUser?.gender === "Other"
+          ? selectedUser.gender
+          : "Other", // fallback
+      email: selectedUser?.email ?? "",
+      fullName: selectedUser?.fullName ?? "",
+      firstName: selectedUser?.firstName ?? "",
+      lastName: selectedUser?.lastName ?? "",
+      isActive: selectedUser?.isActive ?? false,
+      bio: selectedUser?.bio ?? "",
+      address: selectedUser?.address ?? "",
+      contactNumber: selectedUser?.contactNumber ?? "",
+      telegramId: selectedUser?.telegramId ?? "",
+    },
+  });
+
+  // ✅ Update form whenever selectedUser changes
+
+  useEffect(() => {
+    if (selectedUser) {
+      resetEditForm({
+        userName: selectedUser.userName ?? "",
+        gender:
+          selectedUser.gender === "Male" ||
+          selectedUser.gender === "Female" ||
+          selectedUser.gender === "Other"
+            ? (selectedUser.gender as "Male" | "Female" | "Other")
+            : "Other",
+        email: selectedUser.email ?? "",
+        fullName: selectedUser.fullName ?? "",
+        firstName: selectedUser.firstName ?? "",
+        lastName: selectedUser.lastName ?? "",
+        isActive: selectedUser.isActive ?? false,
+        bio: selectedUser.bio ?? "",
+        address: selectedUser.address ?? "",
+        contactNumber: selectedUser.contactNumber ?? "",
+        telegramId: selectedUser.telegramId ?? "",
+      });
+    }
+  }, [selectedUser, resetEditForm]);
+
+  const handleEditUser = async (data: EditUserSchema) => {
     if (!selectedUser) return;
-    setUsers(
-      users.map((u) =>
-        u.uuid === selectedUser.uuid
-          ? {
-              ...u,
-              userName: editFormData.userName,
-              gender: editFormData.gender,
-              email: editFormData.email,
-              fullName: editFormData.fullName,
-              firstName: editFormData.firstName,
-              lastName: editFormData.lastName,
-              status: editFormData.status,
-              bio: editFormData.bio,
-              address: editFormData.address,
-              contactNumber: editFormData.contactNumber,
-              telegramId: editFormData.telegramId,
-              updateDate: new Date().toISOString().split("T")[0],
-            }
-          : u
-      )
-    );
-    setEditOpen(false);
+
+    // Correctly map isActive to status
+    const status = data.isActive ? "Active" : "Inactive";
+
+    const updateUserPayload: UpdateUserType = {
+      userName: data.userName,
+      gender: data.gender,
+      email: data.email,
+      fullName: data.fullName,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      status: status, // Correctly set status based on isActive
+      bio: data.bio ?? "",
+      address: data.address ?? "",
+      contactNumber: data.contactNumber ?? "",
+      telegramId: data.telegramId ?? "",
+    };
+
+    try {
+      // Make the API call to update user
+      await updateUser({
+        uuid: selectedUser.uuid,
+        updateUser: updateUserPayload,
+        token,
+      }).unwrap();
+
+      toast.success("User updated successfully!", {
+        position: "top-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      setEditOpen(false);
+    } catch (error) {
+      toast.error("Error updating user!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      console.error("Error updating user:", error);
+    }
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!selectedUser) return;
+    console.log("selectedUser :>> ", selectedUser);
     setUsers(users.filter((u) => u.uuid !== selectedUser.uuid));
-    setDeleteOpen(false);
+
+    try {
+      await deletedUser({uuid:selectedUser.uuid,token:token}) // unwrap() throws if error
+
+      toast.success("User updated successfully!", {
+        position: "top-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      setDeleteOpen(false)
+    } catch (error) {
+      toast.error("Error updating user!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      console.error("Error updating user:", error);
+    }
   };
 
   const handlePromoteUser = (
@@ -479,13 +622,19 @@ export function UserTable() {
     );
   };
 
+  //checking with session
+  if (status === "loading") return <p>Loading...</p>;
+  if (status === "unauthenticated") return <p>Please login</p>;
+
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
       {/* Header */}
+      <ToastContainer />
+
       <div className="bg-gradient-to-r from-muted/50 to-muted/30 border-b border-border p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-primary/10 rounded-lg">
-            <Users className="w-6 h-6 text-primary" />
+            <Users className="w-6 h-6 text-dynamic" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground">
@@ -518,7 +667,7 @@ export function UserTable() {
                   {statusFilter} <ChevronDown className="ml-2 w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40 bg-whitep-6 bg-card shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm border-border">
+              <DropdownMenuContent className="w-40 bg-card shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm border-border">
                 <DropdownMenuItem onClick={() => setStatusFilter("All")}>
                   All Status
                 </DropdownMenuItem>
@@ -533,126 +682,158 @@ export function UserTable() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary2 text-white  hover:bg-secondary shadow-sm">
-                  <Plus className="w-4 h-4 mr-2" /> Add User
+                <Button className="bg-primary2 text-white bg-secondary shadow-sm">
+                  <Plus className="w-4 h-4 mr-2 " /> Add User
                 </Button>
               </DialogTrigger>
+
               <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold text-popover-foreground">
                     Add New User
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+
+                <form
+                  onSubmit={handleSubmit(onSubmit)}
+                  className="space-y-4 py-4"
+                >
+                  {/* First and Last Name */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-popover-foreground">
-                        First Name
-                      </Label>
+                    <div className="space-y-1">
+                      <Label>First Name</Label>
                       <Input
+                        {...register("firstname")}
                         className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        value={createFormData.firstname}
-                        onChange={(e) =>
-                          setCreateFormData({
-                            ...createFormData,
-                            firstname: e.target.value,
-                          })
-                        }
                       />
+                      {errors.firstname && (
+                        <p className="text-red-500 text-sm">
+                          {errors.firstname.message}
+                        </p>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-popover-foreground">
-                        Last Name
-                      </Label>
+
+                    <div className="space-y-1">
+                      <Label>Last Name</Label>
                       <Input
+                        {...register("lastname")}
                         className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        value={createFormData.lastname}
-                        onChange={(e) =>
-                          setCreateFormData({
-                            ...createFormData,
-                            lastname: e.target.value,
-                          })
-                        }
                       />
+                      {errors.lastname && (
+                        <p className="text-red-500 text-sm">
+                          {errors.lastname.message}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-popover-foreground">Username</Label>
+
+                  {/* Username */}
+                  <div className="space-y-1">
+                    <Label>Username</Label>
                     <Input
+                      {...register("username")}
                       className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      value={createFormData.username}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          username: e.target.value,
-                        })
-                      }
                     />
+                    {errors.username && (
+                      <p className="text-red-500 text-sm">
+                        {errors.username.message}
+                      </p>
+                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-popover-foreground">Email</Label>
+
+                  {/* Email */}
+                  <div className="space-y-1">
+                    <Label>Email</Label>
                     <Input
-                      className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                       type="email"
-                      value={createFormData.email}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          email: e.target.value,
-                        })
-                      }
+                      {...register("email")}
+                      className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">
+                        {errors.email.message}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Passwords */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-popover-foreground">
-                        Password
-                      </Label>
-                      <Input
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        type="password"
-                        value={createFormData.password}
-                        onChange={(e) =>
-                          setCreateFormData({
-                            ...createFormData,
-                            password: e.target.value,
-                          })
-                        }
-                      />
+                    {/* Password */}
+                    <div className="space-y-1 relative">
+                      <Label>Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          {...register("password")}
+                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="text-red-500 text-sm">
+                          {errors.password.message}
+                        </p>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-popover-foreground">
-                        Confirm Password
-                      </Label>
-                      <Input
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        type="password"
-                        value={createFormData.confirmedPassword}
-                        onChange={(e) =>
-                          setCreateFormData({
-                            ...createFormData,
-                            confirmedPassword: e.target.value,
-                          })
-                        }
-                      />
+
+                    {/* Confirm Password */}
+                    <div className="space-y-1 relative">
+                      <Label>Confirm Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showConfirm ? "text" : "password"}
+                          {...register("confirmedPassword")}
+                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm((prev) => !prev)}
+                          className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                        >
+                          {showConfirm ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.confirmedPassword && (
+                        <p className="text-red-500 text-sm">
+                          {errors.confirmedPassword.message}
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setAddOpen(false)}
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleAddUser}
-                    className=" focus:border-indigo-500 bg-primary2 text-white hover:bg-secondary focus:ring-indigo-500 rounded-lg"
-                  >
-                    Add User
-                  </Button>
-                </DialogFooter>
+
+                  {/* Footer */}
+                  <DialogFooter className="pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAddOpen(false)}
+                      className="border-slate-300 rounded-lg"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-primary2 text-white bg-secondary rounded-lg"
+                    >
+                      {isLoading ? "Adding..." : "Add User"}{" "}
+                      {/* show loading text */}{" "}
+                    </Button>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
           </div>
@@ -885,188 +1066,149 @@ export function UserTable() {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className=" p-6 bg-card border-border shadow-sm  transition-all duration-200  backdrop-blur-sm ">
+        <DialogContent className="p-6 bg-card border-border shadow-sm backdrop-blur-sm transition-all duration-200">
           <DialogHeader>
             <DialogTitle className="text-popover-foreground">
               Edit User
             </DialogTitle>
           </DialogHeader>
+
           {selectedUser && (
-            <div className="space-y-4 py-4">
+            <form
+              onSubmit={handleEditSubmit(handleEditUser)}
+              className="space-y-4 py-4"
+            >
               <div className="grid grid-cols-2 gap-4">
+                {/* Username */}
                 <div className="space-y-2">
-                  <Label className="text-popover-foreground">Username</Label>
-                  <Input
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    value={editFormData.userName}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        userName: e.target.value,
-                      })
-                    }
-                  />
+                  <Label>Username</Label>
+                  <Input {...registerEdit("userName")} />
+                  {editErrors.userName && (
+                    <p className="text-red-500 text-sm">
+                      {editErrors.userName.message}
+                    </p>
+                  )}
                 </div>
+
+                {/* Gender */}
                 <div className="space-y-2">
-                  <Label className="text-popover-foreground">Gender</Label>
+                  <Label>Gender</Label>
                   <Select
-                    value={editFormData.gender}
                     onValueChange={(v) =>
-                      setEditFormData({ ...editFormData, gender: v })
+                      setEditValue("gender", v as "Male" | "Female" | "Other")
                     }
                   >
-                    <SelectTrigger className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg">
-                      <SelectValue placeholder="Select gender" />
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={selectedUser.gender || "Select"}
+                      />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                    <SelectContent>
                       <SelectItem value="Male">Male</SelectItem>
                       <SelectItem value="Female">Female</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                  {editErrors.gender && (
+                    <p className="text-red-500 text-sm">
+                      {editErrors.gender.message}
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {/* Email */}
               <div className="space-y-2">
-                <Label className="text-popover-foreground">Email</Label>
-                <Input
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  type="email"
-                  value={editFormData.email}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, email: e.target.value })
-                  }
-                />
+                <Label>Email</Label>
+                <Input type="email" {...registerEdit("email")} />
+                {editErrors.email && (
+                  <p className="text-red-500 text-sm">
+                    {editErrors.email.message}
+                  </p>
+                )}
               </div>
+
+              {/* Full Name */}
               <div className="space-y-2">
-                <Label className="text-popover-foreground">Full Name</Label>
-                <Input
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  value={editFormData.fullName}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      fullName: e.target.value,
-                    })
-                  }
-                />
+                <Label>Full Name</Label>
+                <Input {...registerEdit("fullName")} />
               </div>
+
+              {/* First and Last Name */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-popover-foreground">First Name</Label>
-                  <Input
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    value={editFormData.firstName}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        firstName: e.target.value,
-                      })
-                    }
-                  />
+                  <Label>First Name</Label>
+                  <Input {...registerEdit("firstName")} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-popover-foreground">Last Name</Label>
-                  <Input
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    value={editFormData.lastName}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        lastName: e.target.value,
-                      })
-                    }
-                  />
+                  <Label>Last Name</Label>
+                  <Input {...registerEdit("lastName")} />
                 </div>
               </div>
+
+              {/* Status */}
               <div className="space-y-2">
-                <Label className="text-popover-foreground">Status</Label>
+                <Label>Status</Label>
                 <Select
-                  value={editFormData.status.toString()}
-                  onValueChange={(v) =>
-                    setEditFormData({ ...editFormData, status: v === "true" })
-                  }
+                  onValueChange={(v) => setEditValue("isActive", v === "true")}
                 >
-                  <SelectTrigger className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg">
-                    <SelectValue />
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        selectedUser.isActive ? "Active" : "Inactive"
+                      }
+                    />
                   </SelectTrigger>
-                  <SelectContent className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                  <SelectContent>
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Label className="text-popover-foreground">Bio</Label>
-              <Textarea
-                className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                value={editFormData.bio}
-                onChange={(e: any) =>
-                  setEditFormData({ ...editFormData, bio: e.target.value })
-                }
-                placeholder="User bio..."
-              />
 
+              {/* Bio */}
               <div className="space-y-2">
-                <Label className="text-popover-foreground">Address</Label>
-                <Input
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  value={editFormData.address}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      address: e.target.value,
-                    })
-                  }
-                />
+                <Label>Bio</Label>
+                <Textarea {...registerEdit("bio")} placeholder="User bio..." />
               </div>
+
+              {/* Address */}
+              <div className="space-y-2">
+                <Label>Address</Label>
+                <Input {...registerEdit("address")} />
+              </div>
+
+              {/* Contact + Telegram */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-popover-foreground">
-                    Contact Number
-                  </Label>
+                  <Label>Contact Number</Label>
                   <Input
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    value={editFormData.contactNumber}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        contactNumber: e.target.value,
-                      })
-                    }
+                    {...registerEdit("contactNumber")}
                     placeholder="+855..."
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-popover-foreground">Telegram ID</Label>
+                  <Label>Telegram ID</Label>
                   <Input
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    value={editFormData.telegramId}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        telegramId: e.target.value,
-                      })
-                    }
+                    {...registerEdit("telegramId")}
                     placeholder="@username"
                   />
                 </div>
               </div>
-            </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-primary2 hover:bg-secondary text-primary-foreground"
+                >
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
           )}
-          <DialogFooter>
-            <Button
-              className="border-border bg-transparent"
-              variant="outline"
-              onClick={() => setEditOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-primary2 hover:bg-secondary text-primary-foreground"
-              onClick={handleEditUser}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1152,12 +1294,12 @@ export function UserTable() {
                   <Badge
                     variant="secondary"
                     className={
-                      selectedUser.status === true
+                      selectedUser.isActive === true
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200 mt-1 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
                         : "bg-red-50 text-red-700 border-red-200 mt-1 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
                     }
                   >
-                    {selectedUser.status === true ? "Active" : "Inactive"}
+                    {selectedUser.isActive === true ? "Active" : "Inactive"}
                   </Badge>
                 </div>
                 <div>

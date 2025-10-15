@@ -1,41 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-import type React from "react";
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-  createContext,
-  useContext,
-} from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+"use client"
+import type React from "react"
+import { useState, useMemo, useEffect, useRef, createContext, useContext } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Search,
   ChevronDown,
@@ -52,9 +27,7 @@ import {
   Download,
   AlertTriangle,
   Edit,
-  Moon,
-  Sun,
-} from "lucide-react";
+} from "lucide-react"
 import {
   type ColumnDef,
   flexRender,
@@ -63,216 +36,85 @@ import {
   getPaginationRowModel,
   useReactTable,
   type SortingState,
-} from "@tanstack/react-table";
-import { faker } from "@faker-js/faker";
+} from "@tanstack/react-table"
+import { Paper, PapersResponse } from "@/types/paperType/paperType"
 
 // Theme Context
 interface ThemeContextType {
-  theme: "light" | "dark";
-  toggleTheme: () => void;
+  theme: "light" | "dark"
+  toggleTheme: () => void
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
   toggleTheme: () => {},
-});
+})
 
-const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<"light" | "dark">("light")
 
   useEffect(() => {
     if (theme === "dark") {
-      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add("dark")
     } else {
-      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.remove("dark")
     }
-  }, [theme]);
+  }, [theme])
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
+    setTheme((prev) => (prev === "light" ? "dark" : "light"))
+  }
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
-
-// Type definitions
-type PaperType =
-  | "Research Paper"
-  | "Case Study"
-  | "Technical Review"
-  | "Survey Paper"
-  | "Position Paper"
-  | "Short Paper"
-  | "Workshop Paper"
-  | "Conference Paper"
-  | "Journal Article"
-  | "Thesis"
-  | "Dissertation"
-  | "White Paper";
-
-interface Paper {
-  uuid: string;
-  title: string;
-  abstractText: string;
-  fileUrl: string;
-  thumbnailUrl: string;
-  authorUuid: string;
-  categoryNames: string[];
-  type: PaperType;
-  status: "APPROVED" | "UNDER_REVIEW" | "DRAFT" | "REJECTED";
-  isApproved: boolean;
-  submittedAt: string;
-  createdAt: string;
-  isPublished: boolean;
-  publishedAt: string | null;
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>
 }
-
 interface CreateFormData {
-  title: string;
-  abstractText: string;
-  fileUrl: string;
-  categoryNames: string[];
+  title: string
+  abstractText: string
+  fileUrl: string
+  categoryNames: string[]
 }
 
 interface EditFormData {
-  title: string;
-  abstractText: string;
-  fileUrl: string;
-  thumbnailUrl: string;
-  category: string[];
+  title: string
+  abstractText: string
+  fileUrl: string
+  thumbnailUrl: string
+  category: string[]
 }
 
 interface FormErrors {
-  title?: string;
-  abstractText?: string;
-  fileUrl?: string;
-  categoryNames?: string;
-  category?: string;
+  title?: string
+  abstractText?: string
+  fileUrl?: string
+  categoryNames?: string
+  category?: string
 }
 
-const paperTypes: PaperType[] = [
-  "Research Paper",
-  "Case Study",
-  "Technical Review",
-  "Survey Paper",
-  "Position Paper",
-  "Short Paper",
-  "Workshop Paper",
-  "Conference Paper",
-  "Journal Article",
-  "Thesis",
-  "Dissertation",
-  "White Paper",
-];
 
-const statusOptions = [
-  "All",
-  "APPROVED",
-  "UNDER_REVIEW",
-  "DRAFT",
-  "REJECTED",
-] as const;
+const statusOptions = ["All", "APPROVED", "UNDER_REVIEW", "DRAFT", "REJECTED"] as const
 
-const generateFakePapers = (count = 25): Paper[] => {
-  const categories = [
-    "Artificial Intelligence",
-    "Machine Learning",
-    "Data Science",
-    "Computer Vision",
-    "Natural Language Processing",
-    "Robotics",
-    "Cybersecurity",
-    "Cloud Computing",
-    "DevOps",
-    "Software Engineering",
-    "Web Development",
-    "Mobile Development",
-    "Database Systems",
-    "Distributed Systems",
-    "Blockchain",
-    "IoT",
-    "Human-Computer Interaction",
-    "Computer Graphics",
-    "Network Security",
-    "Big Data",
-    "Deep Learning",
-    "Neural Networks",
-    "Computer Architecture",
-  ];
+export default function PaperManagement({allPapers}:{allPapers:PapersResponse}) {
 
-  const statuses: Paper["status"][] = [
-    "APPROVED",
-    "UNDER_REVIEW",
-    "DRAFT",
-    "REJECTED",
-  ];
-
-  return Array.from({ length: count }, () => {
-    const status = faker.helpers.arrayElement(statuses);
-    const isApproved = status === "APPROVED";
-    const createdAt = faker.date.between({
-      from: "2023-01-01",
-      to: new Date(),
-    });
-    const submittedAt = faker.date.between({ from: createdAt, to: new Date() });
-
-    return {
-      uuid: faker.string.uuid(),
-      title: faker.lorem.sentence({ min: 3, max: 8 }).replace(".", ""),
-      abstractText: faker.lorem.paragraphs(2, "\n\n"),
-      fileUrl: `https://example.com/papers/${faker.string.uuid()}.pdf`,
-      thumbnailUrl: `https://picsum.photos/400/300?random=${faker.number.int({
-        min: 1,
-        max: 1000,
-      })}`,
-      authorUuid: faker.string.uuid(),
-      categoryNames: faker.helpers.arrayElements(categories, {
-        min: 1,
-        max: 3,
-      }),
-      type: faker.helpers.arrayElement(paperTypes),
-      status,
-      isApproved,
-      submittedAt: submittedAt.toISOString().split("T")[0],
-      createdAt: createdAt.toISOString().split("T")[0],
-      isPublished: isApproved,
-      publishedAt: isApproved
-        ? faker.date
-            .between({ from: submittedAt, to: new Date() })
-            .toISOString()
-            .split("T")[0]
-        : null,
-    };
-  });
-};
-
-export default function PaperManagement() {
-  const { theme, toggleTheme } = useContext(ThemeContext);
-  const [papers, setPapers] = useState<Paper[]>(generateFakePapers(25));
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
-  const [statusFilter, setStatusFilter] =
-    useState<(typeof statusOptions)[number]>("All");
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
-  const [viewOpen, setViewOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
+  console.log('allPapers :>> ', allPapers);
+  // const { theme, toggleTheme } = useContext(ThemeContext)
+  const [papers, setPapers] = useState<Paper[]>(allPapers.papers.content || [])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
+  const [statusFilter, setStatusFilter] = useState<(typeof statusOptions)[number]>("All")
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null)
+  const [viewOpen, setViewOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
 
   const [createFormData, setCreateFormData] = useState<CreateFormData>({
     title: "",
     abstractText: "",
     fileUrl: "",
     categoryNames: [],
-  });
+  })
 
   const [editFormData, setEditFormData] = useState<EditFormData>({
     title: "",
@@ -280,76 +122,71 @@ export default function PaperManagement() {
     fileUrl: "",
     thumbnailUrl: "",
     category: [],
-  });
+  })
 
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+      setDebouncedSearchTerm(searchTerm)
+    }, 300)
+    return () => clearTimeout(handler)
+  }, [searchTerm])
 
   // Focus dialog when opened
   useEffect(() => {
     if ((viewOpen || editOpen || deleteOpen || addOpen) && dialogRef.current) {
-      dialogRef.current.focus();
+      dialogRef.current.focus()
     }
-  }, [viewOpen, editOpen, deleteOpen, addOpen]);
+  }, [viewOpen, editOpen, deleteOpen, addOpen])
 
   const validateCreateForm = (data: CreateFormData): FormErrors => {
-    const errors: FormErrors = {};
-    if (!data.title.trim()) errors.title = "Title is required";
-    if (!data.abstractText.trim()) errors.abstractText = "Abstract is required";
+    const errors: FormErrors = {}
+    if (!data.title.trim()) errors.title = "Title is required"
+    if (!data.abstractText.trim()) errors.abstractText = "Abstract is required"
     if (!data.fileUrl.trim()) {
-      errors.fileUrl = "File URL is required";
+      errors.fileUrl = "File URL is required"
     } else if (!isValidUrl(data.fileUrl)) {
-      errors.fileUrl = "Invalid URL format";
+      errors.fileUrl = "Invalid URL format"
     }
-    if (!data.categoryNames.length)
-      errors.categoryNames = "At least one category is required";
-    return errors;
-  };
+    if (!data.categoryNames.length) errors.categoryNames = "At least one category is required"
+    return errors
+  }
 
   const validateEditForm = (data: EditFormData): FormErrors => {
-    const errors: FormErrors = {};
-    if (!data.title.trim()) errors.title = "Title is required";
-    if (!data.abstractText.trim()) errors.abstractText = "Abstract is required";
+    const errors: FormErrors = {}
+    if (!data.title.trim()) errors.title = "Title is required"
+    if (!data.abstractText.trim()) errors.abstractText = "Abstract is required"
     if (!data.fileUrl.trim()) {
-      errors.fileUrl = "File URL is required";
+      errors.fileUrl = "File URL is required"
     } else if (!isValidUrl(data.fileUrl)) {
-      errors.fileUrl = "Invalid URL format";
+      errors.fileUrl = "Invalid URL format"
     }
-    if (!data.category.length)
-      errors.category = "At least one category is required";
-    return errors;
-  };
+    if (!data.category.length) errors.category = "At least one category is required"
+    return errors
+  }
 
   const isValidUrl = (url: string): boolean => {
     try {
-      new URL(url);
-      return true;
+      new URL(url)
+      return true
     } catch {
-      return false;
+      return false
     }
-  };
+  }
 
   // Filtered papers
   const filteredPapers = useMemo(() => {
-    return papers.filter((paper) => {
+    return allPapers.papers.content?.filter((paper) => {
       const matchesSearch =
         paper.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        paper.abstractText
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter === "All" || paper.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [papers, debouncedSearchTerm, statusFilter]);
+        paper.abstractText.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      const matchesStatus = statusFilter === "All" || paper.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [allPapers.papers.content, debouncedSearchTerm, statusFilter])
 
   // Column definitions
   const columns = useMemo<ColumnDef<Paper, any>[]>(
@@ -370,24 +207,18 @@ export default function PaperManagement() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm">
-                {info.getValue<string>()}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                {info.row.original.abstractText}
-              </p>
+              <p className="font-semibold text-foreground truncate text-sm">{info.getValue<string>()}</p>
+              <p className="text-xs text-muted-foreground truncate">{info.row.original.abstractText}</p>
               <div className="flex flex-wrap gap-1 mt-1">
-                {info.row.original.categoryNames
-                  .slice(0, 2)
-                  .map((category: string, idx: number) => (
-                    <Badge
-                      key={idx}
-                      variant="outline"
-                      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 text-xs px-1.5 py-0.5"
-                    >
-                      {category}
-                    </Badge>
-                  ))}
+                {info.row.original.categoryNames.slice(0, 2).map((category: string, idx: number) => (
+                  <Badge
+                    key={idx}
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 text-xs px-1.5 py-0.5"
+                  >
+                    {category}
+                  </Badge>
+                ))}
                 {info.row.original.categoryNames.length > 2 && (
                   <Badge
                     variant="outline"
@@ -402,8 +233,8 @@ export default function PaperManagement() {
         ),
       },
       {
-        accessorKey: "type",
-        header: "Type",
+        accessorKey: "categoryNames",
+        header: "Categories",
         cell: (info) => (
           <Badge
             variant="outline"
@@ -418,7 +249,7 @@ export default function PaperManagement() {
         header: "Status",
         cell: (info) => {
           const status = info.getValue<Paper["status"]>();
-          const statusConfig = {
+          const statusConfig:Record<Paper["status"], { bg: string; dot: string }> = {
             APPROVED: {
               bg: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700 dark:hover:bg-emerald-800",
               dot: "bg-emerald-500 dark:bg-emerald-400",
@@ -435,26 +266,20 @@ export default function PaperManagement() {
               bg: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-900 dark:text-red-200 dark:border-red-700 dark:hover:bg-red-800",
               dot: "bg-red-500 dark:bg-red-400",
             },
-          };
-          const config = statusConfig[status] || statusConfig["DRAFT"];
+          }
+          const config = statusConfig[status] || statusConfig["DRAFT"]
           return (
             <Badge variant="secondary" className={`${config.bg} text-xs`}>
-              <div
-                className={`w-1.5 h-1.5 rounded-full mr-1.5 ${config.dot}`}
-              />
+              <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${config.dot}`} />
               {status.replace("_", " ")}
             </Badge>
-          );
+          )
         },
       },
       {
         accessorKey: "submittedAt",
         header: "Submitted",
-        cell: (info) => (
-          <div className="text-xs text-slate-600 dark:text-slate-300">
-            {info.getValue<string>()}
-          </div>
-        ),
+        cell: (info) => <div className="text-xs text-foreground">{info.getValue<string>()}</div>,
       },
       {
         id: "actions",
@@ -465,55 +290,52 @@ export default function PaperManagement() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:bg-indigo-50 dark:hover:bg-indigo-900 bg-white dark:bg-slate-800"
+                className="h-7 w-7 p-0"
               >
                 <MoreHorizontal className="w-3.5 h-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-44 bg-white dark:bg-slate-800 border-0"
-            >
+            <DropdownMenuContent align="end" className="w-44 border-slate-400 bg-card shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
               <DropdownMenuItem
                 onClick={() => {
-                  setSelectedPaper(row.original);
-                  setViewOpen(true);
+                  setSelectedPaper(row.original)
+                  setViewOpen(true)
                 }}
-                className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900 text-xs text-slate-900 dark:text-slate-100"
+                className="cursor-pointer  hover:bg-accent text-xs text-foreground"
               >
                 <Eye className="w-3.5 h-3.5 mr-2" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  setSelectedPaper(row.original);
+                  setSelectedPaper(row.original)
                   setEditFormData({
                     title: row.original.title,
                     abstractText: row.original.abstractText,
                     fileUrl: row.original.fileUrl,
                     thumbnailUrl: row.original.thumbnailUrl,
                     category: row.original.categoryNames,
-                  });
-                  setEditOpen(true);
+                  })
+                  setEditOpen(true)
                 }}
-                className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900 text-xs text-slate-900 dark:text-slate-100"
+                className="cursor-pointer  hover:bg-accent text-xs text-foreground"
               >
                 <Edit className="w-3.5 h-3.5 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  downloadPaper(row.original);
+                  downloadPaper(row.original)
                 }}
-                className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900 text-xs text-slate-900 dark:text-slate-100"
+                className="cursor-pointer  hover:bg-accent text-xs text-foreground"
               >
                 <Download className="w-3.5 h-3.5 mr-2" />
                 Download
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  setSelectedPaper(row.original);
-                  setDeleteOpen(true);
+                  setSelectedPaper(row.original)
+                  setDeleteOpen(true)
                 }}
                 className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900 text-xs"
               >
@@ -525,8 +347,8 @@ export default function PaperManagement() {
         ),
       },
     ],
-    []
-  );
+    [],
+  )
 
   // Table instance
   const table = useReactTable({
@@ -538,13 +360,13 @@ export default function PaperManagement() {
     state: { sorting, pagination },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
-  });
+  })
 
   const handleAddPaper = () => {
-    const errors = validateCreateForm(createFormData);
+    const errors = validateCreateForm(createFormData)
     if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
+      setFormErrors(errors)
+      return
     }
     const newPaper: Paper = {
       uuid: Date.now().toString(),
@@ -553,7 +375,6 @@ export default function PaperManagement() {
       fileUrl: createFormData.fileUrl,
       thumbnailUrl: "",
       categoryNames: createFormData.categoryNames,
-      type: "Research Paper",
       status: "DRAFT",
       authorUuid: "current-user-uuid",
       isApproved: false,
@@ -561,24 +382,25 @@ export default function PaperManagement() {
       createdAt: new Date().toISOString().split("T")[0],
       isPublished: false,
       publishedAt: null,
-    };
-    setPapers([...papers, newPaper]);
+      downloads: 0,
+    }
+    setPapers([...papers, newPaper])
     setCreateFormData({
       title: "",
       abstractText: "",
       fileUrl: "",
       categoryNames: [],
-    });
-    setFormErrors({});
-    setAddOpen(false);
-  };
+    })
+    setFormErrors({})
+    setAddOpen(false)
+  }
 
   const handleEditPaper = () => {
-    if (!selectedPaper) return;
-    const errors = validateEditForm(editFormData);
+    if (!selectedPaper) return
+    const errors = validateEditForm(editFormData)
     if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
+      setFormErrors(errors)
+      return
     }
     setPapers(
       papers.map((paper) =>
@@ -591,71 +413,63 @@ export default function PaperManagement() {
               thumbnailUrl: editFormData.thumbnailUrl,
               categoryNames: editFormData.category,
             }
-          : paper
-      )
-    );
-    setFormErrors({});
-    setEditOpen(false);
-  };
+          : paper,
+      ),
+    )
+    setFormErrors({})
+    setEditOpen(false)
+  }
 
   const handleDeletePaper = () => {
-    if (!selectedPaper) return;
-    setPapers(papers.filter((paper) => paper.uuid !== selectedPaper.uuid));
-    setDeleteOpen(false);
-  };
+    if (!selectedPaper) return
+    setPapers(papers.filter((paper) => paper.uuid !== selectedPaper.uuid))
+    setDeleteOpen(false)
+  }
 
   const downloadPaper = async (paper: Paper) => {
     try {
-      const response = await fetch(paper.fileUrl);
-      if (!response.ok) throw new Error("Failed to access file");
-      window.open(paper.fileUrl, "_blank");
+      const response = await fetch(paper.fileUrl)
+      if (!response.ok) throw new Error("Failed to access file")
+      window.open(paper.fileUrl, "_blank")
     } catch (error) {
-      alert("Error downloading file: " + (error as Error).message);
+      alert("Error downloading file: " + (error as Error).message)
     }
-  };
+  }
 
-  const handleCreateCategoryChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleCreateCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const categories = e.target.value
       .split(",")
       .map((cat) => cat.trim())
-      .filter((cat) => cat);
-    setCreateFormData({ ...createFormData, categoryNames: categories });
+      .filter((cat) => cat)
+    setCreateFormData({ ...createFormData, categoryNames: categories })
     if (categories.length > 0) {
-      setFormErrors((prev) => ({ ...prev, categoryNames: undefined }));
+      setFormErrors((prev) => ({ ...prev, categoryNames: undefined }))
     }
-  };
+  }
 
   const handleEditCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const categories = e.target.value
       .split(",")
       .map((cat) => cat.trim())
-      .filter((cat) => cat);
-    setEditFormData({ ...editFormData, category: categories });
+      .filter((cat) => cat)
+    setEditFormData({ ...editFormData, category: categories })
     if (categories.length > 0) {
-      setFormErrors((prev) => ({ ...prev, category: undefined }));
+      setFormErrors((prev) => ({ ...prev, category: undefined }))
     }
-  };
-
-  const regenerateFakeData = () => {
-    setPapers(generateFakePapers(25));
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto p-4 max-w-7xl">
-        <div className="bg-white  rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900 dark:to-blue-900 border-b border-slate-200 dark:border-slate-700 p-6">
+    <div className="border-0">
+      <div className=" mx-auto p-4">
+        <div className="bg-card rounded-xl shadow-sm border-0 overflow-hidden">
+          <div className="bg-card p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-indigo-100 dark:bg-indigo-700 rounded-lg">
                 <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-200" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                  Paper Management
-                </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
+                <h2 className="text-xl font-bold text-foreground">Paper Management</h2>
+                <p className="text-sm text-muted-foreground">
                   Manage and track research papers ({papers.length} papers)
                 </p>
               </div>
@@ -663,40 +477,30 @@ export default function PaperManagement() {
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="relative flex-1 max-w-md w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search papers by title or abstract..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                  className="pl-10 border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground shadow-sm"
                   aria-label="Search papers"
                 />
               </div>
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={regenerateFakeData}
-                  className="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100"
-                >
-                  Regenerate Data
-                </Button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                    >
+                    <Button variant="outline" className="border-slate-400 hover:bg-muted bg-card text-foreground">
                       <Filter className="w-4 h-4 mr-2" />
                       {statusFilter} <ChevronDown className="ml-2 w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-40 bg-white dark:bg-slate-800 border-0">
+                  <DropdownMenuContent className="w-40 bg-card border-0  border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
                     {statusOptions.map((status) => (
                       <DropdownMenuItem
                         key={status}
                         onClick={() => setStatusFilter(status)}
-                        className="cursor-pointer text-slate-900 dark:text-slate-100 hover:bg-indigo-50 dark:hover:bg-indigo-900"
+                        className="cursor-pointer text-foreground hover:bg-muted"
                       >
                         {status}
                       </DropdownMenuItem>
@@ -707,41 +511,35 @@ export default function PaperManagement() {
                 <Dialog open={addOpen} onOpenChange={setAddOpen}>
                   <DialogTrigger asChild>
                     <Button
-                      className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-sm"
+                      className="bg-secondary text-white shadow-sm"
                       aria-label="Add new paper"
                     >
                       <Plus className="w-4 h-4 mr-2" /> Add Paper
                     </Button>
                   </DialogTrigger>
-                  <DialogContent
-                    className="sm:max-w-lg bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                    ref={dialogRef}
-                    tabIndex={-1}
-                  >
+                  <DialogContent className="sm:max-w-lg bg-card border-0" ref={dialogRef} tabIndex={-1}>
                     <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                      <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                         <Plus className="w-5 h-5" />
                         Add New Paper
                       </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-5 py-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Title *
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">Title *</Label>
                         <Input
                           value={createFormData.title}
                           onChange={(e) => {
                             setCreateFormData({
                               ...createFormData,
                               title: e.target.value,
-                            });
+                            })
                             setFormErrors((prev) => ({
                               ...prev,
                               title: undefined,
-                            }));
+                            }))
                           }}
-                          className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                          className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground shadow-sm"
                           placeholder="Enter paper title"
                           aria-required="true"
                         />
@@ -753,22 +551,20 @@ export default function PaperManagement() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Abstract *
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">Abstract *</Label>
                         <Textarea
                           value={createFormData.abstractText}
                           onChange={(e) => {
                             setCreateFormData({
                               ...createFormData,
                               abstractText: e.target.value,
-                            });
+                            })
                             setFormErrors((prev) => ({
                               ...prev,
                               abstractText: undefined,
-                            }));
+                            }))
                           }}
-                          className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                          className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground shadow-sm"
                           rows={4}
                           placeholder="Enter paper abstract"
                           aria-required="true"
@@ -781,9 +577,7 @@ export default function PaperManagement() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          File URL *
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">File URL *</Label>
                         <Input
                           type="url"
                           value={createFormData.fileUrl}
@@ -791,13 +585,13 @@ export default function PaperManagement() {
                             setCreateFormData({
                               ...createFormData,
                               fileUrl: e.target.value,
-                            });
+                            })
                             setFormErrors((prev) => ({
                               ...prev,
                               fileUrl: undefined,
-                            }));
+                            }))
                           }}
-                          className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                          className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground shadow-sm"
                           placeholder="https://example.com/paper.pdf"
                           aria-required="true"
                         />
@@ -809,14 +603,12 @@ export default function PaperManagement() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Categories *
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">Categories *</Label>
                         <Input
                           value={createFormData.categoryNames.join(", ")}
                           onChange={handleCreateCategoryChange}
                           placeholder="e.g. Machine Learning, AI, Data Science"
-                          className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                          className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground shadow-sm"
                           aria-required="true"
                         />
                         {formErrors.categoryNames && (
@@ -825,19 +617,17 @@ export default function PaperManagement() {
                             {formErrors.categoryNames}
                           </p>
                         )}
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Separate multiple categories with commas
-                        </p>
+                        <p className="text-xs text-muted-foreground">Separate multiple categories with commas</p>
                       </div>
                     </div>
                     <DialogFooter className="gap-2">
                       <Button
                         variant="outline"
                         onClick={() => {
-                          setAddOpen(false);
-                          setFormErrors({});
+                          setAddOpen(false)
+                          setFormErrors({})
                         }}
-                        className="border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100"
+                        className="border-0 text-foreground"
                       >
                         Cancel
                       </Button>
@@ -858,38 +648,31 @@ export default function PaperManagement() {
           <div className="overflow-hidden">
             <div className="w-full">
               <table className="w-full table-fixed">
-                <thead className="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-600">
+                <thead className="bg-muted/50 backdrop-blur-sm border-0">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}
                           colSpan={header.colSpan}
-                          className={`px-3 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider cursor-pointer select-none hover:bg-slate-100/80 dark:hover:bg-slate-600/80 transition-colors ${
+                          className={`px-3 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted transition-colors ${
                             index === 0
                               ? "w-2/5"
                               : index === 1
-                              ? "w-1/6"
-                              : index === 2
-                              ? "w-1/6"
-                              : index === 3
-                              ? "w-1/6"
-                              : "w-16"
+                                ? "w-1/6"
+                                : index === 2
+                                  ? "w-1/6"
+                                  : index === 3
+                                    ? "w-1/6"
+                                    : "w-16"
                           }`}
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           <div className="flex items-center gap-2">
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            {flexRender(header.column.columnDef.header, header.getContext())}
                             {header.column.getIsSorted() && (
                               <ArrowUp
-                                className={`w-3 h-3 ${
-                                  header.column.getIsSorted() === "desc"
-                                    ? "rotate-180"
-                                    : ""
-                                }`}
+                                className={`w-3 h-3 ${header.column.getIsSorted() === "desc" ? "rotate-180" : ""}`}
                               />
                             )}
                           </div>
@@ -898,26 +681,18 @@ export default function PaperManagement() {
                     </tr>
                   ))}
                 </thead>
-                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
+                <tbody className="bg-card divide-y-0">
                   {table.getRowModel().rows.map((row, index) => (
                     <tr
                       key={row.id}
-                      className={`hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors ${
-                        index % 2 === 0
-                          ? "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                          : "p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                      }`}
+                      className={`hover:bg-muted/50 transition-colors ${index % 2 === 0 ? "bg-card" : "bg-card"}`}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <td
                           key={cell.id}
-                          className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                          style={{ color: "var(--table-foreground)" }}
+                          className="p-6 bg-card border-0 shadow-sm hover:shadow-md transition-all duration-200 hover:bg-muted/30 backdrop-blur-sm text-foreground"
                         >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
                     </tr>
@@ -927,7 +702,7 @@ export default function PaperManagement() {
             </div>
           </div>
 
-          <div className="bg-slate-50/50 dark:bg-slate-700/50 backdrop-blur-sm border-t border-slate-200 dark:border-slate-600 px-6 py-4">
+          <div className="bg-muted/30 backdrop-blur-sm border-0 px-6 py-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Button
@@ -935,7 +710,7 @@ export default function PaperManagement() {
                   size="sm"
                   onClick={() => table.setPageIndex(0)}
                   disabled={!table.getCanPreviousPage()}
-                  className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   aria-label="Go to first page"
                 >
                   First
@@ -945,7 +720,7 @@ export default function PaperManagement() {
                   size="sm"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   aria-label="Go to previous page"
                 >
                   Previous
@@ -955,7 +730,7 @@ export default function PaperManagement() {
                   size="sm"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   aria-label="Go to next page"
                 >
                   Next
@@ -965,23 +740,18 @@ export default function PaperManagement() {
                   size="sm"
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                   disabled={!table.getCanNextPage()}
-                  className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                   aria-label="Go to last page"
                 >
                   Last
                 </Button>
               </div>
               <div className="flex items-center gap-4 border-0">
-                <span className="text-sm text-slate-600 dark:text-slate-300">
-                  Showing{" "}
-                  {table.getState().pagination.pageIndex *
-                    table.getState().pagination.pageSize +
-                    1}{" "}
-                  to{" "}
+                <span className="text-sm text-muted-foreground">
+                  Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
                   {Math.min(
-                    (table.getState().pagination.pageIndex + 1) *
-                      table.getState().pagination.pageSize,
-                    filteredPapers.length
+                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                    filteredPapers.length,
                   )}{" "}
                   of {filteredPapers.length} Papers
                 </span>
@@ -989,16 +759,12 @@ export default function PaperManagement() {
                   value={table.getState().pagination.pageSize.toString()}
                   onValueChange={(value) => table.setPageSize(Number(value))}
                 >
-                  <SelectTrigger className="w-32 h-8 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                  <SelectTrigger className="w-32 h-8 border-0 bg-card text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-slate-800 border-0">
+                  <SelectContent className="bg-card border-0">
                     {[10, 20, 30].map((size) => (
-                      <SelectItem
-                        className="text-slate-900 dark:text-slate-100 hover:bg-indigo-50 dark:hover:bg-indigo-900"
-                        key={size}
-                        value={size.toString()}
-                      >
+                      <SelectItem className="text-foreground hover:bg-muted" key={size} value={size.toString()}>
                         Show {size}
                       </SelectItem>
                     ))}
@@ -1010,12 +776,12 @@ export default function PaperManagement() {
 
           <Dialog open={viewOpen} onOpenChange={setViewOpen}>
             <DialogContent
-              className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+              className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-0"
               ref={dialogRef}
               tabIndex={-1}
             >
               <DialogHeader className="pb-4">
-                <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
+                <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-lg">
                     <Eye className="w-6 h-6 text-white" />
                   </div>
@@ -1024,15 +790,13 @@ export default function PaperManagement() {
               </DialogHeader>
               {selectedPaper && (
                 <div className="space-y-8 py-2">
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900 border-0 shadow-sm">
                     <div className="absolute inset-0 bg-grid-slate-100 dark:bg-grid-slate-700 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] opacity-25"></div>
                     <div className="relative p-8">
                       <div className="flex flex-col lg:flex-row items-start gap-6">
                         <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-800 shadow-lg flex-shrink-0">
                           <AvatarImage
-                            src={
-                              selectedPaper.thumbnailUrl || "/placeholder.svg"
-                            }
+                            src={selectedPaper.thumbnailUrl || "/placeholder.svg"}
                             alt={`Thumbnail for ${selectedPaper.title}`}
                             className="object-cover"
                           />
@@ -1042,25 +806,23 @@ export default function PaperManagement() {
                         </Avatar>
                         <div className="flex-1 min-w-0 space-y-4">
                           <div>
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2 leading-tight">
+                            <h3 className="text-2xl font-bold text-foreground mb-2 leading-tight">
                               {selectedPaper.title}
                             </h3>
-                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
+                            <p className="text-muted-foreground leading-relaxed text-base">
                               {selectedPaper.abstractText}
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {selectedPaper.categoryNames.map(
-                              (category, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="outline"
-                                  className="bg-white/80 dark:bg-slate-700/80 text-blue-700 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900 px-3 py-1 text-sm font-medium"
-                                >
-                                  {category}
-                                </Badge>
-                              )
-                            )}
+                            {selectedPaper.categoryNames.map((category, idx) => (
+                              <Badge
+                                key={idx}
+                                variant="outline"
+                                className="bg-white/80 dark:bg-slate-700/80 text-blue-700 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900 px-3 py-1 text-sm font-medium"
+                              >
+                                {category}
+                              </Badge>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -1068,31 +830,27 @@ export default function PaperManagement() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
                           <FileText className="w-5 h-5 text-purple-600 dark:text-purple-200" />
                         </div>
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Paper Type
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">Paper Type</Label>
                       </div>
                       <Badge
                         variant="outline"
                         className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-700 text-sm px-4 py-2 font-medium"
                       >
-                        {selectedPaper.type}
+                        {selectedPaper.categoryNames[0] || "Uncategorized"}
                       </Badge>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-lg">
                           <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-200" />
                         </div>
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Status
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">Status</Label>
                       </div>
                       <Badge
                         variant="secondary"
@@ -1100,10 +858,10 @@ export default function PaperManagement() {
                           selectedPaper.status === "APPROVED"
                             ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700"
                             : selectedPaper.status === "UNDER_REVIEW"
-                            ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700"
-                            : selectedPaper.status === "DRAFT"
-                            ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
-                            : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
+                              ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700"
+                              : selectedPaper.status === "DRAFT"
+                                ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
+                                : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
                         }`}
                       >
                         <div
@@ -1111,66 +869,48 @@ export default function PaperManagement() {
                             selectedPaper.status === "APPROVED"
                               ? "bg-emerald-500 dark:bg-emerald-400"
                               : selectedPaper.status === "UNDER_REVIEW"
-                              ? "bg-amber-500 dark:bg-amber-400"
-                              : selectedPaper.status === "DRAFT"
-                              ? "bg-slate-500 dark:bg-slate-400"
-                              : "bg-red-500 dark:bg-red-400"
+                                ? "bg-amber-500 dark:bg-amber-400"
+                                : selectedPaper.status === "DRAFT"
+                                  ? "bg-slate-500 dark:bg-slate-400"
+                                  : "bg-red-500 dark:bg-red-400"
                           }`}
                         />
                         {selectedPaper.status.replace("_", " ")}
                       </Badge>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                           <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-200" />
                         </div>
-                        <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Submitted Date
-                        </Label>
+                        <Label className="text-sm font-semibold text-muted-foreground">Submitted Date</Label>
                       </div>
-                      <p className="text-slate-900 dark:text-slate-100 font-semibold text-lg">
-                        {selectedPaper.submittedAt}
-                      </p>
+                      <p className="text-foreground font-semibold text-lg">{selectedPaper.submittedAt}</p>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                    <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                  <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900 rounded-xl border-0 p-6">
+                    <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                       <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-200" />
                       Additional Information
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-300">
-                          Published:
-                        </span>
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
-                          {selectedPaper.isPublished ? "Yes" : "No"}
-                        </span>
+                        <span className="text-muted-foreground">Published:</span>
+                        <span className="font-medium text-foreground">{selectedPaper.isPublished ? "Yes" : "No"}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-300">
-                          Approved:
-                        </span>
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
-                          {selectedPaper.isApproved ? "Yes" : "No"}
-                        </span>
+                        <span className="text-muted-foreground">Approved:</span>
+                        <span className="font-medium text-foreground">{selectedPaper.isApproved ? "Yes" : "No"}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-300">
-                          Created:
-                        </span>
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
-                          {selectedPaper.createdAt}
-                        </span>
+                        <span className="text-muted-foreground">Created:</span>
+                        <span className="font-medium text-foreground">{selectedPaper.createdAt}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-300">
-                          Published Date:
-                        </span>
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
+                        <span className="text-muted-foreground">Published Date:</span>
+                        <span className="font-medium text-foreground">
                           {selectedPaper.publishedAt || "Not published"}
                         </span>
                       </div>
@@ -1178,11 +918,11 @@ export default function PaperManagement() {
                   </div>
                 </div>
               )}
-              <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700">
+              <DialogFooter className="pt-6 border-0">
                 <Button
                   variant="outline"
                   onClick={() => setViewOpen(false)}
-                  className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 px-6"
+                  className="border-0 hover:bg-muted text-foreground px-6"
                   aria-label="Close"
                 >
                   Close
@@ -1202,31 +942,29 @@ export default function PaperManagement() {
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DialogContent
-              className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+              className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-0"
               ref={dialogRef}
               tabIndex={-1}
             >
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   <Edit className="w-5 h-5 text-indigo-600 dark:text-indigo-200" />
                   Edit Paper
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-5 py-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Title *
-                  </Label>
+                  <Label className="text-sm font-semibold text-muted-foreground">Title *</Label>
                   <Input
                     value={editFormData.title}
                     onChange={(e) => {
                       setEditFormData({
                         ...editFormData,
                         title: e.target.value,
-                      });
-                      setFormErrors((prev) => ({ ...prev, title: undefined }));
+                      })
+                      setFormErrors((prev) => ({ ...prev, title: undefined }))
                     }}
-                    className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg"
+                    className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground rounded-lg"
                     aria-required="true"
                   />
                   {formErrors.title && (
@@ -1237,22 +975,20 @@ export default function PaperManagement() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Abstract *
-                  </Label>
+                  <Label className="text-sm font-semibold text-muted-foreground">Abstract *</Label>
                   <Textarea
                     value={editFormData.abstractText}
                     onChange={(e) => {
                       setEditFormData({
                         ...editFormData,
                         abstractText: e.target.value,
-                      });
+                      })
                       setFormErrors((prev) => ({
                         ...prev,
                         abstractText: undefined,
-                      }));
+                      }))
                     }}
-                    className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg"
+                    className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground rounded-lg"
                     rows={4}
                     aria-required="true"
                   />
@@ -1265,9 +1001,7 @@ export default function PaperManagement() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      File URL *
-                    </Label>
+                    <Label className="text-sm font-semibold text-muted-foreground">File URL *</Label>
                     <Input
                       type="url"
                       value={editFormData.fileUrl}
@@ -1275,13 +1009,13 @@ export default function PaperManagement() {
                         setEditFormData({
                           ...editFormData,
                           fileUrl: e.target.value,
-                        });
+                        })
                         setFormErrors((prev) => ({
                           ...prev,
                           fileUrl: undefined,
-                        }));
+                        }))
                       }}
-                      className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground rounded-lg"
                       aria-required="true"
                     />
                     {formErrors.fileUrl && (
@@ -1292,9 +1026,7 @@ export default function PaperManagement() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Thumbnail URL
-                    </Label>
+                    <Label className="text-sm font-semibold text-muted-foreground">Thumbnail URL</Label>
                     <Input
                       type="url"
                       value={editFormData.thumbnailUrl}
@@ -1304,19 +1036,17 @@ export default function PaperManagement() {
                           thumbnailUrl: e.target.value,
                         })
                       }
-                      className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground rounded-lg"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Categories *
-                  </Label>
+                  <Label className="text-sm font-semibold text-muted-foreground">Categories *</Label>
                   <Input
                     value={editFormData.category.join(", ")}
                     onChange={handleEditCategoryChange}
                     placeholder="e.g. Machine Learning, AI, Data Science"
-                    className="border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg"
+                    className="border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground rounded-lg"
                     aria-required="true"
                   />
                   {formErrors.category && (
@@ -1325,19 +1055,17 @@ export default function PaperManagement() {
                       {formErrors.category}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Separate multiple categories with commas
-                  </p>
+                  <p className="text-xs text-muted-foreground">Separate multiple categories with commas</p>
                 </div>
               </div>
               <DialogFooter className="gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setEditOpen(false);
-                    setFormErrors({});
+                    setEditOpen(false)
+                    setFormErrors({})
                   }}
-                  className="border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100"
+                  className="border-0 text-foreground"
                 >
                   Cancel
                 </Button>
@@ -1354,12 +1082,12 @@ export default function PaperManagement() {
 
           <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <DialogContent
-              className="sm:max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+              className="sm:max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto bg-card border-0"
               ref={dialogRef}
               tabIndex={-1}
             >
               <DialogHeader className="pb-4">
-                <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
+                <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                   <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
                     <Trash2 className="w-5 h-5 text-red-600 dark:text-red-200" />
                   </div>
@@ -1368,31 +1096,25 @@ export default function PaperManagement() {
               </DialogHeader>
               {selectedPaper && (
                 <div className="space-y-6 py-2">
-                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900 dark:to-orange-900 border border-red-200 dark:border-red-700 p-6">
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900 dark:to-orange-900 border-0 p-6">
                     <div className="absolute inset-0 bg-red-100 dark:bg-red-800 opacity-20"></div>
                     <div className="relative flex items-start gap-4">
                       <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg flex-shrink-0">
                         <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-200" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-red-900 dark:text-red-200 mb-2">
-                          Confirm Deletion
-                        </h4>
+                        <h4 className="font-semibold text-red-900 dark:text-red-200 mb-2">Confirm Deletion</h4>
                         <p className="text-sm text-red-800 dark:text-red-300 leading-relaxed">
-                          Are you sure you want to delete{" "}
-                          <span className="font-semibold">
-                            {selectedPaper.title}
-                          </span>
-                          ? This action cannot be undone and will permanently
-                          remove the paper from the system.
+                          Are you sure you want to delete <span className="font-semibold">{selectedPaper.title}</span>?
+                          This action cannot be undone and will permanently remove the paper from the system.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+                  <div className="bg-card rounded-xl border-0 p-6 shadow-sm">
                     <div className="flex items-start gap-4">
-                      <Avatar className="h-16 w-16 rounded-xl border-2 border-slate-200 dark:border-slate-700 flex-shrink-0">
+                      <Avatar className="h-16 w-16 rounded-xl border-2 border-muted flex-shrink-0">
                         <AvatarImage
                           src={selectedPaper.thumbnailUrl || "/placeholder.svg"}
                           alt={`Thumbnail for ${selectedPaper.title}`}
@@ -1403,10 +1125,8 @@ export default function PaperManagement() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0 space-y-2">
-                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg leading-tight">
-                          {selectedPaper.title}
-                        </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">
+                        <h3 className="font-bold text-foreground text-lg leading-tight">{selectedPaper.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
                           {selectedPaper.abstractText}
                         </p>
                         <div className="flex flex-wrap gap-2 pt-2">
@@ -1414,7 +1134,7 @@ export default function PaperManagement() {
                             variant="outline"
                             className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-700 text-xs"
                           >
-                            {selectedPaper.type}
+                            {selectedPaper.categoryNames[0] || "Uncategorized"}
                           </Badge>
                           <Badge
                             variant="outline"
@@ -1422,10 +1142,10 @@ export default function PaperManagement() {
                               selectedPaper.status === "APPROVED"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700"
                                 : selectedPaper.status === "UNDER_REVIEW"
-                                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700"
-                                : selectedPaper.status === "DRAFT"
-                                ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
-                                : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
+                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700"
+                                  : selectedPaper.status === "DRAFT"
+                                    ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
+                                    : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
                             }`}
                           >
                             {selectedPaper.status.replace("_", " ")}
@@ -1436,11 +1156,11 @@ export default function PaperManagement() {
                   </div>
                 </div>
               )}
-              <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700 gap-3">
+              <DialogFooter className="pt-6 border-0 gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setDeleteOpen(false)}
-                  className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 flex-1 sm:flex-none"
+                  className="border-0 hover:bg-muted text-foreground flex-1 sm:flex-none"
                 >
                   Cancel
                 </Button>
@@ -1457,5 +1177,5 @@ export default function PaperManagement() {
         </div>
       </div>
     </div>
-  );
+  )
 }

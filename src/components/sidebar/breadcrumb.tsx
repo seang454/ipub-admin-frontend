@@ -18,7 +18,7 @@ export default function Breadcrumb() {
   const segments = pathname.split("/").filter(Boolean)
 
   return (
-    <header className="flex items-center justify-between p-4 bg-gradient-to-r from-background via-card to-background border-b border-border/50 backdrop-blur-sm">
+    <header className="flex items-center justify-between p-4 bg-card border-b border-border/50 backdrop-blur-sm sticky top-0 z-20">
       <div className="flex items-center space-x-4">
         <SidebarTrigger className="hover:bg-muted/50 transition-colors duration-200" />
 
@@ -43,9 +43,9 @@ export default function Breadcrumb() {
                 <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
                 <Link
                   href={href}
-                  className={`px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  className={`px-3 py-2 rounded-lg font-medium transition-all duration-200 text-dynamic ${
                     isLast
-                      ? "text-primary bg-primary/10 border border-primary/20"
+                      ? "bg-primary/10 border border-primary/20"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 >

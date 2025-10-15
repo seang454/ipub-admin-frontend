@@ -1,22 +1,48 @@
-"use client"
+"use client";
 
-import { TrendingUp, BarChart3, Users, BookOpen, Award } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
+import { TrendingUp, BarChart3, Users, BookOpen, Award } from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from "recharts";
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import type { DashboardStatsProps } from "./dashbaord-stats"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import type { DashboardStatsProps } from "./dashbaord-stats";
+import { useMemo } from "react";
 
-export const description = "A modern area chart with enhanced styling"
+export const description = "A modern area chart with enhanced styling";
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80, mentor: 120, publication: 90 },
-  { month: "February", desktop: 305, mobile: 200, mentor: 150, publication: 110 },
+  {
+    month: "February",
+    desktop: 305,
+    mobile: 200,
+    mentor: 150,
+    publication: 110,
+  },
   { month: "March", desktop: 237, mobile: 120, mentor: 130, publication: 100 },
   { month: "April", desktop: 73, mobile: 190, mentor: 90, publication: 70 },
   { month: "May", desktop: 209, mobile: 130, mentor: 140, publication: 120 },
   { month: "June", desktop: 214, mobile: 140, mentor: 160, publication: 130 },
-]
+];
 
 const chartConfig = {
   desktop: {
@@ -39,17 +65,58 @@ const chartConfig = {
     color: "hsl(340, 70%, 65%)", // Lighter pink
     icon: BookOpen,
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-export function ChartAreaStackedExpand({ papers, user, students, mentors }: DashboardStatsProps) {
+export function ChartAreaStackedExpand({
+  papers,
+  user,
+  students,
+  mentors,
+}: DashboardStatsProps) {
+  type CombinedData = { month: string; desktop: number };
+
+  console.log("papers Expand :>> ", papers);
+  console.log("user Expand :>> ", user);
+  console.log("students Expand :>> ", students);
+  console.log("mentors expand :>> ", mentors);
+
+  const combinedData: CombinedData[] = useMemo(() => {
+    if (!mentors) return [];
+
+    // First 6 months
+    const monthNames = Array.from({ length: 6 }, (_, i) =>
+      new Date(2024, i, 1).toLocaleString("default", { month: "long" })
+    );
+
+    const monthCounts = mentors.reduce<Record<string, number>>(
+      (acc, mentor) => {
+        const month = new Date(mentor.createDate).toLocaleString("default", {
+          month: "long",
+        });
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Map each month individually
+    return monthNames.map((month) => ({
+      month,
+      desktop: monthCounts[month] || 0,
+    }));
+  }, [mentors]);
+
   return (
     <Card className="bg-gradient-to-br from-card via-card/80 to-muted/20 border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-primary">Platform Analytics Overview</CardTitle>
+            <CardTitle className="text-2xl font-bold text-primary">
+              Platform Analytics Overview
+            </CardTitle>
             <CardDescription className="text-muted-foreground text-base">
-              Comprehensive metrics across all platform channels for the last 6 months
+              Comprehensive metrics across all platform channels for the last 6
+              months
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
@@ -60,14 +127,22 @@ export function ChartAreaStackedExpand({ papers, user, students, mentors }: Dash
 
         <div className="grid grid-cols-1  sm:grid-cols-2  gap-3 mt-4">
           {Object.entries(chartConfig).map(([key, config]) => {
-            const Icon = config.icon
+            const Icon = config.icon;
             return (
-              <div key={key} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border/30">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.color }} />
+              <div
+                key={key}
+                className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border/30"
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: config.color }}
+                />
                 <Icon className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">{config.label}</span>
+                <span className="text-sm font-medium text-foreground">
+                  {config.label}
+                </span>
               </div>
-            )
+            );
           })}
         </div>
       </CardHeader>
@@ -84,7 +159,12 @@ export function ChartAreaStackedExpand({ papers, user, students, mentors }: Dash
                 bottom: 20,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.3} vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                strokeOpacity={0.3}
+                vertical={false}
+              />
 
               <XAxis
                 dataKey="month"
@@ -103,7 +183,11 @@ export function ChartAreaStackedExpand({ papers, user, students, mentors }: Dash
               />
 
               <ChartTooltip
-                cursor={{ stroke: "var(--accent)", strokeWidth: 2, fillOpacity: 0.5 }} // Changed strokeOpacity to fillOpacity
+                cursor={{
+                  stroke: "var(--accent)",
+                  strokeWidth: 2,
+                  fillOpacity: 0.5,
+                }} // Changed strokeOpacity to fillOpacity
                 content={
                   <ChartTooltipContent
                     className="bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg rounded-lg"
@@ -160,7 +244,9 @@ export function ChartAreaStackedExpand({ papers, user, students, mentors }: Dash
               <TrendingUp className="h-4 w-4 text-accent" />
               <span className="text-sm font-semibold text-accent">+5.2%</span>
             </div>
-            <div className="text-sm text-muted-foreground">Growth compared to previous period</div>
+            <div className="text-sm text-muted-foreground">
+              Growth compared to previous period
+            </div>
           </div>
           <div className="text-sm font-medium text-foreground bg-muted/30 px-3 py-1.5 rounded-full">
             January - June 2024
@@ -168,5 +254,5 @@ export function ChartAreaStackedExpand({ papers, user, students, mentors }: Dash
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

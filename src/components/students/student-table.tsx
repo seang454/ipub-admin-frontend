@@ -45,8 +45,10 @@ import {
   getPaginationRowModel,
   useReactTable,
   type SortingState,
+  Row,
 } from "@tanstack/react-table";
 import { generateFakeStudents, type Student } from "./data";
+import { User } from "@/types/userType/userType";
 
 const courseOptions = [
   "BS Computer Science",
@@ -59,18 +61,26 @@ const courseOptions = [
 
 const roleOptions = ["Student", "User", "Mentor"] as const;
 
-export function StudentTable() {
-  const mockStudents = generateFakeStudents(50).map((s) => ({
-    ...s,
-    role: "Student" as (typeof roleOptions)[number],
-  }));
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+export function StudentTable({
+  allStudents,
+}: {
+  allStudents: User[] | undefined;
+}) {
+  const roleOptions = [
+    "Student",
+    "Mentor",
+    "User",
+    "Admin",
+    "Advisor",
+  ] as const;
+
+  const [students, setStudents] = useState<User[]>(allStudents || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Active" | "Inactive"
   >("All");
 
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -104,14 +114,46 @@ export function StudentTable() {
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
       const matchesSearch =
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "All" || s.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [students, searchTerm, statusFilter]);
 
-  const columns = useMemo<ColumnDef<Student, any>[]>(
+  const handleEditClick = (row: Row<User>) => {
+    const user = row.original; // Type-safe access to original row data
+
+    setSelectedStudent(user);
+    setEditFormData({
+      userName: user.firstName.toLowerCase().replace(/\s+/g, ""),
+      gender: user.gender || "",
+      email: user.email,
+      fullName: user.fullName,
+      firstName: user.firstName.split(" ")[0] || "", // First part of full name
+      lastName: user.firstName.split(" ").slice(1).join(" ") || "", // Remaining part of full name
+      status: user.status === "Active", // Handle active status
+      bio: user.bio || "",
+      address: user.address || "",
+      contactNumber: user.contactNumber || "",
+      telegramId: user.telegramId || "",
+      course: user.isStudent ? "Computer Science" : "Other", // Example condition for course
+      role: user.isAdmin ? "Admin" : user.isStudent ? "Student" : "Advisor", // Example role mapping
+    });
+    setEditOpen(true); // Open edit modal
+  };
+
+  const handleViewClick = (row: Row<User>) => {
+    setSelectedStudent(row.original); // Set selected student
+    setViewOpen(true); // Open view details modal
+  };
+
+  const handleDeleteClick = (row: Row<User>) => {
+    setSelectedStudent(row.original); // Set selected student
+    setDeleteOpen(true); // Open delete confirmation
+  };
+
+  const columns = useMemo<ColumnDef<User, any>[]>(
     () => [
       {
         accessorKey: "name",
@@ -120,7 +162,7 @@ export function StudentTable() {
           <div className="flex items-center gap-4">
             <Avatar className="w-12 h-12 ring-2 ring-slate-100 shadow-sm">
               <AvatarImage
-                src={info.row.original.avatar || "/placeholder.svg"}
+                src={info.row.original.imageUrl || "/placeholder.svg"}
               />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
                 {info
@@ -206,7 +248,7 @@ export function StudentTable() {
       {
         id: "actions",
         header: "Actions",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<User> }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -217,49 +259,25 @@ export function StudentTable() {
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-48 bg-white border-0">
               <DropdownMenuItem
-                onClick={() => {
-                  setSelectedStudent(row.original);
-                  setViewOpen(true);
-                }}
+                onClick={() => handleViewClick(row)}
                 className="cursor-pointer hover:bg-indigo-50"
               >
                 View Details
               </DropdownMenuItem>
+
               <DropdownMenuItem
-                onClick={() => {
-                  setSelectedStudent(row.original);
-                  setEditFormData({
-                    userName: row.original.name
-                      .toLowerCase()
-                      .replace(/\s+/g, ""),
-                    gender: "",
-                    email: row.original.email,
-                    fullName: row.original.name,
-                    firstName: row.original.name.split(" ")[0] || "",
-                    lastName:
-                      row.original.name.split(" ").slice(1).join(" ") || "",
-                    status: row.original.status === "Active",
-                    bio: "",
-                    address: "",
-                    contactNumber: "",
-                    telegramId: "",
-                    course: row.original.course,
-                    role: row.original.role,
-                  });
-                  setEditOpen(true);
-                }}
-                className="cursor-pointer hover:bg-indigo-50"
+                onClick={() => handleEditClick(row)}
+                className="cursor-pointer hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 Edit
               </DropdownMenuItem>
+
               <DropdownMenuItem
-                onClick={() => {
-                  setSelectedStudent(row.original);
-                  setDeleteOpen(true);
-                }}
-                className="text-red-600 cursor-pointer focus:text-red-600 hover:bg-red-50"
+                onClick={() => handleDeleteClick(row)}
+                className="text-red-600 cursor-pointer hover:bg-red-50 focus:text-red-600"
               >
                 Delete
               </DropdownMenuItem>
@@ -295,7 +313,9 @@ export function StudentTable() {
       role: "Student",
       lastActive: new Date().toISOString().split("T")[0],
     };
-    setStudents([...students, newStudent]);
+
+    // setStudents((prevStudents) => [...prevStudents, newStudent]);
+
     setCreateFormData({
       username: "",
       email: "",
@@ -304,32 +324,39 @@ export function StudentTable() {
       password: "",
       confirmedPassword: "",
     });
-    setAddOpen(false);
+
+    setAddOpen(false); // Close the modal or form
   };
 
   const handleEditStudent = () => {
     if (!selectedStudent) return;
-    setStudents(
-      students.map((s) =>
-        s.id === selectedStudent.id
+
+    setStudents((prevStudents) =>
+      prevStudents.map((s) =>
+        s.uuid === selectedStudent.uuid
           ? {
               ...s,
               name: editFormData.fullName,
               email: editFormData.email,
               course: editFormData.course,
               status: editFormData.status ? "Active" : "Inactive",
-              role: editFormData.role,
+              // role: editFormData.role,
             }
           : s
       )
     );
-    setEditOpen(false);
+
+    setEditOpen(false); // Close the modal or form
   };
 
   const handleDeleteStudent = () => {
     if (!selectedStudent) return;
-    setStudents(students.filter((s) => s.id !== selectedStudent.id));
-    setDeleteOpen(false);
+
+    setStudents((prevStudents) =>
+      prevStudents.filter((s) => s.uuid !== selectedStudent.uuid)
+    );
+
+    setDeleteOpen(false); // Close the modal or form
   };
 
   return (
@@ -564,7 +591,10 @@ export function StudentTable() {
                 }`}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                  <td
+                    key={cell.id}
+                    className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -656,62 +686,56 @@ export function StudentTable() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-slate-900">
-              Student Details
+              User Details
             </DialogTitle>
           </DialogHeader>
+
           {selectedStudent && (
             <div className="space-y-4 py-4">
+              {/* Avatar + Basic Info */}
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <Avatar className="w-16 h-16 ring-2 ring-slate-200 shadow-sm">
                   <AvatarImage
-                    src={selectedStudent.avatar || "/placeholder.svg"}
+                    src={selectedStudent.imageUrl || "/placeholder.svg"}
                   />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold text-lg">
-                    {selectedStudent.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {selectedStudent.fullName
+                      ?.split(" ")
+                      .map((n: string) => n[0])
+                      .join("") || "U"}
                   </AvatarFallback>
                 </Avatar>
+
                 <div className="flex-1">
                   <h3 className="font-semibold text-slate-900 text-lg">
-                    {selectedStudent.name}
+                    {selectedStudent.fullName || "Unknown User"}
                   </h3>
-                  <p className="text-slate-600">{selectedStudent.email}</p>
+                  <p className="text-slate-600">
+                    {selectedStudent.email || "N/A"}
+                  </p>
                 </div>
               </div>
 
+              {/* Details Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-700">
-                    Course
+                    Username
                   </Label>
                   <p className="text-sm text-slate-900 font-medium">
-                    {selectedStudent.course}
+                    {selectedStudent.userName || "N/A"}
                   </p>
                 </div>
+
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-700">
-                    Status
+                    Email
                   </Label>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      selectedStudent.status === "Active"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : "bg-red-50 text-red-700 border-red-200"
-                    }
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full mr-2 ${
-                        selectedStudent.status === "Active"
-                          ? "bg-emerald-500"
-                          : "bg-red-500"
-                      }`}
-                    />
-                    {selectedStudent.status}
-                  </Badge>
+                  <p className="text-sm text-slate-900">
+                    {selectedStudent.email || "N/A"}
+                  </p>
                 </div>
+
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-700">
                     Role
@@ -719,27 +743,91 @@ export function StudentTable() {
                   <Badge
                     variant="outline"
                     className={
-                      selectedStudent.role === "Mentor"
+                      selectedStudent.isAdmin
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : selectedStudent.isAdvisor
                         ? "bg-purple-50 text-purple-700 border-purple-200"
-                        : selectedStudent.role === "User"
+                        : selectedStudent.isStudent
                         ? "bg-blue-50 text-blue-700 border-blue-200"
                         : "bg-slate-50 text-slate-700 border-slate-200"
                     }
                   >
-                    {selectedStudent.role}
+                    {selectedStudent.isAdmin
+                      ? "Admin"
+                      : selectedStudent.isAdvisor
+                      ? "Advisor"
+                      : selectedStudent.isStudent
+                      ? "Student"
+                      : "User"}
                   </Badge>
                 </div>
+
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-700">
-                    Last Active
+                    Status
+                  </Label>
+                  <Badge
+                    variant="secondary"
+                    className={
+                      selectedStudent.isActive
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-red-50 text-red-700 border-red-200"
+                    }
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full mr-2 ${
+                        selectedStudent.isActive
+                          ? "bg-emerald-500"
+                          : "bg-red-500"
+                      }`}
+                    />
+                    {selectedStudent.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">
+                    Created Date
                   </Label>
                   <p className="text-sm text-slate-900">
-                    {selectedStudent.lastActive}
+                    {selectedStudent.createDate || "N/A"}
                   </p>
                 </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">
+                    Updated Date
+                  </Label>
+                  <p className="text-sm text-slate-900">
+                    {selectedStudent.updateDate || "N/A"}
+                  </p>
+                </div>
+
+                {selectedStudent.contactNumber && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700">
+                      Contact Number
+                    </Label>
+                    <p className="text-sm text-slate-900">
+                      {selectedStudent.contactNumber}
+                    </p>
+                  </div>
+                )}
+
+                {selectedStudent.address && (
+                  <div className="space-y-2 col-span-2">
+                    <Label className="text-sm font-medium text-slate-700">
+                      Address
+                    </Label>
+                    <p className="text-sm text-slate-900">
+                      {selectedStudent.address}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -1003,44 +1091,52 @@ export function StudentTable() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-slate-900">
-              Delete Student
+              Delete User
             </DialogTitle>
           </DialogHeader>
+
           {selectedStudent && (
             <div className="space-y-4 py-4">
+              {/* Warning Message */}
               <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                 <p className="text-sm text-red-800">
                   Are you sure you want to delete{" "}
-                  <span className="font-semibold">{selectedStudent.name}</span>?
-                  This action cannot be undone.
+                  <span className="font-semibold">
+                    {selectedStudent.fullName || "this user"}
+                  </span>
+                  ? This action cannot be undone.
                 </p>
               </div>
+
+              {/* User Info */}
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <Avatar className="w-12 h-12 ring-2 ring-slate-200 shadow-sm">
                   <AvatarImage
-                    src={selectedStudent.avatar || "/placeholder.svg"}
+                    src={selectedStudent.imageUrl || "/placeholder.svg"}
                   />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold">
-                    {selectedStudent.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {selectedStudent.fullName
+                      ?.split(" ")
+                      .map((n: string) => n[0])
+                      .join("") || "U"}
                   </AvatarFallback>
                 </Avatar>
+
                 <div className="flex-1">
                   <h3 className="font-semibold text-slate-900">
-                    {selectedStudent.name}
+                    {selectedStudent.fullName || "Unknown User"}
                   </h3>
                   <p className="text-sm text-slate-600">
-                    {selectedStudent.email}
+                    {selectedStudent.email || "N/A"}
                   </p>
                   <p className="text-sm text-slate-600">
-                    {selectedStudent.course}
+                    {selectedStudent.userName || "N/A"}
                   </p>
                 </div>
               </div>
             </div>
           )}
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -1053,7 +1149,7 @@ export function StudentTable() {
               onClick={handleDeleteStudent}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Delete Student
+              Delete User
             </Button>
           </DialogFooter>
         </DialogContent>

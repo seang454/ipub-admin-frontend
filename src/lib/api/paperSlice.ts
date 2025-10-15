@@ -9,8 +9,13 @@ export const paperApi = createApi({
   }),
   tagTypes: ["Paper"],
   endpoints: (builder) => ({
-    getPaper: builder.query<PapersResponse, void>({
-      query: () => "/published",
+    getPaper: builder.query<PapersResponse, { token: string }>({
+      query: ({ token }) => ({
+        url: "/published", // Ensure this is the correct endpoint URL
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
       providesTags: ["Paper"],
     }),
   }),
