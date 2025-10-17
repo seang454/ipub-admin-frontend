@@ -154,7 +154,11 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${poppins.variable} ${kantumroyPro.variable} antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+        >
           <Providers>
             <AuthProvider>
               <HomeLayoutWrapper>{children}</HomeLayoutWrapper>

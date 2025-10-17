@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -47,6 +47,10 @@ import {
   Phone,
   MapPin,
   MessageCircle,
+  Edit,
+  Trash2,
+  UserCog,
+  Eye,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -334,12 +338,13 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
               className=" bg-card/90 shadow-sm hover:shadow-md transition-all duration-200  backdrop-blur-sm w-48 bg-popover border-border "
             >
               <DropdownMenuItem
-                className="hover:bg-accent hover:text-accent-foreground"
+                className="cursor-pointer hover:bg-accent hover:text-accent-foreground text-xs text-foreground"
                 onClick={() => {
                   setSelectedUser(row.original);
                   setViewOpen(true);
                 }}
               >
+                <Eye className="w-3.5 h-3.5 mr-2" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -364,6 +369,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                   setEditOpen(true);
                 }}
               >
+                <Edit className="w-3.5 h-3.5 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -373,6 +379,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                   setPromoteOpen(true);
                 }}
               >
+                <UserCog className="w-3.5 h-3.5 mr-2" />
                 Manage Roles
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -382,6 +389,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                 }}
                 className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -406,7 +414,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
   });
-  
+
   //checking session
   const { data: session, status } = useSession();
 
@@ -582,7 +590,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
     setUsers(users.filter((u) => u.uuid !== selectedUser.uuid));
 
     try {
-      await deletedUser({uuid:selectedUser.uuid,token:token}) // unwrap() throws if error
+      await deletedUser({ uuid: selectedUser.uuid, token: token }); // unwrap() throws if error
 
       toast.success("User updated successfully!", {
         position: "top-left",
@@ -593,7 +601,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         draggable: true,
         theme: "colored",
       });
-      setDeleteOpen(false)
+      setDeleteOpen(false);
     } catch (error) {
       toast.error("Error updating user!", {
         position: "top-left",

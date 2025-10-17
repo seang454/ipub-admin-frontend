@@ -35,6 +35,9 @@ import {
   ArrowUp,
   Users,
   Filter,
+  Eye,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -270,6 +273,7 @@ export function AdviserTable() {
                 }}
                 className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900 text-slate-900 "
               >
+                <Eye className="w-3.5 h-3.5 mr-2" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -297,6 +301,7 @@ export function AdviserTable() {
                 }}
                 className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900 text-slate-900 "
               >
+                <Edit className="w-3.5 h-3.5 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -306,6 +311,7 @@ export function AdviserTable() {
                 }}
                 className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900"
               >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
