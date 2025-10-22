@@ -1,4 +1,5 @@
 "use client";
+import DocuhubLoader from "@/components/loader/docuhub-loading";
 import { UserStats } from "@/components/users/user-stats";
 import { UserTable } from "@/components/users/user-table";
 import { useGetAllUsersQuery } from "@/lib/api/userSlice";
@@ -41,7 +42,7 @@ export default function UsersPage() {
       console.log("admins filtered :>> ", admins); // correct immediately
     }
   }, [users]);
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <DocuhubLoader/>;
 
   console.log("users in firt fetch :>> ", users);
   console.log("admin :>> ", admin);

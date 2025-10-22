@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,12 +17,14 @@ import { useGetAllUsersQuery } from "@/lib/api/userSlice";
 import { useGetPaperQuery } from "@/lib/api/paperSlice";
 import { PapersResponse } from "@/types/paperType/paperType";
 import { User } from "@/types/userType/userType";
+import DocuhubLoader from "@/components/loader/docuhub-loading";
 
 type DecodedToken = {
   exp: number; // expiration timestamp
   iat?: number;
-  [key: string]: any;
+  [key: string]: unknown; // Replace any with unknown
 };
+
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -66,7 +67,7 @@ export default function DashboardPage() {
   // Loading & invalid token states
   if (status === "loading") return <p>Loading session...</p>;
   if (!accessToken || isExpired) return <p>No valid access token</p>;
-  if (usersLoading || papersLoading) return <p>Loading dashboard data...</p>;
+  if (usersLoading || papersLoading) return <DocuhubLoader/>;
 
   // Debugging logs
   console.log("accessToken:", accessToken);

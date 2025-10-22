@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import {
   ChevronRight,
@@ -13,9 +12,7 @@ import {
   Mail,
   Phone,
   ChevronLeft,
-  Star,
   Users,
-  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,48 +32,80 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
-import { mockAdvisors, mockProposals } from "./data";
+import { useSession } from "next-auth/react";
+import { useGetPaperQuery } from "@/lib/api/paperSlice";
+import { useGetAllAdvisorsQuery } from "@/lib/api/advisorSlice";
+import { useAssignAdviserMutation } from "@/lib/api/assignMentor";
+import { Paper, GetPapersResponse } from "@/types/paperType/paperType";
+import { User } from "@/types/userType/userType";
+import { toast, ToastContainer } from "react-toastify";
 
 export function EnhancedProposals() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
-  const [selectedPaper, setSelectedPaper] = useState<any>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assigningPaper, setAssigningPaper] = useState<any>(null);
+  const [assigningPaper, setAssigningPaper] = useState<Paper | null>(null);
   const [advisorSearch, setAdvisorSearch] = useState("");
   const [currentAdvisorPage, setCurrentAdvisorPage] = useState(1);
   const [currentPaperPage, setCurrentPaperPage] = useState(1);
-  const advisorsPerPage = 4; // Single row display
+  const [deadline, setDeadline] = useState<string>("");
+  const [assignError, setAssignError] = useState<string>("");
+  const advisorsPerPage = 4;
   const papersPerPage = 3;
 
-  const filteredProposals = mockProposals
+  const { data: session } = useSession();
+  const accessToken = session?.accessToken;
+
+  const {
+    data: papersData,
+    isLoading: papersLoading,
+    error: papersError,
+  } = useGetPaperQuery({ token: accessToken ?? "" }, { skip: !accessToken });
+
+  console.log("papersData :>> ", papersData);
+
+  const {
+    data: advisersData,
+    isLoading: advisorsLoading,
+    error: advisorsError,
+  } = useGetAllAdvisorsQuery(
+    { token: accessToken ?? "" },
+    { skip: !accessToken }
+  );
+
+  const [assignAdviser, { isLoading: isAssigning }] =
+    useAssignAdviserMutation();
+
+  // Get unique categories from papers
+  const availableCategories = Array.from(
+    new Set(
+      (papersData?.papers?.content || []).flatMap(
+        (paper: Paper) => paper.categoryNames
+      )
+    )
+  ).sort();
+
+  // Filter papers that are pending and not approved
+  const filteredProposals = (papersData?.papers?.content || [])
     .filter(
-      (proposal) =>
-        !proposal.is_approved &&
-        !proposal.assigned_uuid &&
-        (proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          proposal.author.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          proposal.abstract_text
+      (paper: Paper) =>
+        (paper.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          paper.abstractText
             .toLowerCase()
             .includes(searchTerm.toLowerCase())) &&
-        (categoryFilter === "all" || proposal.category === categoryFilter)
+        (categoryFilter === "all" ||
+          paper.categoryNames.includes(categoryFilter))
     )
-    .sort((a, b) => {
+    .sort((a: Paper, b: Paper) => {
       if (sortBy === "date") {
         return (
-          new Date(b.submitted_at).getTime() -
-          new Date(a.submitted_at).getTime()
+          new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         );
       } else if (sortBy === "title") {
         return a.title.localeCompare(b.title);
-      } else if (sortBy === "author") {
-        return a.author.name.localeCompare(b.author.name);
       }
       return 0;
     });
@@ -86,15 +115,15 @@ export function EnhancedProposals() {
     (currentPaperPage - 1) * papersPerPage,
     currentPaperPage * papersPerPage
   );
-
-  // Filter and paginate advisors
-  const filteredAdvisors = mockAdvisors.filter(
-    (advisor: any) =>
-      advisor.name.toLowerCase().includes(advisorSearch.toLowerCase()) ||
-      advisor.specialization
-        .toLowerCase()
-        .includes(advisorSearch.toLowerCase()) ||
-      advisor.department.toLowerCase().includes(advisorSearch.toLowerCase())
+  console.log("filteredProposals :>> ", filteredProposals);
+  console.log("paginatedProposals :>> ", paginatedProposals);
+  // Filter only active advisors
+  const filteredAdvisors = (advisersData?.content || []).filter(
+    (advisor: User) =>
+      advisor.isAdvisor &&
+      advisor.isActive &&
+      (advisor.fullName.toLowerCase().includes(advisorSearch.toLowerCase()) ||
+        advisor.email.toLowerCase().includes(advisorSearch.toLowerCase()))
   );
 
   const totalAdvisorPages = Math.ceil(
@@ -105,43 +134,99 @@ export function EnhancedProposals() {
     currentAdvisorPage * advisorsPerPage
   );
 
-  const handleAssignAdvisor = (advisor: any) => {
-    console.log(
-      `Assigning advisor ${advisor.name} to paper ${assigningPaper?.title}`
-    );
-    setShowAssignModal(false);
-    setAssigningPaper(null);
-    setCurrentAdvisorPage(1);
-    setAdvisorSearch("");
+  const handleAssignAdvisor = async (advisor: User) => {
+    if (!assigningPaper || !deadline || !accessToken) {
+      setAssignError("Please select a deadline before assigning.");
+      return;
+    }
+    console.log("datel :>> ", deadline);
+    console.log("advisor :>> ", advisor);
+    console.log("Papers :>> ", assigningPaper);
+
+    try {
+      const response = await assignAdviser({
+        token: accessToken,
+        assignMent: {
+          paperUuid: assigningPaper.uuid,
+          adviserUuid: advisor.uuid,
+          deadline: deadline,
+        },
+      }).unwrap();
+
+      toast.success("Assigned advisor successfully!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      // Refresh students list after successful creation
+      // Reset modal state
+      setShowAssignModal(false);
+      setAssigningPaper(null);
+      setCurrentAdvisorPage(1);
+      setAdvisorSearch("");
+      setDeadline("");
+      setAssignError("");
+    } catch (error: any) {
+      console.error("Failed to assign advisor:", error);
+      // setAssignError(
+      //   error?.data?.message || "Failed to assign advisor. Please try again."
+      // );
+      // toast.error(assignError, {
+      //   position: "top-left",
+      //   autoClose: 3000,
+      //   theme: "colored",
+      // });
+    }
   };
 
+  if (papersLoading || advisorsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading proposals...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (papersError || advisorsError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-600">
+          <p className="text-lg font-semibold mb-2">Error Loading Data</p>
+          <p className="text-sm">Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className=" min-h-screen rounded-2xl sm:p-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+    <div className="min-h-screen rounded-2xl sm:p-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200">
+      <ToastContainer />
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-3xl py-6  border-border transition-all duration-200">
+          <h1 className="text-3xl py-6 border-border transition-all duration-200 font-bold text-dynamic2">
             Research Proposals
           </h1>
-          <p className="text-base sm:text-lg text-dynamic2">
+          <p className="text-base sm:text-lg text-muted-foreground">
             Review and assign advisors to pending research proposals
           </p>
         </div>
 
-        {/* Filters and Search */}
-        <Card className="mb-6 sm:mb-8 border-0 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
-          <CardContent className="p-4 sm:p-6 ">
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center ">
+        <Card className="mb-6 sm:mb-8 border-0 p-6 bg-card shadow-sm hover:shadow-md transition-all duration-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
-                  placeholder="Search by title, author, or keywords..."
+                  placeholder="Search by title or keywords..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    setCurrentPaperPage(1); // Reset to first page when searching
+                    setCurrentPaperPage(1);
                   }}
-                  className="pl-10 text-dynamic2 focus:border-[#2B7FFF] focus:ring-[#2B7FFF] border-slate-300  rounded-lg"
+                  className="pl-10 focus:border-blue-500 focus:ring-blue-500 border-slate-300 rounded-lg"
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -149,40 +234,29 @@ export function EnhancedProposals() {
                   value={categoryFilter}
                   onValueChange={(value) => {
                     setCategoryFilter(value);
-                    setCurrentPaperPage(1); // Reset to first page when filtering
+                    setCurrentPaperPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-48 border-slate-200 border-slate-300  rounded-lg">
+                  <SelectTrigger className="w-full sm:w-48 border-slate-300 rounded-lg">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
-                  <SelectContent className=" bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                  <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="Artificial Intelligence">AI</SelectItem>
-                    <SelectItem value="Environmental Science">
-                      Environmental
-                    </SelectItem>
-                    <SelectItem value="Biomedical Engineering">
-                      Biomedical
-                    </SelectItem>
-                    <SelectItem value="Quantum Computing">Quantum</SelectItem>
-                    <SelectItem value="Business Technology">
-                      Business Tech
-                    </SelectItem>
-                    <SelectItem value="Climate Science">Climate</SelectItem>
-                    <SelectItem value="Healthcare Technology">
-                      Healthcare Tech
-                    </SelectItem>
+                    {availableCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-40 border-slate-200 border-slate-300  rounded-lg">
+                  <SelectTrigger className="w-full sm:w-40 border-slate-300 rounded-lg">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
-                  <SelectContent className=" border-0 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                  <SelectContent>
                     <SelectItem value="date">Date</SelectItem>
                     <SelectItem value="title">Title</SelectItem>
-                    <SelectItem value="author">Author</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -190,13 +264,10 @@ export function EnhancedProposals() {
           </CardContent>
         </Card>
 
-        {/* Results Count */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className=" text-dynamic2">
+          <p className="text-muted-foreground">
             Showing{" "}
-            <span className="font-semibold text-dynamic2">
-              {filteredProposals.length}
-            </span>{" "}
+            <span className="font-semibold">{filteredProposals.length}</span>{" "}
             pending proposals
           </p>
           {totalPaperPages > 1 && (
@@ -206,138 +277,129 @@ export function EnhancedProposals() {
           )}
         </div>
 
-        {/* Proposals Grid */}
-        <div className="grid gap-6">
-          {paginatedProposals.map((proposal) => (
-            <Card
-              key={proposal.uuid}
-              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm"
-            >
-              <CardContent className="p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                  {/* Thumbnail */}
-                  <div className="w-full lg:w-64 flex-shrink-0">
-                    <Image
-                      width={100}
-                      height={100}
-                      unoptimized
-                      src={
-                        proposal.thumbnail_url ||
-                        "/placeholder.svg?height=192&width=256"
-                      }
-                      alt={proposal.title}
-                      className="w-full h-48 object-cover rounded-lg border border-slate-200"
-                    />
-                  </div>
+        {/* papers */}
 
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-2">
-                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
-                        {proposal.title}
-                      </h3>
-                      <Badge
-                        variant="secondary"
-                        className="bg-[#F59E0B]/10 text-[#F59E0B] hover:bg-[#F59E0B]/10 self-start"
-                      >
-                        <Clock className="w-3 h-3 mr-1" />
-                        {proposal.status}
-                      </Badge>
-                    </div>
-
-                    {/* Author Info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-                      <button
-                        onClick={() => setSelectedUser(proposal.author)}
-                        className="flex items-center gap-3 hover:bg-slate-50 rounded-lg p-2 transition-colors self-start"
-                      >
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage
-                            src={
-                              proposal.author.profile_picture ||
-                              "/placeholder.svg?height=40&width=40"
-                            }
-                          />
-                          <AvatarFallback>
-                            {proposal.author.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="text-left">
-                          <p className="font-semibold text-slate-900">
-                            {proposal.author.name}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {proposal.author.department}
-                          </p>
-                        </div>
-                      </button>
-                      <Separator
-                        orientation="vertical"
-                        className="h-8 hidden sm:block"
+        {filteredProposals.length === 0 ? (
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-12 text-center">
+              <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                No Proposals Found
+              </h3>
+              <p className="text-slate-600">
+                {searchTerm || categoryFilter !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "There are no pending proposals at the moment"}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6">
+            {paginatedProposals.map((proposal: Paper) => (
+              <Card
+                key={proposal.uuid}
+                className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <CardContent className="p-4 sm:p-6 lg:p-8">
+                  <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+                    <div className="w-full lg:w-64 flex-shrink-0">
+                      <Image
+                        width={256}
+                        height={192}
+                        unoptimized
+                        src={
+                          proposal.thumbnailUrl ||
+                          "/placeholder.svg?height=192&width=256"
+                        }
+                        alt={proposal.title}
+                        className="w-full h-48 object-cover rounded-lg border border-slate-200"
                       />
-                      <div className="text-sm text-slate-600">
-                        <p>
-                          Submitted:{" "}
-                          {new Date(proposal.submitted_at).toLocaleDateString()}
-                        </p>
-                        <p>
-                          Category:{" "}
-                          <span className="font-medium text-slate-900">
-                            {proposal.category}
-                          </span>
-                        </p>
-                      </div>
                     </div>
 
-                    {/* Abstract */}
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-slate-900 mb-2">
-                        Abstract
-                      </h4>
-                      <p className="text-slate-700 leading-relaxed line-clamp-3">
-                        {proposal.abstract_text}
-                      </p>
-                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-2">
+                        <h3 className="text-xl sm:text-2xl font-bold text-dynamic2 leading-tight">
+                          {proposal.title}
+                        </h3>
+                        <Badge
+                          variant="secondary"
+                          className="bg-amber-100 text-amber-700 self-start"
+                        >
+                          <Clock className="w-3 h-3 mr-1 text-dynamic2" />
+                          {proposal.status}
+                        </Badge>
+                      </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="text-sm text-dynamic2 mb-4 space-y-1">
+                        <p>
+                          <span className="font-medium text-dynamic">
+                            Submitted:
+                          </span>{" "}
+                          {new Date(proposal.submittedAt).toLocaleDateString()}
+                        </p>
+                        <p>
+                          <span className="font-medium text-dynamic2">
+                            Categories:
+                          </span>{" "}
+                          {proposal.categoryNames.join(", ")}
+                        </p>
+                        <p>
+                          <span className="font-medium text-dynamic2">
+                            Downloads:
+                          </span>{" "}
+                          {proposal.downloads}
+                        </p>
+                      </div>
+
+                      <div className="mb-6">
+                        <h4 className="font-semibold text-dynamic2 mb-2">
+                          Abstract
+                        </h4>
+                        <p className="text-dynamic2 leading-relaxed line-clamp-3">
+                          {proposal.abstractText || "No abstract provided"}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            variant="outline"
+                            onClick={() => setSelectedPaper(proposal)}
+                            className="border-slate-300 hover:border-blue-500 hover:text-blue-500"
+                          >
+                            <Eye className="w-4 h-4 mr-2 text-dynamic2" />
+                            View Details
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              window.open(proposal.fileUrl, "_blank")
+                            }
+                            className="border-slate-300 hover:border-slate-400"
+                          >
+                            <FileText className="w-4 h-4 mr-2 text-dynamic2" />
+                            Download PDF
+                          </Button>
+                        </div>
                         <Button
-                          variant="outline"
-                          onClick={() => setSelectedPaper(proposal)}
-                          className="border-slate-300 hover:border-[#2B7FFF] hover:text-[#2B7FFF]"
+                          onClick={() => {
+                            setAssigningPaper(proposal);
+                            setShowAssignModal(true);
+                            setAssignError("");
+                          }}
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                         >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="border-slate-300 hover:border-slate-400 bg-transparent"
-                        >
-                          <FileText className="w-4 h-4 mr-2" />
-                          Download PDF
+                          <UserCheck className="w-4 h-4 mr-2" />
+                          Assign Advisor
                         </Button>
                       </div>
-                      <Button
-                        onClick={() => {
-                          setAssigningPaper(proposal);
-                          setShowAssignModal(true);
-                        }}
-                        className="bg-gradient-to-r bg-primary2 hover:bg-secondary text-white"
-                      >
-                        <UserCheck className="w-4 h-4 mr-2" />
-                        Assign Advisor
-                      </Button>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {totalPaperPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-200">
@@ -357,46 +419,12 @@ export function EnhancedProposals() {
                   setCurrentPaperPage((prev) => Math.max(1, prev - 1))
                 }
                 disabled={currentPaperPage === 1}
-                className="border-slate-300"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">Previous</span>
               </Button>
-              <div className="flex items-center gap-1">
-                {Array.from(
-                  { length: Math.min(5, totalPaperPages) },
-                  (_, i) => {
-                    let pageNum;
-                    if (totalPaperPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPaperPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPaperPage >= totalPaperPages - 2) {
-                      pageNum = totalPaperPages - 4 + i;
-                    } else {
-                      pageNum = currentPaperPage - 2 + i;
-                    }
-
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={
-                          currentPaperPage === pageNum ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setCurrentPaperPage(pageNum)}
-                        className={
-                          currentPaperPage === pageNum
-                            ? "bg-[#2B7FFF] hover:bg-[#2B7FFF]/90"
-                            : "border-slate-300"
-                        }
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  }
-                )}
-              </div>
+              <span className="text-sm">
+                Page {currentPaperPage} of {totalPaperPages}
+              </span>
               <Button
                 variant="outline"
                 size="sm"
@@ -406,434 +434,382 @@ export function EnhancedProposals() {
                   )
                 }
                 disabled={currentPaperPage === totalPaperPages}
-                className="border-slate-300"
               >
-                <span className="hidden sm:inline mr-1">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* Assign Advisor Modal */}
-        <Dialog open={showAssignModal} onOpenChange={setShowAssignModal}>
-          <DialogContent className="bg-gradient-to-br from-white to-blue-50 border-0 shadow-2xl rounded-2xl p-6 max-w-lg sm:max-w-2xl">
+        <Dialog
+          open={showAssignModal}
+          onOpenChange={(open) => {
+            setShowAssignModal(open);
+            if (!open) {
+              setAssignError("");
+              setDeadline("");
+              setAdvisorSearch("");
+              setCurrentAdvisorPage(1);
+            }
+          }}
+        >
+          <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
             <DialogHeader className="pb-4 border-b border-gray-200/50">
-              <DialogTitle className="text-xl sm:text-2xl font-bold  bg-clip-text text-primary2">
-                Assign Advisor to {assigningPaper?.author.name}
+              <DialogTitle className="text-2xl font-bold text-blue-700">
+                Assign Advisor
               </DialogTitle>
               <p className="text-gray-500 mt-1 text-sm">
-                Select an advisor based on expertise and availability
+                Select an advisor for:{" "}
+                <span className="font-semibold">{assigningPaper?.title}</span>
               </p>
             </DialogHeader>
 
             <div className="space-y-6">
-              {/* Search Advisors */}
+              {assignError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {assignError}
+                </div>
+              )}
+
+              <div>
+                <label
+                  htmlFor="deadline"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Review Deadline <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="date"
+                  id="deadline"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                  required
+                />
+              </div>
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search by name, specialization, or department..."
+                  placeholder="Search advisors by name or email..."
                   value={advisorSearch}
                   onChange={(e) => {
                     setAdvisorSearch(e.target.value);
                     setCurrentAdvisorPage(1);
                   }}
-                  className="pl-10 h-10 text-sm bg-white/80 backdrop-blur-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg shadow-sm transition-all duration-300"
+                  className=" bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
                 />
               </div>
 
-              {/* Cards Container with Fixed Height */}
-              <div className="relative">
-                <div className="h-[50vh] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-transparent">
-                  {paginatedAdvisors.length > 0 ? (
-                    paginatedAdvisors.map((advisor) => (
-                      <Card
-                        key={advisor.uuid}
-                        className="border border-gray-200/50 bg-white/95 backdrop-blur-md rounded-xl shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 ease-in-out"
-                      >
-                        <CardContent className="p-4 sm:p-5">
-                          <div className="flex items-center gap-4 sm:gap-5">
-                            {/* Avatar Section - Larger and more modern */}
-                            <div className="flex-shrink-0">
-                              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 ring-2 ring-blue-500/30 hover:ring-blue-500/50 transition-all duration-300">
-                                <AvatarImage
-                                  src={
-                                    advisor.profile_picture ||
-                                    "/placeholder.svg?height=64&width=64"
-                                  }
-                                />
-                                <AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-200 text-blue-700 font-semibold text-base">
-                                  {advisor.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </AvatarFallback>
-                              </Avatar>
-                            </div>
+              <div className="h-[40vh] overflow-y-auto space-y-3 pr-2">
+                {paginatedAdvisors.length > 0 ? (
+                  paginatedAdvisors.map((advisor: User) => (
+                    <Card
+                      key={advisor.uuid}
+                      className="border rounded-xl bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                    >
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-5">
+                          <Avatar className="w-16 h-16 ring-2 ring-blue-500/30">
+                            <AvatarImage src={advisor.imageUrl || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-200 text-blue-700 font-semibold">
+                              {advisor.firstName[0]}
+                              {advisor.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
 
-                            {/* Main Info Section - Improved typography and spacing */}
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <div className="space-y-1.5">
-                                <h4 className="font-bold text-gray-900 text-lg sm:text-xl truncate">
-                                  {advisor.name}
-                                </h4>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs px-3 py-1 bg-blue-100/80 text-blue-700 border-blue-300/50 rounded-full font-medium"
-                                  >
-                                    {advisor.department}
-                                  </Badge>
-                                </div>
-                              </div>
-
-                              {/* Stats Row - Improved spacing and icon alignment */}
-                              <div className="flex items-center gap-4 sm:gap-5 text-xs sm:text-sm text-gray-600">
-                                <div className="flex items-center gap-1.5">
-                                  <Users className="w-4 h-4 text-blue-500" />
-                                  <span>
-                                    {advisor.papers_supervised} papers
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <Award className="w-4 h-4 text-blue-500" />
-                                  <span>
-                                    {advisor.years_experience} yrs exp.
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <span
-                                    className={`w-2.5 h-2.5 rounded-full ${
-                                      advisor.current_capacity <
-                                      advisor.max_capacity * 0.7
-                                        ? "bg-green-500"
-                                        : advisor.current_capacity <
-                                          advisor.max_capacity
-                                        ? "bg-amber-500"
-                                        : "bg-red-500"
-                                    }`}
-                                  ></span>
-                                  <span>
-                                    {advisor.current_capacity}/
-                                    {advisor.max_capacity}
-                                  </span>
-                                </div>
-                              </div>
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <h4 className="font-bold text-dynamic2 text-xl truncate">
+                              {advisor.fullName}
+                            </h4>
+                            <div className="flex items-center gap-2 text-sm text-dynamic2">
+                              <Mail className="w-4 h-4 text-blue-500" />
+                              <span className="truncate">{advisor.email}</span>
                             </div>
-
-                            {/* Action Button Section - Modernized button */}
-                            <div className="flex-shrink-0">
-                              <Button
-                                onClick={() => handleAssignAdvisor(advisor)}
-                                disabled={
-                                  advisor.current_capacity >=
-                                  advisor.max_capacity
-                                }
-                                className={`
-                          bg-gradient-to-r from-blue-600 to-indigo-600 
-                          hover:from-blue-700 hover:to-indigo-700 
-                          disabled:bg-gray-200 disabled:text-gray-500 
-                          disabled:cursor-not-allowed text-white 
-                          font-medium text-sm px-5 py-2 rounded-lg 
-                          shadow-sm hover:shadow-md hover:scale-105 
-                          transition-all duration-300 ease-in-out
-                        `}
-                              >
-                                {advisor.current_capacity >=
-                                advisor.max_capacity
-                                  ? "Full"
-                                  : "Assign"}
-                              </Button>
-                            </div>
+                            {advisor.contactNumber &&
+                              advisor.contactNumber !== "null" && (
+                                <div className="flex items-center gap-2 text-sm text-dynamic2">
+                                  <Phone className="w-4 h-4 text-blue-500" />
+                                  <span>{advisor.contactNumber}</span>
+                                </div>
+                              )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                      <Users className="w-12 h-12 mb-2 opacity-50" />
-                      <p className="text-sm font-medium">No advisors found</p>
-                      <p className="text-xs">
-                        Try adjusting your search criteria
-                      </p>
-                    </div>
-                  )}
-                </div>
+
+                          <Button
+                            onClick={() => handleAssignAdvisor(advisor)}
+                            // disabled={isAssigning || !deadline}
+                            className=" bg-secondary text-dynamic2 "
+                          >
+                            {isAssigning ? "Assigning..." : "Assign"}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+                    <Users className="w-12 h-12 mb-2 opacity-50" />
+                    <p className="text-sm font-medium">No advisors found</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Try adjusting your search
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Pagination - Unchanged */}
-              {filteredAdvisors.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-200/50 bg-gray-50/30 -mx-6 px-6 -mb-6 pb-4 rounded-b-2xl">
-                  {totalAdvisorPages > 1 && (
-                    <div className="flex items-center justify-between w-full">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setCurrentAdvisorPage((prev) => Math.max(1, prev - 1))
-                        }
-                        disabled={currentAdvisorPage === 1}
-                        className="border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-xs px-3 py-1.5 rounded-md"
-                      >
-                        <ChevronLeft className="w-3 h-3 mr-1" />
-                        Previous
-                      </Button>
-
-                      <div className="flex items-center gap-1">
-                        {Array.from(
-                          { length: Math.min(totalAdvisorPages, 5) },
-                          (_, i) => {
-                            let pageNum;
-                            if (totalAdvisorPages <= 5) {
-                              pageNum = i + 1;
-                            } else if (currentAdvisorPage <= 3) {
-                              pageNum = i + 1;
-                            } else if (
-                              currentAdvisorPage >=
-                              totalAdvisorPages - 2
-                            ) {
-                              pageNum = totalAdvisorPages - 4 + i;
-                            } else {
-                              pageNum = currentAdvisorPage - 2 + i;
-                            }
-
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={
-                                  currentAdvisorPage === pageNum
-                                    ? "default"
-                                    : "outline"
-                                }
-                                size="sm"
-                                onClick={() => setCurrentAdvisorPage(pageNum)}
-                                className={`w-8 h-8 p-0 text-xs ${
-                                  currentAdvisorPage === pageNum
-                                    ? "bg-blue-600 text-white"
-                                    : "border-gray-300 hover:border-blue-500 hover:text-blue-600"
-                                }`}
-                              >
-                                {pageNum}
-                              </Button>
-                            );
-                          }
-                        )}
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setCurrentAdvisorPage((prev) =>
-                            Math.min(totalAdvisorPages, prev + 1)
-                          )
-                        }
-                        disabled={currentAdvisorPage === totalAdvisorPages}
-                        className="border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-xs px-3 py-1.5 rounded-md"
-                      >
-                        Next
-                        <ChevronRight className="w-3 h-3 ml-1" />
-                      </Button>
-                    </div>
-                  )}
+              {totalAdvisorPages > 1 && (
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                  <p className="text-sm text-gray-600">
+                    {filteredAdvisors.length} advisor
+                    {filteredAdvisors.length !== 1 ? "s" : ""} available
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentAdvisorPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={currentAdvisorPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm">
+                      {currentAdvisorPage} / {totalAdvisorPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentAdvisorPage((prev) =>
+                          Math.min(totalAdvisorPages, prev + 1)
+                        )
+                      }
+                      disabled={currentAdvisorPage === totalAdvisorPages}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* Paper Detail Modal */}
         <Dialog
           open={!!selectedPaper}
           onOpenChange={() => setSelectedPaper(null)}
         >
-          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900 pr-8">
-                {selectedPaper?.title}
-              </DialogTitle>
-            </DialogHeader>
-            {/* hello */}
+          <DialogContent className="w-[90vw] max-w-6xl max-h-[90vh] overflow-hidden p-0 gap-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-0 border-border shadow-sm hover:shadow-md transition-all duration-200 bg-card/80 backdrop-blur-sm">
             {selectedPaper && (
-              <div className="space-y-6">
-                {/* Paper Thumbnail */}
-                <div className="w-full">
+              <div className="relative">
+                {/* Hero Image Section with Gradient Overlay */}
+                <div className="relative h-72 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
                   <Image
-                    height={200}
+                    height={288}
+                    width={1200}
                     unoptimized
-                    width={100}
-                    src={
-                      selectedPaper.thumbnail_url ||
-                      "/placeholder.svg?height=300&width=600"
-                    }
+                    src={selectedPaper.thumbnailUrl || "/placeholder.svg"}
                     alt={selectedPaper.title}
-                    className="w-full h-64 object-cover rounded-lg border border-slate-200"
+                    className="w-full h-full object-cover"
                   />
+                  <div className="absolute bottom-0 left-0 right-0 z-20 p-8">
+                    <Badge
+                      variant="secondary"
+                      className="mb-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm text-amber-700 dark:text-amber-400 border-0 shadow-lg"
+                    >
+                      <Clock className="w-3 h-3 mr-1" />
+                      {selectedPaper.status}
+                    </Badge>
+                  </div>
                 </div>
 
-                {/* Paper Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Content Section */}
+                <div className="overflow-y-auto max-h-[calc(90vh-288px)] p-8 space-y-8">
+                  {/* Stats Cards */}
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">
-                      Paper Details
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <p>
-                        <span className="font-medium">Category:</span>{" "}
-                        {selectedPaper.category}
-                      </p>
-                      <p>
-                        <span className="font-medium">Status:</span>{" "}
-                        {selectedPaper.status}
-                      </p>
-                      <p>
-                        <span className="font-medium">Submitted:</span>{" "}
-                        {new Date(
-                          selectedPaper.submitted_at
-                        ).toLocaleDateString()}
-                      </p>
-                      <p>
-                        <span className="font-medium">Created:</span>{" "}
-                        {new Date(
-                          selectedPaper.created_at
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
+                    <h2 className="text-2xl font-bold text-white drop-shadow-2xl mb-2">
+                      {selectedPaper.title}
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
+                      <CardContent className="p-4 text-center">
+                        <FileText className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+                        <p className="text-2xl font-bold text-dynamic2">
+                          {selectedPaper.downloads}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Downloads
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
+                      <CardContent className="p-4 text-center">
+                        <Clock className="w-8 h-8 mx-auto mb-2 text-indigo-600 dark:text-indigo-400" />
+                        <p className="text-sm font-bold text-dynamic2">
+                          {new Date(
+                            selectedPaper.submittedAt
+                          ).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Submitted
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
+                      <CardContent className="p-4 text-center">
+                        <Eye className="w-8 h-8 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
+                        <p className="text-sm font-bold text-dynamic2">
+                          {selectedPaper.isPublished ? "Yes" : "No"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Published
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
+                      <CardContent className="p-4 text-center">
+                        <Filter className="w-8 h-8 mx-auto mb-2 text-pink-600 dark:text-pink-400" />
+                        <p className="text-sm font-bold text-dynamic2">
+                          {selectedPaper.categoryNames.length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Categories
+                        </p>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">
-                      Author Information
-                    </h3>
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage
-                          src={
-                            selectedPaper.author.profile_picture ||
-                            "/placeholder.svg?height=48&width=48"
-                          }
-                        />
-                        <AvatarFallback>
-                          {selectedPaper.author.name
-                            .split(" ")
-                            .map((n: any) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {selectedPaper.author.name}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {selectedPaper.author.department}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
-                          <div className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            <span>{selectedPaper.author.email}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            <span>{selectedPaper.author.phone}</span>
+                  {/* Categories Section */}
+                  <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                    <CardContent className="p-6">
+                      <h3 className="text-lg font-bold text-dynamic2 mb-4 flex items-center gap-2">
+                        <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        Categories
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPaper.categoryNames.map((category, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-700 dark:text-blue-300 border-0 px-4 py-1.5 text-sm font-medium"
+                          >
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Abstract Section */}
+                  <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                    <CardContent className="p-6">
+                      <h3 className="text-lg font-bold text-dynamic2 mb-4 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        Abstract
+                      </h3>
+                      <p className="text-dynamic2 leading-relaxed text-base">
+                        {selectedPaper.abstractText || "No abstract provided"}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Timeline Section */}
+                  <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                    <CardContent className="p-6">
+                      <h3 className="text-lg font-bold text-dynamic2 mb-4 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        Timeline
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mt-2" />
+                          <div>
+                            <p className="font-medium text-dynamic2">Created</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(
+                                selectedPaper.createdAt
+                              ).toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </p>
                           </div>
                         </div>
+                        <div className="flex items-start gap-4">
+                          <div className="w-2 h-2 bg-indigo-600 dark:bg-indigo-400 rounded-full mt-2" />
+                          <div>
+                            <p className="font-medium text-dynamic2">
+                              Submitted
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(
+                                selectedPaper.submittedAt
+                              ).toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        {selectedPaper.publishedAt && (
+                          <div className="flex items-start gap-4">
+                            <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full mt-2" />
+                            <div>
+                              <p className="font-medium text-dynamic2">
+                                Published
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(
+                                  selectedPaper.publishedAt
+                                ).toLocaleDateString("en-US", {
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </div>
-                </div>
+                    </CardContent>
+                  </Card>
 
-                {/* Abstract */}
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">
-                    Abstract
-                  </h3>
-                  <p className="text-slate-700 leading-relaxed">
-                    {selectedPaper.abstract_text}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
-                  <Button
-                    variant="outline"
-                    className="border-slate-300 bg-transparent"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setAssigningPaper(selectedPaper);
-                      setSelectedPaper(null);
-                      setShowAssignModal(true);
-                    }}
-                    className="bg-gradient-to-r from-[#2B7FFF] to-[#3559AF] hover:from-[#2B7FFF]/90 hover:to-[#3559AF]/90 text-white"
-                  >
-                    <UserCheck className="w-4 h-4 mr-2" />
-                    Assign Advisor
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* User Profile Modal */}
-        <Dialog
-          open={!!selectedUser}
-          onOpenChange={() => setSelectedUser(null)}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900">
-                User Profile
-              </DialogTitle>
-            </DialogHeader>
-
-            {selectedUser && (
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <Avatar className="w-20 h-20">
-                    <AvatarImage
-                      src={
-                        selectedUser.profile_picture ||
-                        "/placeholder.svg?height=80&width=80"
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent dark:from-slate-900 dark:via-slate-900 dark:to-transparent pb-4">
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        window.open(selectedPaper.fileUrl, "_blank")
                       }
-                    />
-                    <AvatarFallback className="text-lg">
-                      {selectedUser.name
-                        .split(" ")
-                        .map((n: any) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {selectedUser.name}
-                    </h3>
-                    <p className="text-slate-600 mb-2">
-                      {selectedUser.department}
-                    </p>
-                    <div className="flex flex-col gap-2 text-sm text-slate-500">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        <span>{selectedUser.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        <span>{selectedUser.phone}</span>
-                      </div>
-                    </div>
+                      className="flex-1 border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold shadow-md hover:shadow-lg transition-all"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Download PDF
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setAssigningPaper(selectedPaper);
+                        setSelectedPaper(null);
+                        setShowAssignModal(true);
+                        setAssignError("");
+                      }}
+                      className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Assign Advisor
+                    </Button>
                   </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-slate-900 mb-2">
-                    Biography
-                  </h4>
-                  <p className="text-slate-700 leading-relaxed">
-                    {selectedUser.bio}
-                  </p>
                 </div>
               </div>
             )}

@@ -9,6 +9,7 @@ import {
   TrendingDown,
   GraduationCap,
 } from "lucide-react";
+import { UsersResponse } from '@/types/userType/userType';
 
 const stats = [
   { title: "Total Advisor", value: "1,234", change: "+12%", trend: "up", icon: Users, iconVar: '--primary' },
@@ -21,7 +22,7 @@ function cn(...classes: (string | boolean | undefined)[]): string {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function AdviserStats() {
+export default function AdviserStats({ advisers }: { advisers: UsersResponse | undefined }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => {

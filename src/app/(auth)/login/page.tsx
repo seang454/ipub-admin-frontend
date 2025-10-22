@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
+  const param = useSearchParams();
   useEffect(() => {
-    setLoading(false);
-  }, []);
+    signIn("keycloak", {
+      callbackUrl: param.get("callbackUrl") || "/"
+    })
+  }, [param]);
 
   if (loading) return <div>Loading...</div>;
 

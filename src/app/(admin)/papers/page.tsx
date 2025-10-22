@@ -1,4 +1,5 @@
 'use client'
+import DocuhubLoader from "@/components/loader/docuhub-loading";
 import { PaperStats } from "@/components/papers/paper-stats";
 import PaperManagement from "@/components/papers/paper-table";
 import { useGetPaperQuery } from "@/lib/api/paperSlice";
@@ -11,7 +12,7 @@ export default function PaperPage() {
     token: session?.accessToken ?? "",
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <DocuhubLoader/>;
 
   if (!papers) return <div>No papers found</div>; // handle undefined
 

@@ -109,7 +109,9 @@ export const studentApi = createApi({
     }),
     deleteStudent: builder.mutation<void, { uuid: string; token: string }>({
       query: ({ uuid, token }) => ({
-        url: `/${uuid}`,
+        // backend uses singular 'student' for other student endpoints (create/update),
+        // use same pattern for delete to match server routes
+        url: `/student/${uuid}`,
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

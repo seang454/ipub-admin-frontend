@@ -79,6 +79,7 @@ import {
   EditUserSchema,
 } from "./zodvalidation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export interface CreateUserData {
   username: string;
@@ -103,36 +104,6 @@ export interface UpdateUserData {
   telegramId: string;
   isActive: boolean;
 }
-
-// export const generateFakeUsers = (count: number): User[] =>
-//   Array.from({ length: count }, (_, i) => ({
-//     slug: `user-${i + 1}`,
-//     uuid: `uuid-${i + 1}`,
-//     userName: `user${i + 1}`,
-//     gender: Math.random() > 0.5 ? "Male" : "Female",
-//     email: `user${i + 1}@example.com`,
-//     fullName: `User ${i + 1}`,
-//     firstName: `User`,
-//     lastName: `${i + 1}`,
-//     imageUrl: null,
-//     status: "Manager",
-//     createDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000))
-//       .toISOString()
-//       .split("T")[0],
-//     updateDate: new Date().toISOString().split("T")[0],
-//     bio: Math.random() > 0.5 ? `Bio for user ${i + 1}` : null,
-//     address: Math.random() > 0.5 ? `Address ${i + 1}` : null,
-//     contactNumber:
-//       Math.random() > 0.5
-//         ? `+855${Math.floor(Math.random() * 100000000)}`
-//         : null,
-//     telegramId: Math.random() > 0.5 ? `@user${i + 1}` : null,
-//     isUser: true,
-//     isAdmin: Math.random() > 0.9,
-//     isStudent: Math.random() > 0.7,
-//     isAdvisor: Math.random() > 0.8,
-//     isActive:true
-//   }));
 
 export function UserTable({ allUsers }: { allUsers: User[] }) {
   const [users, setUsers] = useState<User[]>([]);
@@ -342,6 +313,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                 onClick={() => {
                   setSelectedUser(row.original);
                   setViewOpen(true);
+                  setCurrentId(row.original.uuid)
                 }}
               >
                 <Eye className="w-3.5 h-3.5 mr-2" />
@@ -1433,6 +1405,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
             </div>
           )}
           <DialogFooter>
+            <Link href={`/users/${currentId}`}>Go to</Link>
             <Button
               variant="outline"
               onClick={() => setViewOpen(false)}

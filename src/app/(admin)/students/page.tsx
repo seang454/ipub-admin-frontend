@@ -1,4 +1,5 @@
 "use client";
+import DocuhubLoader from "@/components/loader/docuhub-loading";
 import { StudentStats } from "@/components/students/student-stats";
 import { StudentTable } from "@/components/students/student-table";
 import { useGetStudentsQuery } from "@/lib/api/studentSlice";
@@ -20,7 +21,7 @@ export default function Page() {
     redirect("/");
   }
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <DocuhubLoader/>;
   }
   return (
     <div className="p-6 border-border shadow-sm hover:shadow-md transition-all duration-200 bg-background-root">

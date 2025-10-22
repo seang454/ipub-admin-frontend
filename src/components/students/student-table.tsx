@@ -75,9 +75,12 @@ import {
   useCreateNewStudentMutation,
   useDeleteStudentMutation,
   useUpdateStudentMutation,
+  useGetAllStudentsQuery,
 } from "@/lib/api/studentSlice";
 import { redirect } from "next/navigation";
 import { StudentUpdateType } from "@/types/studentType/studentType";
+import { UploadMediaResponse } from "@/types/mediaType/mediaType";
+import { useCreateMediaMutation } from "@/lib/api/imageSlice";
 
 const courseOptions = [
   "BS Computer Science",
@@ -95,7 +98,9 @@ export function StudentTable({
 }: {
   allStudents: User[] | undefined;
 }) {
-  console.log("allStudents :>> ", allStudents);
+  const { data: session, status } = useSession();
+  const accessToken = session?.accessToken as string | undefined;
+  // console.log("allStudents :>> ", allStudents);
   const roleOptions = [
     "Student",
     "Mentor",
@@ -104,7 +109,19 @@ export function StudentTable({
     "Advisor",
   ] as const;
 
-  const [students, setStudents] = useState<User[]>(allStudents || []);
+  // Use RTK Query to fetch latest students and allow refetch after mutations.
+  const {
+    data: fetchedStudents,
+    isLoading: studentsLoading,
+    refetch: refetchStudents,
+  } = useGetAllStudentsQuery(
+    { token: accessToken ?? "", size: 200 },
+    { skip: !accessToken }
+  );
+
+  // Source-of-truth: prefer fetched students, fall back to server-provided prop, then empty array.
+  const students = fetchedStudents ?? allStudents ?? [];
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Active" | "Inactive"
@@ -123,17 +140,21 @@ export function StudentTable({
     value: boolean
   ) => {
     if (!selectedUser) return;
-    setStudents(
-      students.map((u) =>
-        u.uuid === selectedUser.uuid
-          ? {
-              ...u,
-              [roleType]: value,
-              updateDate: new Date().toISOString().split("T")[0],
-            }
-          : u
-      )
+    // Keep immediate UI feedback locally (optimistic), but refetch to get authoritative data.
+    // NOTE: roles persistence may require a different API endpoint; we still refetch so table updates.
+    // Update local preview by mapping through current students (non-persistent)
+    // This keeps UI responsive until server refetch overrides with real data.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (students as any) = students.map((u: User) =>
+      u.uuid === selectedUser.uuid
+        ? {
+            ...u,
+            [roleType]: value,
+            updateDate: new Date().toISOString().split("T")[0],
+          }
+        : u
     );
+    void refetchStudents?.();
   };
   const [currentId, setCurrentId] = useState<string>("");
 
@@ -165,8 +186,6 @@ export function StudentTable({
   });
 
   //get session token
-  const { data: session, status } = useSession();
-  const accessToken = session?.accessToken as string | undefined;
   // RDk for Create New Student
   const [createNewStudent, { isLoading: createIsLoading }] =
     useCreateNewStudentMutation();
@@ -177,17 +196,21 @@ export function StudentTable({
   const [deleteStudent, { isLoading: deleteIsLoading }] =
     useDeleteStudentMutation();
 
+  const [uploadImage, { isLoading: uploadIsLoading }] =
+    useCreateMediaMutation();
+
   // Image upload state
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
       const matchesSearch =
         s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === "All" || s.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "All" ||
+        (statusFilter === "Active" ? s.isActive === true : s.isActive === false);
       return matchesSearch && matchesStatus;
     });
   }, [students, searchTerm, statusFilter]);
@@ -201,9 +224,6 @@ export function StudentTable({
     setSelectedStudent(row.original); // Set selected student
     setDeleteOpen(true); // Open delete confirmation
   };
-  const handleConvertImage = () =>{
-    
-  } 
 
   const columns = useMemo<ColumnDef<User, any>[]>(
     () => [
@@ -240,27 +260,28 @@ export function StudentTable({
         ),
       },
       {
-        accessorKey: "status",
+        accessorKey: "isActive",
         header: "Status",
-        cell: (info) => (
-          <Badge
-            variant="secondary"
-            className={
-              info.getValue<boolean>() === true
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
-                : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
-            }
-          >
-            <div
-              className={`w-2 h-2 rounded-full mr-2 ${
-                info.getValue<boolean>() === true
-                  ? "bg-emerald-500"
-                  : "bg-red-500"
-              }`}
-            />
-            {info.getValue<boolean>() === true ? "Active" : "Inactive"}
-          </Badge>
-        ),
+        cell: (info) => {
+          const active = info.getValue<boolean>() === true;
+          return (
+            <Badge
+              variant="secondary"
+              className={
+                active
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
+              }
+            >
+              <div
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  active ? "bg-emerald-500" : "bg-red-500"
+                }`}
+              />
+              {active ? "Active" : "Inactive"}
+            </Badge>
+          );
+        },
       },
       {
         accessorKey: "roles",
@@ -368,7 +389,7 @@ export function StudentTable({
                     fullName: row.original.fullName,
                     firstName: row.original.firstName,
                     lastName: row.original.lastName,
-                    status: row.original.status,
+                    status: row.original.isActive ? "Active" : "Inactive",
                     bio: row.original.bio || "",
                     address: row.original.address || "",
                     contactNumber: row.original.contactNumber || "",
@@ -396,6 +417,7 @@ export function StudentTable({
                 onClick={() => {
                   setSelectedUser(row.original);
                   setDeleteOpen(true);
+                  setCurrentId(row.original.uuid);
                 }}
                 className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
@@ -438,7 +460,6 @@ export function StudentTable({
     console.log("data :>> ", data);
     // Assuming you have a function to update the students list (e.g., setStudents)
     // Example: setStudents(prev => [...prev, newStudent]);
-
     // Clear the form fields
 
     try {
@@ -452,13 +473,15 @@ export function StudentTable({
         autoClose: 3000,
         theme: "colored",
       });
+      // Refresh students list after successful creation
+      void refetchStudents?.();
     } catch (error) {
       toast.error("Error creating student!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("error :>> ", error);
+      console.log("error :>> ", error);
     }
     setValue("firstname", "");
     setValue("lastname", "");
@@ -485,17 +508,69 @@ export function StudentTable({
     resolver: zodResolver(editStudentSchema), // Apply validation schema
   });
   // Form submission handler
-  const handleEditStudent: SubmitHandler<EditStudentFormData> = async(data) => {
-    console.log("Form Data:", data);
-    console.log('currentId', currentId)
+  const handleEditStudent: SubmitHandler<EditStudentFormData> = async (
+    data
+  ) => {
+    // console.log("Form Data:", data);
+    // console.log("currentId", currentId);
+
+    // If an image file was selected, upload via FormData first
+
+    let uploadedMediaUri: string | undefined;
+
+    if (imageFile) {
+      console.log("imageFile in if :>> ", imageFile);
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      try {
+        const uploadResp = await uploadImage(formData).unwrap();
+        console.log("uploadResp :>> ", uploadResp);
+
+        uploadedMediaUri = (uploadResp as UploadMediaResponse)?.data?.uri;
+        // console.log('uploadedMediaUri :>> ', uploadedMediaUri);
+
+        if (uploadedMediaUri) {
+          setUploadedImage(uploadedMediaUri);
+          // update the edit form value so UI & submission use the uploaded URI
+          editSetValue("studentCardUrl", uploadedMediaUri);
+          toast.success("Image uploaded successfully", {
+            position: "top-left",
+            autoClose: 2000,
+            theme: "colored",
+          });
+        } else {
+          toast.error("Upload returned no URI", {
+            position: "top-left",
+            autoClose: 3000,
+            theme: "colored",
+          });
+        }
+      } catch (err) {
+        console.log("Image upload failed:", err);
+        toast.error("Image upload failed. Will attempt to save other fields.", {
+          position: "top-left",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      }
+    }
+
+    // console.log('uploadedMediaUri :>> ', uploadedMediaUri);
+
+    const lastedData: StudentUpdateType = {
+      studentCardUrl: uploadedMediaUri ?? data?.studentCardUrl,
+      university: data?.university,
+      major: data?.major,
+      yearsOfStudy: data?.yearsOfStudy,
+    };
 
     // Submit logic: Save the student data, update state, etc.
 
     try {
       const response = await updateStudent({
         token: accessToken ?? "",
-        updateUser:data as StudentUpdateType,
-        uuid: currentId
+        updateUser: lastedData satisfies StudentUpdateType,
+        uuid: currentId,
       }).unwrap();
       console.log("response :>> ", response);
       toast.success("Student created successfully!", {
@@ -503,13 +578,15 @@ export function StudentTable({
         autoClose: 3000,
         theme: "colored",
       });
+      // Refresh students after update
+      void refetchStudents?.();
     } catch (error) {
       toast.error("Error creating student!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("error :>> ", error);
+      console.log("error :>> ", error);
     }
 
     setValue("firstname", "");
@@ -561,14 +638,31 @@ export function StudentTable({
     }
   };
 
-  const handleDeleteStudent = () => {
-    if (!selectedStudent) return;
-
-    setStudents((prevStudents) =>
-      prevStudents.filter((s) => s.uuid !== selectedStudent.uuid)
-    );
-
-    setDeleteOpen(false); // Close the modal or form
+  const handleDeleteStudent = async () => {
+    console.log('currentId :>> ', currentId);
+    if (!currentId) return;
+    try {
+      await deleteStudent({
+        uuid: currentId,
+        token: accessToken ?? "",
+      }).unwrap();
+      toast.success("Student deleted", {
+        position: "top-left",
+        autoClose: 2500,
+        theme: "colored",
+      });
+      // refresh list
+      void refetchStudents?.();
+    } catch (err) {
+      console.error("Failed to delete student:", err);
+      toast.error("Failed to delete student", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+    } finally {
+      setDeleteOpen(false);
+    }
   };
   if (!accessToken) {
     toast.error("Please login to view students!", {
@@ -1206,6 +1300,7 @@ export function StudentTable({
                 {uploadedImage && (
                   <div className="relative w-full max-w-xs">
                     <Image
+                      unoptimized
                       src={uploadedImage}
                       alt="Student Card Preview"
                       width={300}

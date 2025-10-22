@@ -1,26 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 // import Loading from '@/app/Loading';
-import { Button } from '@/components/ui/button';
-import { Paper } from '@/types/paperType/paperType';
-import PaperCard from '@/components/card/PaperCard';
-import { useGetPaperQuery } from '@/lib/api/paperSlice';
+import { Button } from "@/components/ui/button";
+import { Paper } from "@/types/paperType/paperType";
+import PaperCard from "@/components/card/PaperCard";
+import { useGetPaperQuery } from "@/lib/api/paperSlice";
+import { useSession } from "next-auth/react";
 
 export default function PapersListPage() {
+  const { data: session } = useSession();
+  const accessToken = session?.accessToken as string | undefined;
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 12;
 
-  const { data, isLoading, error, refetch, isSuccess, isError } = useGetPaperQuery();
+  const { data, isLoading, error, refetch, isSuccess, isError } =
+    useGetPaperQuery({
+      token: accessToken ?? "",
+    });
 
   // Enhanced debugging
-  console.log('📜 Papers Page Debug:', {
+  console.log("📜 Papers Page Debug:", {
     data,
     isLoading,
     error,
     isSuccess,
     isError,
-    papersCount: data?.papers?.content?.length || 0
+    papersCount: data?.papers?.content?.length || 0,
   });
 
   // if (isLoading) {
@@ -31,21 +37,29 @@ export default function PapersListPage() {
   //     </div>
   //   );
   // }
-  
+
   if (error) {
     return (
       <div className="w-[90%] mx-auto my-10">
-        <h1 className="font-bold text-3xl text-blue-600 uppercase mb-8">Research Papers</h1>
+        <h1 className="font-bold text-3xl text-blue-600 uppercase mb-8">
+          Research Papers
+        </h1>
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-2xl">
             <p className="text-lg mb-2">Failed to load papers from API</p>
             <details className="mb-4">
-              <summary className="cursor-pointer text-sm">Error details</summary>
+              <summary className="cursor-pointer text-sm">
+                Error details
+              </summary>
               <pre className="mt-2 text-xs bg-red-50 p-2 rounded overflow-auto">
                 {JSON.stringify(error, null, 2)}
               </pre>
             </details>
-            <Button onClick={() => refetch()} variant="outline" className="w-full">
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
+              className="w-full"
+            >
               Try Again
             </Button>
           </div>
@@ -61,13 +75,13 @@ export default function PapersListPage() {
 
   const handleNextPage = () => {
     if (hasNextPage) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (hasPrevPage) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
@@ -91,17 +105,29 @@ export default function PapersListPage() {
       {/* Debug Info */}
       <div className="mb-6 p-4 bg-blue-50 rounded-lg">
         <h3 className="font-semibold mb-2">Debug Information:</h3>
-        <p><strong>API Status:</strong> {isSuccess ? '✅ Success' : isError ? '❌ Error' : '🔄 Loading'}</p>
-        <p><strong>Papers loaded:</strong> {papers.length}</p>
-        <p><strong>Total in API:</strong> {data?.papers?.totalElements || 'Unknown'}</p>
-        <p><strong>API Message:</strong> {data?.message || 'None'}</p>
+        <p>
+          <strong>API Status:</strong>{" "}
+          {isSuccess ? "✅ Success" : isError ? "❌ Error" : "🔄 Loading"}
+        </p>
+        <p>
+          <strong>Papers loaded:</strong> {papers.length}
+        </p>
+        <p>
+          <strong>Total in API:</strong>{" "}
+          {data?.papers?.totalElements || "Unknown"}
+        </p>
+        <p>
+          <strong>API Message:</strong> {data?.message || "None"}
+        </p>
       </div>
 
       {papers.length === 0 ? (
         <div className="text-center py-12">
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-6 py-4 rounded-lg inline-block">
             <p className="text-lg">No papers found in the API response</p>
-            <p className="text-sm mt-2">The API returned successfully but with 0 papers.</p>
+            <p className="text-sm mt-2">
+              The API returned successfully but with 0 papers.
+            </p>
           </div>
         </div>
       ) : (
@@ -112,8 +138,10 @@ export default function PapersListPage() {
               <PaperCard
                 key={paper.uuid}
                 paper={paper}
-                onDownloadPDF={() => window.open(paper.fileUrl, '_blank')}
-                onToggleBookmark={() => console.log(`Toggle bookmark for paper ${paper.uuid}`)}
+                onDownloadPDF={() => window.open(paper.fileUrl, "_blank")}
+                onToggleBookmark={() =>
+                  console.log(`Toggle bookmark for paper ${paper.uuid}`)
+                }
                 isBookmarked={false}
               />
             ))}
@@ -129,11 +157,11 @@ export default function PapersListPage() {
               >
                 Previous
               </Button>
-              
+
               <span className="text-sm text-gray-600">
                 Page {currentPage + 1} of {totalPages}
               </span>
-              
+
               <Button
                 onClick={handleNextPage}
                 disabled={!hasNextPage}
@@ -147,4 +175,4 @@ export default function PapersListPage() {
       )}
     </section>
   );
-};
+}
