@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextAuthOptions } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
-import { refreshTokenRequest } from "./oidc";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,7 +15,6 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, account, profile }) {
-      // Initial sign-in
       if (account) {
         return {
           ...token,
@@ -32,33 +30,31 @@ export const authOptions: NextAuthOptions = {
             (profile as any)?.realm_access?.roles ??
             (profile as any)?.resource_access?.account?.roles ??
             [],
+          user: {
+            id: profile?.sub ?? null,
+            username: profile?.name ?? null,
+            email: profile?.email ?? null,
+            roles: (profile as any)?.realm_access?.roles ?? [],
+          },
         };
       }
-
-      // Refresh if expired
-      if (token.expiresAt && Date.now() / 1000 > token.expiresAt - 60) {
-        try {
-          const refreshed = await refreshTokenRequest(token.refreshToken);
-          return {
-            ...token,
-            accessToken: refreshed.access_token ?? token.accessToken,
-            refreshToken: refreshed.refresh_token ?? token.refreshToken,
-            expiresAt: Math.floor(
-              Date.now() / 1000 + (refreshed.expires_in || 3600)
-            ),
-          };
-        } catch {
-          return { ...token, error: "RefreshAccessTokenError" };
-        }
-      }
-
       return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.refreshToken = token.refreshToken;
-      session.error = token.error;
-      session.roles = token.roles;
+      if (token.error) {
+        session.error = token.error;
+      }
+
+      session.user = token.user as {
+        id: string | null;
+        username: string | null;
+        email: string | null;
+        roles: string[];
+      };
+      session.accessToken = token.accessToken as string;
+      session.refreshToken = token.refreshToken as string;
+      session.accessTokenExpires = token.expiresAt as number;
+
       return session;
     },
   },

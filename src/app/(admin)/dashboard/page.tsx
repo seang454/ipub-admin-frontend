@@ -78,7 +78,7 @@ export default function DashboardPage() {
   console.log("papers:", papers);
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background-root">
       <h1 className="text-3xl font-semibold text-primary mb-6">
         Dashboard Overview
       </h1>

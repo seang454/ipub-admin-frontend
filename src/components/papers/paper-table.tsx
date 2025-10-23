@@ -84,6 +84,7 @@ import {
   useDeletePaperMutation,
   useUpdateAdminPaperMutation,
 } from "@/lib/api/paperAdminSlice";
+import PDFViewer from "../pdf/pdfView";
 
 // Theme Context
 interface ThemeContextType {
@@ -1077,189 +1078,198 @@ export default function PaperManagement({
 
           <Dialog open={viewOpen} onOpenChange={setViewOpen}>
             <DialogContent
-              className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-0"
+              className="sm:max-w-4xl lg:max-w-7xl max-h-[100vh] overflow-y-auto bg-card border-0 grid grid-cols-1 md:grid-cols-2"
               ref={dialogRef}
               tabIndex={-1}
             >
-              <DialogHeader className="pb-4">
-                <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-lg">
-                    <Eye className="w-6 h-6 text-white" />
-                  </div>
-                  Paper Details
-                </DialogTitle>
-              </DialogHeader>
-              {selectedPaper && (
-                <div className="space-y-8 py-2">
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900 border-0 shadow-sm">
-                    <div className="absolute inset-0 bg-grid-slate-100 dark:bg-grid-slate-700 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] opacity-25"></div>
-                    <div className="relative p-8">
-                      <div className="flex flex-col lg:flex-row items-start gap-6">
-                        <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-800 shadow-lg flex-shrink-0">
-                          <AvatarImage
-                            src={
-                              selectedPaper.thumbnailUrl || "/placeholder.svg"
-                            }
-                            alt={`Thumbnail for ${selectedPaper.title}`}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 text-white font-bold text-2xl rounded-2xl">
-                            <FileText className="h-10 w-10" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0 space-y-4">
-                          <div>
-                            <h3 className="text-2xl font-bold text-foreground mb-2 leading-tight">
-                              {selectedPaper.title}
-                            </h3>
-                            <p className="text-muted-foreground leading-relaxed text-base">
-                              {selectedPaper.abstractText}
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedPaper.categoryNames.map(
-                              (category, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="outline"
-                                  className="bg-white/80 dark:bg-slate-700/80 text-blue-700 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900 px-3 py-1 text-sm font-medium"
-                                >
-                                  {category}
-                                </Badge>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      </div>
+              <section>
+                <DialogHeader className="pb-4">
+                  <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-lg">
+                      <Eye className="w-6 h-6 text-white" />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                          <FileText className="w-5 h-5 text-purple-600 dark:text-purple-200" />
-                        </div>
-                        <Label className="text-sm font-semibold text-muted-foreground">
-                          Paper Type
-                        </Label>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-700 text-sm px-4 py-2 font-medium"
-                      >
-                        {selectedPaper.categoryNames[0] || "Uncategorized"}
-                      </Badge>
-                    </div>
-
-                    <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-lg">
-                          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-200" />
-                        </div>
-                        <Label className="text-sm font-semibold text-muted-foreground">
-                          Status
-                        </Label>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={`text-sm px-4 py-2 font-medium ${
-                          selectedPaper.status === "APPROVED"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700"
-                            : selectedPaper.status === "UNDER_REVIEW"
-                            ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700"
-                            : selectedPaper.status === "DRAFT"
-                            ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
-                            : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
-                        }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full mr-2 ${
-                            selectedPaper.status === "APPROVED"
-                              ? "bg-emerald-500 dark:bg-emerald-400"
-                              : selectedPaper.status === "UNDER_REVIEW"
-                              ? "bg-amber-500 dark:bg-amber-400"
-                              : selectedPaper.status === "DRAFT"
-                              ? "bg-slate-500 dark:bg-slate-400"
-                              : "bg-red-500 dark:bg-red-400"
-                          }`}
-                        />
-                        {selectedPaper.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-
-                    <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                          <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-200" />
-                        </div>
-                        <Label className="text-sm font-semibold text-muted-foreground">
-                          Submitted Date
-                        </Label>
-                      </div>
-                      <p className="text-foreground font-semibold text-lg">
-                        {selectedPaper.submittedAt}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900 rounded-xl border-0 p-6">
-                    <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                      <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-200" />
-                      Additional Information
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Published:
-                        </span>
-                        <span className="font-medium text-foreground">
-                          {selectedPaper.isPublished ? "Yes" : "No"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Approved:</span>
-                        <span className="font-medium text-foreground">
-                          {selectedPaper.isApproved ? "Yes" : "No"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Created:</span>
-                        <span className="font-medium text-foreground">
-                          {selectedPaper.createdAt}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Published Date:
-                        </span>
-                        <span className="font-medium text-foreground">
-                          {selectedPaper.publishedAt || "Not published"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <DialogFooter className="pt-6 border-0">
-                <Button
-                  variant="outline"
-                  onClick={() => setViewOpen(false)}
-                  className="border-0 hover:bg-muted text-foreground px-6"
-                  aria-label="Close"
-                >
-                  Close
-                </Button>
+                    Paper Details
+                  </DialogTitle>
+                </DialogHeader>
                 {selectedPaper && (
-                  <Button
-                    onClick={() => downloadPaper(selectedPaper)}
-                    className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
+                  <div className="space-y-8 py-2">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900 border-0 shadow-sm">
+                      <div className="absolute inset-0 bg-grid-slate-100 dark:bg-grid-slate-700 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] opacity-25"></div>
+                      <div className="relative p-8">
+                        <div className="flex flex-col lg:flex-row items-start gap-6">
+                          <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-800 shadow-lg flex-shrink-0">
+                            <AvatarImage
+                              src={
+                                selectedPaper.thumbnailUrl || "/placeholder.svg"
+                              }
+                              alt={`Thumbnail for ${selectedPaper.title}`}
+                              className="object-cover"
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 text-white font-bold text-2xl rounded-2xl">
+                              <FileText className="h-10 w-10" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0 space-y-4">
+                            <div>
+                              <h3 className="text-2xl font-bold text-foreground mb-2 leading-tight">
+                                {selectedPaper.title}
+                              </h3>
+                              <p className="text-muted-foreground leading-relaxed text-base">
+                                {selectedPaper.abstractText}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedPaper.categoryNames.map(
+                                (category, idx) => (
+                                  <Badge
+                                    key={idx}
+                                    variant="outline"
+                                    className="bg-white/80 dark:bg-slate-700/80 text-blue-700 dark:text-blue-200 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900 px-3 py-1 text-sm font-medium"
+                                  >
+                                    {category}
+                                  </Badge>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                            <FileText className="w-5 h-5 text-purple-600 dark:text-purple-200" />
+                          </div>
+                          <Label className="text-sm font-semibold text-muted-foreground">
+                            Paper Type
+                          </Label>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-700 text-sm px-4 py-2 font-medium"
+                        >
+                          {selectedPaper.categoryNames[0] || "Uncategorized"}
+                        </Badge>
+                      </div>
+
+                      <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-lg">
+                            <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-200" />
+                          </div>
+                          <Label className="text-sm font-semibold text-muted-foreground">
+                            Status
+                          </Label>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className={`text-sm px-4 py-2 font-medium ${
+                            selectedPaper.status === "APPROVED"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700"
+                              : selectedPaper.status === "UNDER_REVIEW"
+                              ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700"
+                              : selectedPaper.status === "DRAFT"
+                              ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
+                              : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
+                          }`}
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full mr-2 ${
+                              selectedPaper.status === "APPROVED"
+                                ? "bg-emerald-500 dark:bg-emerald-400"
+                                : selectedPaper.status === "UNDER_REVIEW"
+                                ? "bg-amber-500 dark:bg-amber-400"
+                                : selectedPaper.status === "DRAFT"
+                                ? "bg-slate-500 dark:bg-slate-400"
+                                : "bg-red-500 dark:bg-red-400"
+                            }`}
+                          />
+                          {selectedPaper.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+
+                      <div className="bg-card rounded-xl border-0 p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-200" />
+                          </div>
+                          <Label className="text-sm font-semibold text-muted-foreground">
+                            Submitted Date
+                          </Label>
+                        </div>
+                        <p className="text-foreground font-semibold text-lg">
+                          {selectedPaper.submittedAt}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900 rounded-xl border-0 p-6">
+                      <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-200" />
+                        Additional Information
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Published:
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {selectedPaper.isPublished ? "Yes" : "No"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Approved:
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {selectedPaper.isApproved ? "Yes" : "No"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Created:
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {selectedPaper.createdAt}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Published Date:
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {selectedPaper.publishedAt || "Not published"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </DialogFooter>
+                <DialogFooter className="pt-6 border-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => setViewOpen(false)}
+                    className="border-0 hover:bg-muted text-foreground px-6"
+                    aria-label="Close"
+                  >
+                    Close
+                  </Button>
+                  {selectedPaper && (
+                    <Button
+                      onClick={() => downloadPaper(selectedPaper)}
+                      className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  )}
+                </DialogFooter>
+              </section>
+              <section>
+                <PDFViewer pdfUri={selectedPaper?.fileUrl || " "}/>
+              </section>
             </DialogContent>
           </Dialog>
 

@@ -5,13 +5,13 @@ import { PapersResponse } from "@/types/paperType/paperType";
 export const paperApi = createApi({
   reducerPath: "paperApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/papers`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/admin`,
   }),
   tagTypes: ["Paper"],
   endpoints: (builder) => ({
     getPaper: builder.query<PapersResponse, { token: string }>({
       query: ({ token }) => ({
-        url: "/published", // Ensure this is the correct endpoint URL
+        url: "/papers", // Ensure this is the correct endpoint URL
         headers: {
           Authorization: `Bearer ${token}`,
         },

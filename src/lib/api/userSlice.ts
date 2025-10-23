@@ -24,6 +24,15 @@ export const userApi = createApi({
       }),
       providesTags: ["User"], // ✅ correct placement
     }),
+    getAUserByUuid: builder.query<User,{token:string,uuid:string}>({
+      query: ({token,uuid}) => ({
+        url: `/user/${uuid}`,
+        method:"GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
     getUser: builder.query<
       UsersResponse,
       { page: number; size: number; token: string }
@@ -96,6 +105,7 @@ export const userApi = createApi({
 });
 
 export const {
+  useGetAUserByUuidQuery,
   useGetUserQuery,
   useGetAllMentorQuery,
   useGetAllStudentQuery,

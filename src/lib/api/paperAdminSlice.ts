@@ -3,6 +3,11 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { PapersResponse } from "@/types/paperType/paperType";
 import { text } from "stream/consumers";
 import { EditFormData } from "@/components/papers/paper-table";
+import {
+  PaginatedStudentsResponse,
+  Student,
+} from "@/types/studentType/studentType";
+import { query } from "../../../util/db";
 export type PaperData = {
   title: string;
   abstractText: string;
@@ -63,7 +68,7 @@ export const paperAdminApi = createApi({
       }),
       invalidatesTags: ["AdminPaper"],
     }),
-    deletePaper: builder.mutation<void,{token:string,uuid:string}>({
+    deletePaper: builder.mutation<void, { token: string; uuid: string }>({
       query: ({ token, uuid }) => ({
         url: `/admin/paper/${uuid}`,
         method: "DELETE",
@@ -73,6 +78,44 @@ export const paperAdminApi = createApi({
       }),
       invalidatesTags: ["AdminPaper"],
     }),
+    getAllPendingStudent: builder.query<
+      PaginatedStudentsResponse,
+      { token: string; page: number; size: number }
+    >({
+      query: (params) => ({
+        url: `/admin/student/pending`,
+        method: "GET",
+        params: {
+          page: params.page,
+          size: params.size,
+        },
+        headers: {
+          Authorization: `Bearer ${params.token}`,
+        },
+      }),
+    }),
+    getAStudentByUuid: builder.query<Student, { token: string; uuid: string }>({
+      query: ({ token, uuid }) => ({
+        url: `/admin/student/${uuid}`,
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    approveStudent: builder.mutation<
+      { message: string },
+      { uuid: string; token: string }
+    >({
+      query: ({ uuid, token }) => ({
+        url: `/admin/student/promote/${uuid}`,
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseHandler:"text"
+      }),
+    }),
   }),
 });
 
@@ -81,5 +124,8 @@ export const {
   useGetPaperQuery,
   useCreatePaperMutation,
   useUpdateAdminPaperMutation,
-  useDeletePaperMutation
+  useDeletePaperMutation,
+  useGetAllPendingStudentQuery,
+  useGetAStudentByUuidQuery,
+  useApproveStudentMutation
 } = paperAdminApi;

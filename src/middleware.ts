@@ -15,7 +15,6 @@ export default async function middleware(req: NextRequest) {
     req.nextUrl.pathname.startsWith("/signup");
 
   const protectedRoute = req.nextUrl.pathname.startsWith("/dashboard");
-
   if (authRoute && isValid) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }

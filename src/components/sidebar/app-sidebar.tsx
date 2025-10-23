@@ -11,6 +11,7 @@ import {
   BookText,
   Sun,
   Moon,
+  BellIcon,
 } from "lucide-react";
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -36,6 +37,7 @@ const data = {
     { title: "Advisers", url: "/advisers", icon: UserCheck },
     { title: "Students", url: "/students", icon: GraduationCap },
     { title: "Proposals", url: "/proposals", icon: BookText },
+    { title: "Notification", url: "/notification", icon: BellIcon}
   ],
 };
 
@@ -55,8 +57,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <div
           className="
             flex items-center justify-between px-4 py-4 mx-2 mt-2
-            bg-gradient-to-r from-indigo-100 to-purple-100
-            dark:from-indigo-700/20 dark:to-purple-700/20
+            bg-secondary
             rounded-lg shadow-md
           "
         >
@@ -66,15 +67,15 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               className="
                 flex h-10 w-10 items-center justify-center 
                 rounded-xl 
-                bg-gradient-to-br from-indigo-500 to-purple-500 
+                bg-secondary
                 text-white shadow-lg
               "
             >
-              <Shield className="h-5 w-5" />
+              <Shield className="h-5 w-5 text-white" />
             </div>
             <div className="grid flex-1 text-left leading-tight">
-              <span className="truncate font-bold text-lg">Admin Panel</span>
-              <span className="truncate text-sm text-gray-600 dark:text-gray-400">
+              <span className="truncate font-bold text-lg text-white">Admin Panel</span>
+              <span className="truncate text-sm text-white">
                 Management System
               </span>
             </div>
