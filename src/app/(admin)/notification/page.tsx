@@ -14,6 +14,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Search,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -80,6 +82,7 @@ export default function NotificationPage() {
 
   const [filter, setFilter] = useState("all");
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch individual student data by userUuid
   const fetchStudentData = async (
@@ -221,7 +224,14 @@ export default function NotificationPage() {
               ) {
                 return prev;
               }
-              return [newNotification, ...prev];
+              // Add new notification at the beginning (latest first)
+              const updated = [newNotification, ...prev];
+              // Sort by timestamp to ensure latest is always first
+              return updated.sort((a, b) => {
+                const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                return timeB - timeA; // Descending order (newest first)
+              });
             });
 
             // If student data is still loading, try to fetch it
@@ -251,7 +261,14 @@ export default function NotificationPage() {
             ) {
               return prev;
             }
-            return [newNotification, ...prev];
+            // Add new notification at the beginning (latest first)
+            const updated = [newNotification, ...prev];
+            // Sort by timestamp to ensure latest is always first
+            return updated.sort((a, b) => {
+              const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+              const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+              return timeB - timeA; // Descending order (newest first)
+            });
           });
 
           // If student data is still loading, try to fetch it
@@ -278,6 +295,7 @@ export default function NotificationPage() {
       subscriptionRef.current?.unsubscribe();
       stompClient.deactivate();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId, token]);
 
   // Load pending students as initial notifications
@@ -296,6 +314,7 @@ export default function NotificationPage() {
         senderId: student.userUuid,
         data: student,
         isLoading: false,
+        timestamp: new Date(0).toISOString(), // Old timestamp for initial pending students
       })
     );
 
@@ -304,7 +323,8 @@ export default function NotificationPage() {
       const newNotifs = studentNotifications.filter(
         (n) => !existingIds.has(n.id)
       );
-      return [...newNotifs, ...prev];
+      // Add initial notifications at the end, so real-time ones stay on top
+      return [...prev, ...newNotifs];
     });
   }, [getPendingStudents]);
 
@@ -319,16 +339,6 @@ export default function NotificationPage() {
       }, 300);
     }
   }, [highlightId, notifications]);
-
-  const getTypeStyles = (type: NotificationType) => {
-    const styles = {
-      success: "bg-green-50 border-green-200 text-green-800",
-      info: "bg-blue-50 border-blue-200 text-blue-800",
-      warning: "bg-amber-50 border-amber-200 text-amber-800",
-      error: "bg-red-50 border-red-200 text-red-800",
-    };
-    return styles[type] || styles.info;
-  };
 
   const getTypeIcon = (type: NotificationType) => {
     const baseClass = "w-10 h-10 rounded-full flex items-center justify-center";
@@ -361,7 +371,6 @@ export default function NotificationPage() {
       destination: "/app/update-read",
       body: JSON.stringify(payload),
     });
-
 
     setNotifications((prev) =>
       prev.map((n) => (n.senderId === senderUuid ? { ...n, read: true } : n))
@@ -399,8 +408,29 @@ export default function NotificationPage() {
     }
   };
 
-  const filteredNotifications =
+  // Filter by read/unread status
+  const statusFilteredNotifications =
     filter === "all" ? notifications : notifications.filter((n) => !n.read);
+
+  // Filter by search query
+  const filteredNotifications = statusFilteredNotifications.filter(
+    (notification) => {
+      if (!searchQuery.trim()) return true;
+
+      const query = searchQuery.toLowerCase();
+      const title = notification.title.toLowerCase();
+      const message = notification.message.toLowerCase();
+      const university = notification.data?.university?.toLowerCase() || "";
+      const major = notification.data?.major?.toLowerCase() || "";
+
+      return (
+        title.includes(query) ||
+        message.includes(query) ||
+        university.includes(query) ||
+        major.includes(query)
+      );
+    }
+  );
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -428,11 +458,11 @@ export default function NotificationPage() {
 
   useEffect(() => {
     setCurrentPage(0);
-  }, [filter]);
+  }, [filter, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background-root p-4 md:p-8">
-      <ToastContainer/>
+      <ToastContainer />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="rounded-2xl border mb-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
@@ -459,6 +489,35 @@ export default function NotificationPage() {
             <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <Settings className="w-5 h-5 text-slate-600" />
             </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="border-t border-slate-200 pt-4 pb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search notifications by title, university, or major..."
+                className="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-700 placeholder-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <p className="text-sm text-slate-600 mt-2">
+                Found {filteredNotifications.length} result
+                {filteredNotifications.length !== 1 ? "s" : ""} for &quot;
+                {searchQuery}&quot;
+              </p>
+            )}
           </div>
 
           {/* Filter Tabs */}
@@ -503,11 +562,31 @@ export default function NotificationPage() {
             </div>
           ) : paginatedNotifications.length === 0 ? (
             <div className="rounded-2xl border p-12 text-center bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
-              <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-dynamic2 mb-2">
-                No notifications
-              </h3>
-              <p className="text-slate-500">You&apos;re all caught up!</p>
+              {searchQuery ? (
+                <>
+                  <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-dynamic2 mb-2">
+                    No results found
+                  </h3>
+                  <p className="text-slate-500">
+                    Try adjusting your search terms or filters
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Clear search
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-dynamic2 mb-2">
+                    No notifications
+                  </h3>
+                  <p className="text-slate-500">You&apos;re all caught up!</p>
+                </>
+              )}
             </div>
           ) : (
             paginatedNotifications.map((notification) => (
@@ -576,7 +655,7 @@ export default function NotificationPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         {!notification.read && (
                           <button
-                            disabled={notification.read}  
+                            disabled={notification.read}
                             onClick={() => markAsRead(notification.senderId)}
                             className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                           >
