@@ -56,7 +56,7 @@ jobs:
               git fetch origin
               git reset --hard origin/main
               
-              # Show current commit
+              # Show current commit here
               log "Current commit: $(git log -1 --oneline)"
             else
               log "📂 Cloning repo..."
