@@ -60,7 +60,7 @@ jobs:
               log "Current commit: $(git log -1 --oneline)"
             else
               log "📂 Cloning repo..."
-              git clone https://${{ secrets.PAT_TOKEN }}@github.com/FSWD-GEN-01/ipub-admin-frontend.git $HOME/docuhub-frontend
+              git clone https://${{ secrets.PAT_TOKEN }}@github.com/seang454/ipub-admin-frontend.git $HOME/docuhub-frontend
               cd $HOME/docuhub-frontend
               log "Cloned commit: $(git log -1 --oneline)"
             fi
