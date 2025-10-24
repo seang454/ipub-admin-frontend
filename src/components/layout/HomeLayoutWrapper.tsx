@@ -32,8 +32,7 @@ export default function HomeLayoutWrapper({
     // Check for the notification page
     return <NotificationPage />;
   } else if (pathName.startsWith("/notification/")) {
-    // Extract the notification ID from the URL for the detail page
-    const notificationId = pathName.split("/notification/")[1];
-    return <NotificationDetailPage uuid={notificationId} />;
+    // Render notification detail page (it uses useParams() to get the ID)
+    return <NotificationDetailPage />;
   } else return <HomeWrapper>{children}</HomeWrapper>;
 }

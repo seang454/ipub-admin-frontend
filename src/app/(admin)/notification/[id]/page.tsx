@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 
-export default function StudentDetailPage({ uuid }: { uuid: string }) {
+export default function StudentDetailPage() {
   const { data: session } = useSession();
   const token = session?.accessToken || " ";
   const searchParams = useSearchParams();
+  const params = useParams();
+  const uuid = params?.id as string;
   const fromNotificationId = searchParams?.get("from");
 
   const { data: getAUser, isLoading: userLoading } = useGetAUserByUuidQuery({

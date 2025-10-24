@@ -1,132 +1,304 @@
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 DocuHub Admin Dashboard
 
-## Getting Started
+> A modern Next.js admin dashboard for managing academic papers, students, advisers, and research proposals deployed on Google Cloud Platform.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)
+![React](https://img.shields.io/badge/React-19.1.0-61DAFB?logo=react)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.13-38B2AC?logo=tailwind-css)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)
+
+---
+
+## 🚀 Features
+
+- 📊 **Dashboard Analytics** - Real-time statistics and charts
+- 📄 **Paper Management** - Upload, review, and approve research papers
+- 👨‍🎓 **Student Management** - Track student progress and submissions
+- 👨‍🏫 **Adviser Management** - Manage academic advisers and assignments
+- 📝 **Proposal System** - Review and approve research proposals
+- 🔐 **Authentication** - Secure NextAuth.js authentication
+- 🌐 **Internationalization** - Multi-language support (English & Khmer)
+- 🌙 **Dark Mode** - Built-in theme switching
+- 📱 **Responsive Design** - Mobile-first approach
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+- **Framework:** Next.js 15.5.0 (App Router)
+- **Language:** TypeScript 5
+- **UI Library:** React 19.1.0
+- **Styling:** TailwindCSS 4.1.13
+- **Components:** Radix UI, Shadcn/ui
+- **State Management:** Redux Toolkit
+- **Forms:** React Hook Form + Zod validation
+- **Charts:** Recharts
+- **PDF Handling:** React-PDF, PDF.js, PDF-lib
+
+### Backend Integration
+
+- **Authentication:** NextAuth.js
+- **API Client:** Custom fetch utilities
+- **Real-time:** STOMP.js, SockJS
+
+### DevOps
+
+- **Containerization:** Docker (Multi-stage build)
+- **Cloud Platform:** Google Cloud Platform (GCE VM)
+- **CI/CD:** GitHub Actions
+- **Deployment:** Automated with health checks & rollback
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+
+- **Node.js** 20.x or higher
+- **npm** or **yarn**
+- **Docker** (for containerized deployment)
+
+### Local Development
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/FSWD-GEN-01/ipub-admin-frontend.git
+cd ipub-admin-frontend
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Set up environment variables**
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your configuration:
+
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here
+NEXT_PUBLIC_API_URL=https://your-api-url.com
+```
+
+4. **Run development server**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-=======
-# admin-dashboard
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+5. **Open in browser**
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/hongleap14/admin-dashboard.git
-git branch -M main
-git push -uf origin main
+http://localhost:3000
 ```
 
-## Integrate with your tools
+---
 
-- [ ] [Set up project integrations](https://gitlab.com/hongleap14/admin-dashboard/-/settings/integrations)
+## 🐳 Docker Deployment
 
-## Collaborate with your team
+### Build and Run Locally
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```bash
+# Build the Docker image
+docker build -t docuhub-frontend .
 
-## Test and Deploy
+# Run the container
+docker run -d -p 3000:3000 --name docuhub-admin docuhub-frontend
+```
 
-Use the built-in continuous integration in GitLab.
+### Using Docker Compose (Recommended for Local Dev)
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+```bash
+docker-compose up -d
+```
 
-***
+---
 
-# Editing this README
+## 🚀 Production Deployment (GCP)
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+This project uses **GitHub Actions** for automated deployment to Google Cloud Platform.
 
-## Suggestions for a good README
+### Setup GitHub Secrets
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Add these secrets to your repository:
 
-## Name
-Choose a self-explaining name for your project.
+- `GCE_VM_IP` - Your GCP VM IP address
+- `GCE_VM_USER` - SSH username
+- `GCE_SSH_PRIVATE_KEY` - SSH private key
+- `PAT_TOKEN` - GitHub Personal Access Token
+- `NEXTAUTH_SECRET` - NextAuth secret key
+- `API_URL` - Your backend API URL
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Deployment Process
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+1. Push to `main` branch
+2. GitHub Actions automatically:
+   - Builds optimized Docker image
+   - Tests the new container
+   - Performs health checks
+   - Switches traffic (zero-downtime)
+   - Rolls back on failure
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+---
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## 📁 Project Structure
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+ipub-admin-frontend/
+├── .github/
+│   └── workflows/
+│       └── frontend.yml        # CI/CD pipeline
+├── public/                     # Static assets
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (admin)/           # Admin routes
+│   │   ├── (auth)/            # Auth routes
+│   │   └── api/               # API routes
+│   ├── components/            # React components
+│   │   ├── ui/               # Shadcn components
+│   │   ├── dashboard/        # Dashboard widgets
+│   │   ├── papers/           # Paper management
+│   │   └── ...
+│   ├── lib/                   # Utilities & API clients
+│   ├── types/                 # TypeScript types
+│   └── middleware.ts          # Auth middleware
+├── Dockerfile                 # Multi-stage Docker build
+├── docker-compose.yml         # Local development setup
+├── next.config.ts            # Next.js configuration
+├── tailwind.config.ts        # Tailwind CSS config
+└── package.json              # Dependencies
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+---
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 🔧 Available Scripts
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```bash
+# Development
+npm run dev              # Start dev server with Turbopack
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+# Production
+npm run build            # Build for production
+npm start                # Start production server
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+# Code Quality
+npm run lint             # Run ESLint
+```
 
-## License
-For open source projects, say how it is licensed.
+---
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
->>>>>>> 8da4080743db2306c21f82843094e45270dc830e
+## 🌐 Environment Variables
+
+Required environment variables (see `.env.example`):
+
+```env
+# Authentication
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-nextauth-secret
+
+# API Configuration
+NEXT_PUBLIC_API_URL=https://api.example.com
+
+# Optional: Database (if using NextAuth with DB)
+# DATABASE_URL=postgresql://...
+```
+
+---
+
+## 🔐 Security Features
+
+- ✅ **HTTPS Only** (in production)
+- ✅ **Security Headers** (CSP, HSTS, X-Frame-Options)
+- ✅ **Authentication Middleware**
+- ✅ **Non-root Docker User**
+- ✅ **Environment Variable Protection**
+- ✅ **API Route Protection**
+
+---
+
+## 📊 Performance Optimizations
+
+- ⚡ **Multi-stage Docker Build** - 60% smaller images
+- ⚡ **Docker BuildKit Caching** - 3x faster builds
+- ⚡ **Next.js Image Optimization**
+- ⚡ **CSS Optimization**
+- ⚡ **Code Splitting** - Automatic route-based splitting
+- ⚡ **Tree Shaking** - Remove unused code
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 👥 Team
+
+### Development Team
+
+- Pho Hongleap
+- Peng Seang Sim
+- Sorn Sophamarinet
+- Khim Sokha
+- Butsea Vthong
+- Kry Sobothty
+- Vannarith Vr
+- Chim Theara
+
+### Mentors
+
+- Eung Lyzhia
+- Kim Chansokpheng
+
+---
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+---
+
+## 🆘 Support
+
+For support, please contact the development team or open an issue on GitHub.
+
+---
+
+## 🎯 Roadmap
+
+- [ ] Real-time notifications
+- [ ] Advanced analytics dashboard
+- [ ] PDF annotation system
+- [ ] Email notification system
+- [ ] Mobile app integration
+- [ ] Multi-tenant support
+
+---
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Shadcn/ui](https://ui.shadcn.com/)
+- [Radix UI](https://www.radix-ui.com/)
+- CSTAD Pre-University Training Program
+
+---
+
+**Built with ❤️ by the DocuHub Team**
