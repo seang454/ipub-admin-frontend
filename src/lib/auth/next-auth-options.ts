@@ -1,6 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextAuthOptions } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
+import { refreshTokenRequest } from "./oidc";
+
+// Define Keycloak profile type
+interface KeycloakProfile {
+  sub?: string;
+  name?: string;
+  email?: string;
+  realm_access?: {
+    roles?: string[];
+  };
+  resource_access?: {
+    account?: {
+      roles?: string[];
+    };
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,7 +30,9 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, account, profile }) {
-      if (account) {
+      // Initial sign in - save tokens from provider
+      if (account && profile) {
+        const keycloakProfile = profile as KeycloakProfile;
         return {
           ...token,
           accessToken: account.access_token ?? token.accessToken,
@@ -27,18 +44,45 @@ export const authOptions: NextAuthOptions = {
                 : 3600)
           ),
           roles:
-            (profile as any)?.realm_access?.roles ??
-            (profile as any)?.resource_access?.account?.roles ??
+            keycloakProfile?.realm_access?.roles ??
+            keycloakProfile?.resource_access?.account?.roles ??
             [],
           user: {
-            id: profile?.sub ?? null,
-            username: profile?.name ?? null,
-            email: profile?.email ?? null,
-            roles: (profile as any)?.realm_access?.roles ?? [],
+            id: keycloakProfile?.sub ?? null,
+            username: keycloakProfile?.name ?? null,
+            email: keycloakProfile?.email ?? null,
+            roles: keycloakProfile?.realm_access?.roles ?? [],
           },
         };
       }
-      return token;
+
+      // Token is still valid - return as is
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (token.expiresAt && currentTime < token.expiresAt) {
+        return token;
+      }
+
+      // Token has expired - try to refresh it
+      try {
+        console.log("🔄 Access token expired, refreshing...");
+        const refreshedTokens = await refreshTokenRequest(
+          token.refreshToken as string
+        );
+
+        console.log("✅ Token refreshed successfully");
+        return {
+          ...token,
+          accessToken: refreshedTokens.access_token,
+          refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+          expiresAt: Math.floor(Date.now() / 1000 + refreshedTokens.expires_in),
+          error: undefined,
+        };
+      } catch (error) {
+        return {
+          ...token,
+          error: "RefreshAccessTokenError",
+        };
+      }
     },
     async session({ session, token }) {
       if (token.error) {
@@ -72,7 +116,7 @@ export const authOptions: NextAuthOptions = {
               refresh_token: token.refreshToken!,
             }),
           }
-        ).catch(console.error);
+        ).catch(() => {});
       }
     },
   },

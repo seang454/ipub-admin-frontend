@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +68,15 @@ import { Adviser, adviserSchema } from "./zode";
 import { useDeleteUserMutation } from "@/lib/api/userSlice";
 
 // Types
+// Extended User type with optional adviser properties
+interface UserWithAdviserFields extends User {
+  experienceYears?: number;
+  linkedinUrl?: string;
+  office?: string;
+  socialLinks?: string;
+  university?: string;
+}
+
 interface Student {
   id: string;
   name: string;
@@ -221,7 +229,7 @@ export function AdviserTable({
     });
   }, [Advisor, searchTerm, statusFilter]);
 
-  const columns = useMemo<ColumnDef<User, any>[]>(
+  const columns = useMemo<ColumnDef<User, unknown>[]>(
     () => [
       {
         accessorKey: "fullName",
@@ -378,6 +386,7 @@ export function AdviserTable({
                 className="hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   // Populate edit form using known user fields (include new fields)
+                  const userWithFields = row.original as UserWithAdviserFields;
                   setSelectedStudent(row.original as unknown as User);
                   setCurrentId(row.original.uuid);
                   setEditFormData({
@@ -393,20 +402,23 @@ export function AdviserTable({
                     lastName: row.original.lastName ?? "",
                     status: row.original.isActive ?? false,
                     // new fields: try to read from user object if present
-                    experienceYears:
-                      (row.original as any).experienceYears ?? "",
-                    linkedinUrl: (row.original as any).linkedinUrl ?? "",
-                    office: (row.original as any).office ?? "",
-                    socialLinks: (row.original as any).socialLinks ?? "",
+                    experienceYears: String(
+                      userWithFields.experienceYears ?? ""
+                    ),
+                    linkedinUrl: userWithFields.linkedinUrl ?? "",
+                    office: userWithFields.office ?? "",
+                    socialLinks: userWithFields.socialLinks ?? "",
                     imageFile: null,
-                    imagePreview: (row.original as any).imageUrl ?? "",
+                    imagePreview: userWithFields.imageUrl ?? "",
                     bio: row.original.bio || "",
                     address: row.original.address || "",
                     contactNumber: row.original.contactNumber || "",
                     telegramId: row.original.telegramId || "",
-                    course: (row.original as any).university ?? "",
-                    role: row.original.role ?? "Student",
-                  } as any);
+                    course: userWithFields.university ?? "",
+                    role: (row.original.role === "Advisor"
+                      ? "Adviser"
+                      : row.original.role) as "Student" | "User" | "Adviser",
+                  });
                   setEditOpen(true);
                 }}
               >
@@ -475,7 +487,6 @@ export function AdviserTable({
         });
         void refetchAdvisors?.();
       } catch (err) {
-        console.error("Create adviser failed:", err);
         toast.error("Failed to create adviser", {
           position: "top-left",
           autoClose: 3000,
@@ -515,7 +526,10 @@ export function AdviserTable({
         const fd = new FormData();
         fd.append("file", editFormData.imageFile);
         const mediaRes = await createMedia(fd).unwrap();
-        imageUrl = (mediaRes as any).data?.uri ?? (mediaRes as any).data?.name;
+        const mediaData = (
+          mediaRes as { data?: { uri?: string; name?: string } }
+        ).data;
+        imageUrl = mediaData?.uri ?? mediaData?.name;
       }
 
       // Build payload using the submitted form values (not the local controlled inputs)
@@ -527,7 +541,7 @@ export function AdviserTable({
         status: formValues.status ?? "INACTIVE", // Default to "INACTIVE" if not provided
       };
 
-      console.log('Advisor :>> ', Advisor);
+      console.log("Advisor :>> ", Advisor);
 
       await updateAdvisor({
         uuid: selectedStudent.uuid,
@@ -542,7 +556,6 @@ export function AdviserTable({
       });
       void refetchAdvisors?.();
     } catch (err) {
-      console.error("Update adviser failed:", err);
       toast.error("Failed to update adviser", {
         position: "top-left",
         autoClose: 3000,
@@ -571,7 +584,6 @@ export function AdviserTable({
         });
         void refetchAdvisors?.();
       } catch (err) {
-        console.error("Delete adviser failed:", err);
         toast.error("Failed to delete adviser", {
           position: "top-left",
           autoClose: 3000,
@@ -646,7 +658,7 @@ export function AdviserTable({
               </DropdownMenu>
               <Dialog open={addOpen} onOpenChange={setAddOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-sm">
+                  <Button className="shadow-sm">
                     <Plus className="w-4 h-4 mr-2" /> Add Adviser
                   </Button>
                 </DialogTrigger>
@@ -896,7 +908,7 @@ export function AdviserTable({
                 size="sm"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900  shadow-sm"
+                className="border-border hover:bg-card text-foreground shadow-sm"
               >
                 First
               </Button>
@@ -905,7 +917,7 @@ export function AdviserTable({
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900  shadow-sm"
+                className="border-border hover:bg-card text-foreground shadow-sm"
               >
                 Previous
               </Button>
@@ -914,7 +926,7 @@ export function AdviserTable({
                 size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900  shadow-sm"
+                className="border-border hover:bg-card text-foreground shadow-sm"
               >
                 Next
               </Button>
@@ -923,7 +935,7 @@ export function AdviserTable({
                 size="sm"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="border-slate-300 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 text-slate-900  shadow-sm"
+                className="border-border hover:bg-card text-foreground shadow-sm"
               >
                 Last
               </Button>
@@ -954,7 +966,7 @@ export function AdviserTable({
                     <SelectItem
                       key={size}
                       value={size.toString()}
-                      className="border-0 bg-white"
+                      className="border-0 bg-card"
                     >
                       Show {size}
                     </SelectItem>
@@ -1137,7 +1149,7 @@ export function AdviserTable({
         {/* //edit  */}
 
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-200" />
@@ -1199,7 +1211,7 @@ export function AdviserTable({
                     <SelectTrigger className="w-full h-10 border-slate-300 rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-white dark:bg-slate-800 border-0">
+                    <SelectContent className="bg-popover border-0">
                       <SelectItem value="true">Active</SelectItem>
                       <SelectItem value="false">Inactive</SelectItem>
                     </SelectContent>
@@ -1267,7 +1279,7 @@ export function AdviserTable({
 
         {/* Delete Dialog */}
         <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DialogContent className="sm:max-w-md  hover:shadow-md  hover:bg-card/80  p-6 bg-card border-border shadow-sm  transition-all duration-200 backdrop-blur-sm rounded-2xl">
+          <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-dynamic2">
                 Delete Adviser

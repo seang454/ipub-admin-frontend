@@ -42,7 +42,7 @@ export default function UsersPage() {
       console.log("admins filtered :>> ", admins); // correct immediately
     }
   }, [users]);
-  if (isLoading) return <DocuhubLoader/>;
+  if (isLoading) return <DocuhubLoader />;
 
   console.log("users in firt fetch :>> ", users);
   console.log("admin :>> ", admin);
@@ -57,10 +57,12 @@ export default function UsersPage() {
         </h1>
         <UserStats allUsers={users} />
 
-        <div className="mt-6 bg-white p-6 rounded-lg ">
+        <div className="mt-6 bg-card p-6 rounded-lg border border-border shadow-sm">
           <div className="mb-2">
-            <h2 className="text-3xl font-semibold text-primary mb-2">Users</h2>
-            <p className="text-gray-600">
+            <h2 className="text-3xl font-semibold text-card-foreground mb-2">
+              Users
+            </h2>
+            <p className="text-muted-foreground">
               Manage users, roles, and permissions
             </p>
           </div>

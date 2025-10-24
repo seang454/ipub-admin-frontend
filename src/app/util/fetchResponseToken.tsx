@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
 
 // Define the AuthResponse type according to your API response structure
 type AuthResponse = {
   access_token: string;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export default function FetchResponseToken(): AuthResponse | null {
@@ -21,9 +20,7 @@ export default function FetchResponseToken(): AuthResponse | null {
         setAuthResponse(body);
 
         // Redirect after fetching
-      } catch (err) {
-        console.error("❌ Fetch error:", err);
-      }
+      } catch (err) {}
     };
 
     fetchProtected();

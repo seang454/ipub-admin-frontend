@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import type React from "react";
 import {
@@ -269,7 +268,7 @@ export default function PaperManagement({
   }, [allPapers.papers.content, debouncedSearchTerm, statusFilter]);
 
   // Column definitions
-  const columns = useMemo<ColumnDef<Paper, any>[]>(
+  const columns = useMemo<ColumnDef<Paper, unknown>[]>(
     () => [
       {
         accessorKey: "title",
@@ -506,7 +505,6 @@ export default function PaperManagement({
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("Upload failed:", err);
     }
   };
 
@@ -594,7 +592,6 @@ export default function PaperManagement({
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("Upload failed:", err);
     }
 
     setFormErrors({});
@@ -629,17 +626,62 @@ export default function PaperManagement({
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("Upload failed:", err);
     }
   };
 
   const downloadPaper = async (paper: Paper) => {
     try {
-      const response = await fetch(paper.fileUrl);
-      if (!response.ok) throw new Error("Failed to access file");
-      window.open(paper.fileUrl, "_blank");
+      // Show loading toast
+      toast.info("Downloading PDF...", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+
+      const response = await fetch(paper.fileUrl, {
+        mode: "cors",
+        credentials: "omit",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${paper.title}.pdf` || "document.pdf";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+      toast.success("PDF downloaded successfully!", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
     } catch (error) {
-      alert("Error downloading file: " + (error as Error).message);
+      toast.warning("Could not download directly. Opening in new tab...", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      // Fallback: create a link with download attribute
+      const link = document.createElement("a");
+      link.href = paper.fileUrl;
+      link.download = `${paper.title}.pdf` || "document.pdf";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -724,12 +766,12 @@ export default function PaperManagement({
 
                 <Dialog open={addOpen} onOpenChange={setAddOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+                    <Button className="shadow-md">
                       <Plus className="w-4 h-4 mr-2" /> Add Paper
                     </Button>
                   </DialogTrigger>
 
-                  <DialogContent className="sm:max-w-lg bg-gradient-to-b from-gray-900/90 to-gray-800/90  border  rounded-2xl text-white max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                  <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
                     <VisuallyHidden>
                       <DialogTitle className="text-dynamic2">
                         Add New Paper
@@ -855,7 +897,7 @@ export default function PaperManagement({
                                 type="button"
                                 onClick={() => {
                                   setThumbnailPreview("");
-                                  setValue("thumbnail", undefined as any);
+                                  setValue("thumbnail", "" as unknown as File);
                                 }}
                                 className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md"
                               >
@@ -1268,13 +1310,13 @@ export default function PaperManagement({
                 </DialogFooter>
               </section>
               <section>
-                <PDFViewer pdfUri={selectedPaper?.fileUrl || " "}/>
+                <PDFViewer pdfUri={selectedPaper?.fileUrl || " "} />
               </section>
             </DialogContent>
           </Dialog>
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent className="sm:max-w-2xl bg-gradient-to-b from-gray-900/90 to-gray-800/90 backdrop-blur-xl border border-gray-700/50 shadow-2xl rounded-2xl text-white p-6 max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
               <VisuallyHidden>
                 <DialogTitle>Edit Paper</DialogTitle>
               </VisuallyHidden>
@@ -1335,7 +1377,8 @@ export default function PaperManagement({
                       const file = e.target.files?.[0];
                       if (file) {
                         setTimeout(
-                          () => editSetValue("fileUrl", file as any),
+                          () =>
+                            editSetValue("fileUrl", file as unknown as string),
                           0
                         );
                         setFilePreview(file.name); // Just save the file name, not base64
@@ -1395,7 +1438,7 @@ export default function PaperManagement({
                           type="button"
                           onClick={() => {
                             setThumbnailPreview("");
-                            setValue("thumbnail", undefined as any);
+                            editSetValue("thumbnailUrl", "" as unknown as File);
                           }}
                           className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md"
                         >

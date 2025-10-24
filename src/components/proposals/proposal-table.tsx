@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import {
   ChevronRight,
@@ -13,6 +12,10 @@ import {
   Phone,
   ChevronLeft,
   Users,
+  Download,
+  Calendar,
+  Tag,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,9 +40,10 @@ import { useSession } from "next-auth/react";
 import { useGetPaperQuery } from "@/lib/api/paperSlice";
 import { useGetAllAdvisorsQuery } from "@/lib/api/advisorSlice";
 import { useAssignAdviserMutation } from "@/lib/api/assignMentor";
-import { Paper, GetPapersResponse } from "@/types/paperType/paperType";
+import { Paper } from "@/types/paperType/paperType";
 import { User } from "@/types/userType/userType";
 import { toast, ToastContainer } from "react-toastify";
+import PDFViewer from "@/components/pdf/pdfView";
 
 export function EnhancedProposals() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,8 +57,66 @@ export function EnhancedProposals() {
   const [currentPaperPage, setCurrentPaperPage] = useState(1);
   const [deadline, setDeadline] = useState<string>("");
   const [assignError, setAssignError] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"details" | "pdf">("details");
   const advisorsPerPage = 4;
   const papersPerPage = 3;
+
+  // Function to handle PDF download
+  const handleDownloadPDF = async (fileUrl: string, fileName: string) => {
+    try {
+      // Show loading toast
+      toast.info("Downloading PDF...", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+
+      const response = await fetch(fileUrl, {
+        mode: "cors",
+        credentials: "omit",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName || "document.pdf";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+      toast.success("PDF downloaded successfully!", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+    } catch (error) {
+      toast.warning("Could not download directly. Opening in new tab...", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      // Fallback: create a link with download attribute
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileName || "document.pdf";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
@@ -144,7 +206,7 @@ export function EnhancedProposals() {
     console.log("Papers :>> ", assigningPaper);
 
     try {
-      const response = await assignAdviser({
+      await assignAdviser({
         token: accessToken,
         assignMent: {
           paperUuid: assigningPaper.uuid,
@@ -166,8 +228,7 @@ export function EnhancedProposals() {
       setAdvisorSearch("");
       setDeadline("");
       setAssignError("");
-    } catch (error: any) {
-      console.error("Failed to assign advisor:", error);
+    } catch (error: unknown) {
       // setAssignError(
       //   error?.data?.message || "Failed to assign advisor. Please try again."
       // );
@@ -373,7 +434,10 @@ export function EnhancedProposals() {
                           <Button
                             variant="outline"
                             onClick={() =>
-                              window.open(proposal.fileUrl, "_blank")
+                              handleDownloadPDF(
+                                proposal.fileUrl,
+                                `${proposal.title}.pdf`
+                              )
                             }
                             className="border-slate-300 hover:border-slate-400"
                           >
@@ -453,114 +517,122 @@ export function EnhancedProposals() {
             }
           }}
         >
-          <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
-            <DialogHeader className="pb-4 border-b border-gray-200/50">
+          <DialogContent className="max-h-[90vh] flex flex-col p-0 bg-card border-border shadow-sm overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200/50 flex-shrink-0">
               <DialogTitle className="text-2xl font-bold text-blue-700">
                 Assign Advisor
               </DialogTitle>
-              <p className="text-gray-500 mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Select an advisor for:{" "}
                 <span className="font-semibold">{assigningPaper?.title}</span>
               </p>
             </DialogHeader>
 
-            <div className="space-y-6">
-              {assignError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {assignError}
-                </div>
-              )}
-
-              <div>
-                <label
-                  htmlFor="deadline"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Review Deadline <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="date"
-                  id="deadline"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search advisors by name or email..."
-                  value={advisorSearch}
-                  onChange={(e) => {
-                    setAdvisorSearch(e.target.value);
-                    setCurrentAdvisorPage(1);
-                  }}
-                  className=" bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                />
-              </div>
-
-              <div className="h-[40vh] overflow-y-auto space-y-3 pr-2">
-                {paginatedAdvisors.length > 0 ? (
-                  paginatedAdvisors.map((advisor: User) => (
-                    <Card
-                      key={advisor.uuid}
-                      className="border rounded-xl bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex items-center gap-5">
-                          <Avatar className="w-16 h-16 ring-2 ring-blue-500/30">
-                            <AvatarImage src={advisor.imageUrl || undefined} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-200 text-blue-700 font-semibold">
-                              {advisor.firstName[0]}
-                              {advisor.lastName[0]}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <h4 className="font-bold text-dynamic2 text-xl truncate">
-                              {advisor.fullName}
-                            </h4>
-                            <div className="flex items-center gap-2 text-sm text-dynamic2">
-                              <Mail className="w-4 h-4 text-blue-500" />
-                              <span className="truncate">{advisor.email}</span>
-                            </div>
-                            {advisor.contactNumber &&
-                              advisor.contactNumber !== "null" && (
-                                <div className="flex items-center gap-2 text-sm text-dynamic2">
-                                  <Phone className="w-4 h-4 text-blue-500" />
-                                  <span>{advisor.contactNumber}</span>
-                                </div>
-                              )}
-                          </div>
-
-                          <Button
-                            onClick={() => handleAssignAdvisor(advisor)}
-                            // disabled={isAssigning || !deadline}
-                            className=" bg-secondary text-dynamic2 "
-                          >
-                            {isAssigning ? "Assigning..." : "Assign"}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
-                    <Users className="w-12 h-12 mb-2 opacity-50" />
-                    <p className="text-sm font-medium">No advisors found</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Try adjusting your search
-                    </p>
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="space-y-4">
+                {assignError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {assignError}
                   </div>
                 )}
-              </div>
 
-              {totalAdvisorPages > 1 && (
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
+                <div>
+                  <label
+                    htmlFor="deadline"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
+                    Review Deadline <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    id="deadline"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full"
+                    required
+                  />
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Search advisors by name or email..."
+                    value={advisorSearch}
+                    onChange={(e) => {
+                      setAdvisorSearch(e.target.value);
+                      setCurrentAdvisorPage(1);
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+
+                <div className="space-y-3 max-h-[45vh] overflow-y-auto pr-2">
+                  {paginatedAdvisors.length > 0 ? (
+                    paginatedAdvisors.map((advisor: User) => (
+                      <Card
+                        key={advisor.uuid}
+                        className="border rounded-xl bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                      >
+                        <CardContent className="p-5">
+                          <div className="flex items-center gap-5">
+                            <Avatar className="w-16 h-16 ring-2 ring-blue-500/30">
+                              <AvatarImage
+                                src={advisor.imageUrl || undefined}
+                              />
+                              <AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-200 text-blue-700 font-semibold">
+                                {advisor.firstName[0]}
+                                {advisor.lastName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <h4 className="font-bold text-dynamic2 text-xl truncate">
+                                {advisor.fullName}
+                              </h4>
+                              <div className="flex items-center gap-2 text-sm text-dynamic2">
+                                <Mail className="w-4 h-4 text-blue-500" />
+                                <span className="truncate">
+                                  {advisor.email}
+                                </span>
+                              </div>
+                              {advisor.contactNumber &&
+                                advisor.contactNumber !== "null" && (
+                                  <div className="flex items-center gap-2 text-sm text-dynamic2">
+                                    <Phone className="w-4 h-4 text-blue-500" />
+                                    <span>{advisor.contactNumber}</span>
+                                  </div>
+                                )}
+                            </div>
+
+                            <Button
+                              onClick={() => handleAssignAdvisor(advisor)}
+                              // disabled={isAssigning || !deadline}
+                              className=" bg-secondary text-dynamic2 "
+                            >
+                              {isAssigning ? "Assigning..." : "Assign"}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+                      <Users className="w-12 h-12 mb-2 opacity-50" />
+                      <p className="text-sm font-medium">No advisors found</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Try adjusting your search
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {totalAdvisorPages > 1 && (
+              <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-card">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
                     {filteredAdvisors.length} advisor
                     {filteredAdvisors.length !== 1 ? "s" : ""} available
                   </p>
@@ -575,7 +647,7 @@ export function EnhancedProposals() {
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <span className="text-sm">
+                    <span className="text-sm text-foreground">
                       {currentAdvisorPage} / {totalAdvisorPages}
                     </span>
                     <Button
@@ -592,224 +664,324 @@ export function EnhancedProposals() {
                     </Button>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
         <Dialog
           open={!!selectedPaper}
-          onOpenChange={() => setSelectedPaper(null)}
+          onOpenChange={() => {
+            setSelectedPaper(null);
+            setActiveTab("details");
+          }}
         >
-          <DialogContent className="w-[90vw] max-w-6xl max-h-[90vh] overflow-hidden p-0 gap-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-0 border-border shadow-sm hover:shadow-md transition-all duration-200 bg-card/80 backdrop-blur-sm">
+          <DialogContent className="w-[98vw] max-w-[1800px] h-[95vh] overflow-hidden p-0 gap-0 bg-background border border-border shadow-2xl">
             {selectedPaper && (
-              <div className="relative">
-                {/* Hero Image Section with Gradient Overlay */}
-                <div className="relative h-72 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
-                  <Image
-                    height={288}
-                    width={1200}
-                    unoptimized
-                    src={selectedPaper.thumbnailUrl || "/placeholder.svg"}
-                    alt={selectedPaper.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 z-20 p-8">
-                    <Badge
-                      variant="secondary"
-                      className="mb-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm text-amber-700 dark:text-amber-400 border-0 shadow-lg"
-                    >
-                      <Clock className="w-3 h-3 mr-1" />
-                      {selectedPaper.status}
-                    </Badge>
+              <div className="flex flex-col h-full max-h-[95vh]">
+                {/* Modern Header */}
+                <div className="relative border-b border-border flex-shrink-0 bg-gradient-to-br from-card via-card to-muted/50">
+                  <div className="px-8 py-6">
+                    <div className="flex items-start justify-between gap-6">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="h-10 w-1.5 bg-gradient-to-b from-secondary to-secondary-hover rounded-full" />
+                          <h2 className="text-3xl font-bold text-foreground line-clamp-2">
+                            {selectedPaper.title}
+                          </h2>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap ml-4">
+                          <Badge
+                            variant="secondary"
+                            className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent/20"
+                          >
+                            <Clock className="w-3.5 h-3.5 mr-1.5" />
+                            {selectedPaper.status}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="bg-muted/50 text-foreground border-border hover:bg-muted"
+                          >
+                            <Download className="w-3.5 h-3.5 mr-1.5" />
+                            {selectedPaper.downloads} downloads
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 w-32 h-32 rounded-xl overflow-hidden border-2 border-border shadow-lg">
+                        <Image
+                          height={128}
+                          width={128}
+                          unoptimized
+                          src={selectedPaper.thumbnailUrl || "/placeholder.svg"}
+                          alt={selectedPaper.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Content Section */}
-                <div className="overflow-y-auto max-h-[calc(90vh-288px)] p-8 space-y-8">
-                  {/* Stats Cards */}
-                  <div>
-                    <h2 className="text-2xl font-bold text-white drop-shadow-2xl mb-2">
-                      {selectedPaper.title}
-                    </h2>
+                {/* Modern Tab Navigation */}
+                <div className="border-b border-border bg-card flex-shrink-0">
+                  <div className="flex gap-2 px-6 pt-4">
+                    <button
+                      onClick={() => setActiveTab("details")}
+                      className={`relative flex items-center gap-2 px-6 py-3 font-semibold transition-all duration-300 ${
+                        activeTab === "details"
+                          ? "text-secondary"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <FileCheck className="w-4 h-4" />
+                      Details
+                      {activeTab === "details" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-secondary to-secondary-hover" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("pdf")}
+                      className={`relative flex items-center gap-2 px-6 py-3 font-semibold transition-all duration-300 ${
+                        activeTab === "pdf"
+                          ? "text-secondary"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <FileText className="w-4 h-4" />
+                      View PDF
+                      {activeTab === "pdf" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-secondary to-secondary-hover" />
+                      )}
+                    </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
-                      <CardContent className="p-4 text-center">
-                        <FileText className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
-                        <p className="text-2xl font-bold text-dynamic2">
-                          {selectedPaper.downloads}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Downloads
-                        </p>
-                      </CardContent>
-                    </Card>
+                </div>
 
-                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
-                      <CardContent className="p-4 text-center">
-                        <Clock className="w-8 h-8 mx-auto mb-2 text-indigo-600 dark:text-indigo-400" />
-                        <p className="text-sm font-bold text-dynamic2">
-                          {new Date(
-                            selectedPaper.submittedAt
-                          ).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Submitted
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
-                      <CardContent className="p-4 text-center">
-                        <Eye className="w-8 h-8 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
-                        <p className="text-sm font-bold text-dynamic2">
-                          {selectedPaper.isPublished ? "Yes" : "No"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Published
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
-                      <CardContent className="p-4 text-center">
-                        <Filter className="w-8 h-8 mx-auto mb-2 text-pink-600 dark:text-pink-400" />
-                        <p className="text-sm font-bold text-dynamic2">
-                          {selectedPaper.categoryNames.length}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Categories
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Categories Section */}
-                  <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-bold text-dynamic2 mb-4 flex items-center gap-2">
-                        <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        Categories
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedPaper.categoryNames.map((category, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-700 dark:text-blue-300 border-0 px-4 py-1.5 text-sm font-medium"
-                          >
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Abstract Section */}
-                  <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-bold text-dynamic2 mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                        Abstract
-                      </h3>
-                      <p className="text-dynamic2 leading-relaxed text-base">
-                        {selectedPaper.abstractText || "No abstract provided"}
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Timeline Section */}
-                  <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-bold text-dynamic2 mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                        Timeline
-                      </h3>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mt-2" />
-                          <div>
-                            <p className="font-medium text-dynamic2">Created</p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(
-                                selectedPaper.createdAt
-                              ).toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
+                {/* Content Area */}
+                <div className="flex-1 overflow-y-auto min-h-0 bg-background">
+                  {activeTab === "details" ? (
+                    <div className="p-8 max-w-[90%] mx-auto space-y-8 pb-8">
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-1 gap-4 lg:gap-6">
+                        <Card className="group relative overflow-hidden border border-border bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-5 text-center relative z-10">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Download className="w-5 h-5 lg:w-6 lg:h-6 text-secondary" />
+                            </div>
+                            <p className="text-2xl lg:text-3xl font-bold text-foreground mb-1">
+                              {selectedPaper.downloads}
                             </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="w-2 h-2 bg-indigo-600 dark:bg-indigo-400 rounded-full mt-2" />
-                          <div>
-                            <p className="font-medium text-dynamic2">
-                              Submitted
+                            <p className="text-xs lg:text-sm text-muted-foreground font-medium truncate px-1">
+                              Downloads
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                          </CardContent>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </Card>
+
+                        <Card className="group relative overflow-hidden border border-border bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-5 text-center relative z-10">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-accent" />
+                            </div>
+                            <p className="text-base lg:text-xl font-bold text-foreground mb-1">
                               {new Date(
                                 selectedPaper.submittedAt
                               ).toLocaleDateString("en-US", {
-                                month: "long",
+                                month: "short",
                                 day: "numeric",
                                 year: "numeric",
                               })}
                             </p>
-                          </div>
-                        </div>
-                        {selectedPaper.publishedAt && (
-                          <div className="flex items-start gap-4">
-                            <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full mt-2" />
-                            <div>
-                              <p className="font-medium text-dynamic2">
-                                Published
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(
-                                  selectedPaper.publishedAt
-                                ).toLocaleDateString("en-US", {
-                                  month: "long",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                            <p className="text-xs lg:text-sm text-muted-foreground font-medium truncate px-1">
+                              Submitted
+                            </p>
+                          </CardContent>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </Card>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent dark:from-slate-900 dark:via-slate-900 dark:to-transparent pb-4">
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        window.open(selectedPaper.fileUrl, "_blank")
-                      }
-                      className="flex-1 border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold shadow-md hover:shadow-lg transition-all"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Download PDF
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setAssigningPaper(selectedPaper);
-                        setSelectedPaper(null);
-                        setShowAssignModal(true);
-                        setAssignError("");
-                      }}
-                      className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <UserCheck className="w-4 h-4 mr-2" />
-                      Assign Advisor
-                    </Button>
-                  </div>
+                        <Card className="group relative overflow-hidden border border-border bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-5 text-center relative z-10">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-chart-2/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Eye className="w-5 h-5 lg:w-6 lg:h-6 text-chart-2" />
+                            </div>
+                            <p className="text-base lg:text-xl font-bold text-foreground mb-1">
+                              {selectedPaper.isPublished ? "Yes" : "No"}
+                            </p>
+                            <p className="text-xs lg:text-sm text-muted-foreground font-medium truncate px-1">
+                              Published
+                            </p>
+                          </CardContent>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-chart-2/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </Card>
+
+                        <Card className="group relative overflow-hidden border border-border bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all duration-300">
+                          <CardContent className="p-4 lg:p-5 text-center relative z-10">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-chart-4/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Tag className="w-5 h-5 lg:w-6 lg:h-6 text-chart-4" />
+                            </div>
+                            <p className="text-2xl lg:text-3xl font-bold text-foreground mb-1">
+                              {selectedPaper.categoryNames.length}
+                            </p>
+                            <p className="text-xs lg:text-sm text-muted-foreground font-medium truncate px-1">
+                              Categories
+                            </p>
+                          </CardContent>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-chart-4/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </Card>
+                      </div>
+
+                      {/* Categories */}
+                      <Card className="border border-border bg-card hover:shadow-md transition-shadow duration-300">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+                              <Tag className="w-5 h-5 text-secondary" />
+                            </div>
+                            <h3 className="text-xl font-bold text-foreground">
+                              Categories
+                            </h3>
+                          </div>
+                          <div className="flex flex-wrap gap-2.5">
+                            {selectedPaper.categoryNames.map(
+                              (category, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="px-4 py-2 text-sm font-medium bg-secondary/5 text-secondary border-secondary/20 hover:bg-secondary/10 hover:border-secondary/30 transition-colors duration-200"
+                                >
+                                  {category}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Abstract */}
+                      <Card className="border border-border bg-card hover:shadow-md transition-shadow duration-300">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                              <FileText className="w-5 h-5 text-accent" />
+                            </div>
+                            <h3 className="text-xl font-bold text-foreground">
+                              Abstract
+                            </h3>
+                          </div>
+                          <p className="text-foreground leading-relaxed text-base">
+                            {selectedPaper.abstractText ||
+                              "No abstract provided"}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Timeline */}
+                      <Card className="border border-border bg-card hover:shadow-md transition-shadow duration-300">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center">
+                              <Clock className="w-5 h-5 text-chart-2" />
+                            </div>
+                            <h3 className="text-xl font-bold text-foreground">
+                              Timeline
+                            </h3>
+                          </div>
+                          <div className="relative space-y-6 pl-8">
+                            {/* Timeline line */}
+                            <div className="absolute left-2 top-3 bottom-3 w-0.5 bg-gradient-to-b from-secondary via-accent to-chart-2" />
+
+                            <div className="flex items-start gap-4 relative">
+                              <div className="absolute -left-8 w-5 h-5 bg-secondary rounded-full border-4 border-card shadow-md" />
+                              <div>
+                                <p className="font-bold text-foreground text-lg">
+                                  Created
+                                </p>
+                                <p className="text-muted-foreground mt-1">
+                                  {new Date(
+                                    selectedPaper.createdAt
+                                  ).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-4 relative">
+                              <div className="absolute -left-8 w-5 h-5 bg-accent rounded-full border-4 border-card shadow-md" />
+                              <div>
+                                <p className="font-bold text-foreground text-lg">
+                                  Submitted
+                                </p>
+                                <p className="text-muted-foreground mt-1">
+                                  {new Date(
+                                    selectedPaper.submittedAt
+                                  ).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+
+                            {selectedPaper.publishedAt && (
+                              <div className="flex items-start gap-4 relative">
+                                <div className="absolute -left-8 w-5 h-5 bg-chart-2 rounded-full border-4 border-card shadow-md" />
+                                <div>
+                                  <p className="font-bold text-foreground text-lg">
+                                    Published
+                                  </p>
+                                  <p className="text-muted-foreground mt-1">
+                                    {new Date(
+                                      selectedPaper.publishedAt
+                                    ).toLocaleDateString("en-US", {
+                                      month: "long",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ) : (
+                    <div className="p-6">
+                      <PDFViewer pdfUri={selectedPaper.fileUrl} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="border-t border-border bg-card p-5 flex gap-4 flex-shrink-0 shadow-lg">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      handleDownloadPDF(
+                        selectedPaper.fileUrl,
+                        `${selectedPaper.title}.pdf`
+                      )
+                    }
+                    className="flex-1 h-12 font-semibold border-border hover:bg-muted hover:border-muted-foreground transition-all duration-200"
+                  >
+                    <Download className="w-5 h-5 mr-2" />
+                    Download PDF
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setAssigningPaper(selectedPaper);
+                      setSelectedPaper(null);
+                      setShowAssignModal(true);
+                      setAssignError("");
+                      setActiveTab("details");
+                    }}
+                    variant="default"
+                    className="flex-1 h-12 font-semibold bg-gradient-to-r from-secondary to-secondary-hover hover:from-secondary-hover hover:to-secondary shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    <UserCheck className="w-5 h-5 mr-2" />
+                    Assign Advisor
+                  </Button>
                 </div>
               </div>
             )}

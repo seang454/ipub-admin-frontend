@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import pkg from "pg";
 const { Pool } = pkg;
 
@@ -10,6 +9,6 @@ export const pool = new Pool({
   port: 5400,
 });
 
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: unknown[]) {
   return pool.query(text, params);
 }

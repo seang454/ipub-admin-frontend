@@ -27,11 +27,14 @@ export async function POST(req: Request) {
 
     // Forward upstream content-type (likely application/json)
     const upstreamContentType = upstream.headers.get("content-type");
-    if (upstreamContentType) res.headers.set("content-type", upstreamContentType);
+    if (upstreamContentType)
+      res.headers.set("content-type", upstreamContentType);
 
     return res;
   } catch (err) {
-    console.error("Media proxy error:", err);
-    return NextResponse.json({ message: "Proxy error", error: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { message: "Proxy error", error: String(err) },
+      { status: 500 }
+    );
   }
 }

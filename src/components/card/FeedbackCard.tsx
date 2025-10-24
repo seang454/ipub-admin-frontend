@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Image from 'next/image';
+import React from "react";
+import Image from "next/image";
 
 export interface Feedback {
   id: string;
@@ -21,7 +21,7 @@ interface FeedbackCardProps {
 
 const FeedbackCard: React.FC<FeedbackCardProps> = ({
   feedback,
-  className = '',
+  className = "",
   showBorder = true,
 }) => {
   // Render star ratings if provided
@@ -31,7 +31,9 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
         {[...Array(5)].map((_, i) => (
           <svg
             key={i}
-            className={`w-4 h-4 ${i < rating ? 'text-accent' : 'text-gray-300 dark:text-gray-600'}`}
+            className={`w-4 h-4 ${
+              i < rating ? "text-accent" : "text-muted-foreground"
+            }`}
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -44,15 +46,15 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
 
   return (
     <div
-      className={`card ${showBorder ? 'border' : ''} ${className}`}
+      className={`card ${showBorder ? "border" : ""} ${className}`}
       style={{
-        width: '650px',
-        height: '259px',
-        marginTop: '20px',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px',
+        width: "650px",
+        height: "259px",
+        marginTop: "20px",
+        borderRadius: "8px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
       }}
     >
       <div className="flex items-center justify-between">
@@ -80,7 +82,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
               {feedback.userName}
             </p>
             {feedback.userTitle && (
-              <p className="text-small-text text-gray-500 dark:text-gray-400">
+              <p className="text-small-text text-muted-foreground">
                 {feedback.userTitle}
               </p>
             )}
@@ -107,7 +109,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
         <div className="flex justify-between items-center">
           {feedback.rating !== undefined && renderRating(feedback.rating)}
           {feedback.date && (
-            <span className="text-small-text text-gray-500 dark:text-gray-400">
+            <span className="text-small-text text-muted-foreground">
               {feedback.date}
             </span>
           )}

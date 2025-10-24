@@ -108,7 +108,11 @@ export default function NotificationPage() {
         return student || null;
       }
     } catch (error) {
-      console.error("Error fetching student data:", error);
+      toast.error("Error fetching student data", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
     }
     return null;
   };
@@ -284,7 +288,11 @@ export default function NotificationPage() {
         });
       },
       onStompError: (frame) => {
-        console.error("STOMP error:", frame);
+        toast.error("Connection error. Please refresh the page.", {
+          position: "top-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
       },
     });
 
@@ -404,7 +412,6 @@ export default function NotificationPage() {
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("Error verifying student:", error);
     }
   };
 

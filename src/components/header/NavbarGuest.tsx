@@ -8,38 +8,26 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
+import { toast } from "react-toastify";
 
 export default function NavbarGuest() {
   const pathname = usePathname();
   const { t, i18n } = useTranslation("common");
   const { data } = useSession();
+  const { theme, setTheme } = useTheme();
 
   const [mounted, setMounted] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [currentLang, setCurrentLang] = useState<"en" | "kh">("en");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-
-    const savedDarkMode = localStorage.getItem("darkMode");
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    const initialDarkMode = savedDarkMode
-      ? savedDarkMode === "true"
-      : prefersDark;
-    setIsDarkMode(initialDarkMode);
-    document.documentElement.classList.toggle("dark", initialDarkMode);
-
     if (i18n?.language) setCurrentLang(i18n.language as "en" | "kh");
   }, [i18n]);
 
   const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    document.documentElement.classList.toggle("dark", newMode);
-    localStorage.setItem("darkMode", newMode.toString());
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   const toggleLanguage = async () => {
@@ -49,7 +37,11 @@ export default function NavbarGuest() {
       await i18n.changeLanguage(newLang);
       setCurrentLang(newLang);
     } catch (err) {
-      console.error("Failed to change language", err);
+      toast.error("Failed to change language", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
     }
   };
 
@@ -99,7 +91,7 @@ export default function NavbarGuest() {
             onClick={toggleDarkMode}
             className="p-2 rounded-full hover:bg-muted transition"
           >
-            {isDarkMode ? (
+            {theme === "dark" ? (
               <Sun className="h-5 w-5 text-secondary" />
             ) : (
               <Moon className="h-5 w-5 text-secondary" />
@@ -173,7 +165,7 @@ export default function NavbarGuest() {
                 onClick={toggleDarkMode}
                 className="p-2 rounded-full hover:bg-muted transition"
               >
-                {isDarkMode ? (
+                {theme === "dark" ? (
                   <Sun className="h-5 w-5 text-secondary" />
                 ) : (
                   <Moon className="h-5 w-5 text-secondary" />

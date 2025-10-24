@@ -21,19 +21,21 @@ export default function Page() {
     redirect("/");
   }
   if (isLoading) {
-    return <DocuhubLoader/>;
+    return <DocuhubLoader />;
   }
   return (
     <div className="p-6 border-border shadow-sm hover:shadow-md transition-all duration-200 bg-background-root">
       <div>
-        <h1 className="text-3xl font-semibold py-6 ">Student Management</h1>
+        <h1 className="text-3xl font-semibold text-dynamic py-6">
+          Student Management
+        </h1>
         <StudentStats />
-        <div className="mt-6 bg-white p-6 rounded-lg">
+        <div className="mt-6 bg-card p-6 rounded-lg border border-border shadow-sm">
           <div>
-            <h2 className="text-2xl font-semibold text-primary mb-2">
+            <h2 className="text-2xl font-semibold text-card-foreground mb-2">
               Students
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Manage users, roles, and permissions
             </p>
             <StudentTable allStudents={studentsData?.content} />

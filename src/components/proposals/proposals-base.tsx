@@ -36,11 +36,11 @@ export function Proposals() {
         {proposals.map((proposal) => (
           <Card
             key={proposal.id}
-            className="p-6 border-none bg-white shadow-none"
+            className="p-6 border-none bg-card shadow-none"
           >
             <CardContent className="p-0">
               <div className="flex items-start justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-xl font-semibold text-foreground">
                   {proposal.title}
                 </h3>
                 <Badge
@@ -52,7 +52,7 @@ export function Proposals() {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-6 mb-4 text-sm text-gray-600">
+              <div className="flex items-center gap-6 mb-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   {proposal.author}
@@ -65,8 +65,10 @@ export function Proposals() {
               </div>
 
               <div className="mb-4">
-                <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                <p className="text-gray-600">{proposal.description}</p>
+                <h4 className="font-medium text-foreground mb-2">
+                  Description
+                </h4>
+                <p className="text-muted-foreground">{proposal.description}</p>
               </div>
 
               <div className="flex gap-2 mb-6">
@@ -82,20 +84,18 @@ export function Proposals() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">
+                  <h4 className="font-medium text-foreground mb-2">
                     Assign Adviser
                   </h4>
                   <Button
                     variant="outline"
-                    className="text-gray-600 bg-transparent"
+                    className="text-muted-foreground bg-transparent"
                   >
                     Choose an adviser
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
-                <Button className="text-white bg-blue-600 hover:bg-blue-700">
-                  Assign Adviser
-                </Button>
+                <Button>Assign Adviser</Button>
               </div>
             </CardContent>
           </Card>

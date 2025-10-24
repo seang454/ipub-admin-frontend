@@ -32,7 +32,7 @@ const stats = [
     change: "-4%",
     trend: "down",
     icon: UserX,
-    iconColor: "text-gray-500",
+    iconColor: "text-muted-foreground",
   },
   {
     title: "Graduates",
@@ -72,12 +72,14 @@ export function StudentStats() {
                     "text-sm font-medium",
                     stat.trend === "up" && "text-green-600",
                     stat.trend === "down" && "text-red-600",
-                    stat.trend === "neutral" && "text-gray-500"
+                    stat.trend === "neutral" && "text-muted-foreground"
                   )}
                 >
                   {stat.change}
                 </span>
-                <span className="text-sm text-gray-500">from last month</span>
+                <span className="text-sm text-muted-foreground">
+                  from last month
+                </span>
               </div>
             </div>
             <div className="flex-shrink-0">

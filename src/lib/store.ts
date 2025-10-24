@@ -10,6 +10,7 @@ import { mediaApi } from "./api/imageSlice";
 import { AdviserApi } from "./api/advisorSlice";
 import { categoryApi } from "./api/categorySlice";
 import { paperAdminApi } from "./api/paperAdminSlice";
+import { AssignmentApi } from "./api/assignMentor";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   [AdviserApi.reducerPath]: AdviserApi.reducer,
   [categoryApi.reducerPath]: categoryApi.reducer,
   [paperAdminApi.reducerPath]: paperAdminApi.reducer,
+  [AssignmentApi.reducerPath]: AssignmentApi.reducer,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer); // wrap the root reducer with persistReducer and use for store to persist the store and store the data in local storage
 export const store = configureStore({
@@ -43,7 +45,16 @@ export const store = configureStore({
           "persist/REGISTER",
         ], //disable the serializable check for these actions in redux persist
       },
-    }).concat(paperApi.middleware, userApi.middleware, studentApi.middleware, mediaApi.middleware, AdviserApi.middleware, categoryApi.middleware, paperAdminApi.middleware), // add the api middleware to the store
+    }).concat(
+      paperApi.middleware,
+      userApi.middleware,
+      studentApi.middleware,
+      mediaApi.middleware,
+      AdviserApi.middleware,
+      categoryApi.middleware,
+      paperAdminApi.middleware,
+      AssignmentApi.middleware
+    ), // add the api middleware to the store
 });
 
 export const persistor = persistStore(store); // create a persistor for the store

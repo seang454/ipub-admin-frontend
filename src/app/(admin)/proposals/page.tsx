@@ -6,10 +6,10 @@ export default function page() {
     <div className="p-6 bg-background-root">
       <div>
         <div className="mb-6">
-          <h2 className="text-3xl font-semibold py-6">
+          <h2 className="text-3xl font-semibold text-dynamic py-6">
             Proposals Management
           </h2>
-          <p className="text-gray-600">Manage all proposal statments</p>
+          <p className="text-muted-foreground">Manage all proposal statments</p>
         </div>
         <EnhancedProposals />
       </div>

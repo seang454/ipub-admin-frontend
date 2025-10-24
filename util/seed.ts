@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { faker } from "@faker-js/faker";
 import { Pool } from "pg";
 
 const pool = new Pool({
-   user: "postgres",
+  user: "postgres",
   host: "db.docuhub.me",
   database: "db_docuhub",
   password: "qwer",
   port: 5400,
 });
 
-async function query(text: string, params?: any[]) {
+async function query(text: string, params?: unknown[]) {
   return pool.query(text, params);
 }
 
@@ -47,7 +46,13 @@ async function seed() {
       await query(
         `INSERT INTO categories (id, name, slug, uuid, created_date)
          VALUES ($1,$2,$3,$4,$5)`,
-        [i + 1, name, faker.helpers.slugify(name), uuid, faker.date.past({ years: 2 }).toISOString().split("T")[0]]
+        [
+          i + 1,
+          name,
+          faker.helpers.slugify(name),
+          uuid,
+          faker.date.past({ years: 2 }).toISOString().split("T")[0],
+        ]
       );
     }
 
@@ -112,7 +117,10 @@ async function seed() {
     for (let i = 0; i < 3; i++) {
       await query(
         `INSERT INTO adviser_specializes (adviser_uuid, specialize_uuid) VALUES ($1,$2)`,
-        [userUUIDs[i % userUUIDs.length], specializeUUIDs[i % specializeUUIDs.length]]
+        [
+          userUUIDs[i % userUUIDs.length],
+          specializeUUIDs[i % specializeUUIDs.length],
+        ]
       );
     }
 

@@ -1,44 +1,51 @@
-"use client"
+"use client";
 
-import { Annotation, FileItem, ProjectData, storage } from "@/lib/auth/storagepdf"
-import { useState, useEffect, useCallback } from "react"
+import {
+  Annotation,
+  FileItem,
+  ProjectData,
+  storage,
+} from "@/lib/auth/storagepdf";
+import { useState, useEffect, useCallback } from "react";
 export function useFiles() {
-  const [files, setFiles] = useState<FileItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadFiles = () => {
       try {
-        const storedFiles = storage.getFiles()
-        setFiles(storedFiles)
+        const storedFiles = storage.getFiles();
+        setFiles(storedFiles);
       } catch (error) {
-        console.error("Failed to load files:", error)
+        // Failed to load files
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadFiles()
-  }, [])
+    loadFiles();
+  }, []);
 
   const addFile = useCallback((file: FileItem) => {
-    storage.addFile(file)
-    setFiles((prev) => [...prev, file])
-  }, [])
+    storage.addFile(file);
+    setFiles((prev) => [...prev, file]);
+  }, []);
 
   const removeFile = useCallback((fileId: string) => {
-    storage.removeFile(fileId)
-    setFiles((prev) => prev.filter((f) => f.id !== fileId))
-  }, [])
+    storage.removeFile(fileId);
+    setFiles((prev) => prev.filter((f) => f.id !== fileId));
+  }, []);
 
   const updateFile = useCallback(
     (fileId: string, updates: Partial<FileItem>) => {
-      const updatedFiles = files.map((f) => (f.id === fileId ? { ...f, ...updates } : f))
-      storage.saveFiles(updatedFiles)
-      setFiles(updatedFiles)
+      const updatedFiles = files.map((f) =>
+        f.id === fileId ? { ...f, ...updates } : f
+      );
+      storage.saveFiles(updatedFiles);
+      setFiles(updatedFiles);
     },
-    [files],
-  )
+    [files]
+  );
 
   return {
     files,
@@ -46,61 +53,63 @@ export function useFiles() {
     addFile,
     removeFile,
     updateFile,
-  }
+  };
 }
 
 export function useAnnotations(fileId: string) {
-  const [annotations, setAnnotations] = useState<Annotation[]>([])
-  const [loading, setLoading] = useState(true)
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!fileId) return
+    if (!fileId) return;
 
     const loadAnnotations = () => {
       try {
-        const storedAnnotations = storage.getAnnotations(fileId)
-        setAnnotations(storedAnnotations)
+        const storedAnnotations = storage.getAnnotations(fileId);
+        setAnnotations(storedAnnotations);
       } catch (error) {
-        console.error("Failed to load annotations:", error)
+        // Failed to load annotations
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadAnnotations()
-  }, [fileId])
+    loadAnnotations();
+  }, [fileId]);
 
   const saveAnnotations = useCallback(
     (newAnnotations: Annotation[]) => {
-      storage.saveAnnotations(fileId, newAnnotations)
-      setAnnotations(newAnnotations)
+      storage.saveAnnotations(fileId, newAnnotations);
+      setAnnotations(newAnnotations);
     },
-    [fileId],
-  )
+    [fileId]
+  );
 
   const addAnnotation = useCallback(
     (annotation: Annotation) => {
-      const updated = [...annotations, annotation]
-      saveAnnotations(updated)
+      const updated = [...annotations, annotation];
+      saveAnnotations(updated);
     },
-    [annotations, saveAnnotations],
-  )
+    [annotations, saveAnnotations]
+  );
 
   const updateAnnotation = useCallback(
     (annotationId: string, updates: Partial<Annotation>) => {
-      const updated = annotations.map((ann) => (ann.id === annotationId ? { ...ann, ...updates } : ann))
-      saveAnnotations(updated)
+      const updated = annotations.map((ann) =>
+        ann.id === annotationId ? { ...ann, ...updates } : ann
+      );
+      saveAnnotations(updated);
     },
-    [annotations, saveAnnotations],
-  )
+    [annotations, saveAnnotations]
+  );
 
   const removeAnnotation = useCallback(
     (annotationId: string) => {
-      const updated = annotations.filter((ann) => ann.id !== annotationId)
-      saveAnnotations(updated)
+      const updated = annotations.filter((ann) => ann.id !== annotationId);
+      saveAnnotations(updated);
     },
-    [annotations, saveAnnotations],
-  )
+    [annotations, saveAnnotations]
+  );
 
   return {
     annotations,
@@ -109,30 +118,30 @@ export function useAnnotations(fileId: string) {
     addAnnotation,
     updateAnnotation,
     removeAnnotation,
-  }
+  };
 }
 
 export function useProjects() {
-  const [projects, setProjects] = useState<ProjectData[]>([])
-  const [currentProject, setCurrentProject] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [currentProject, setCurrentProject] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProjects = () => {
       try {
-        const storedProjects = storage.getProjects()
-        const currentProjectId = storage.getCurrentProject()
-        setProjects(storedProjects)
-        setCurrentProject(currentProjectId)
+        const storedProjects = storage.getProjects();
+        const currentProjectId = storage.getCurrentProject();
+        setProjects(storedProjects);
+        setCurrentProject(currentProjectId);
       } catch (error) {
-        console.error("Failed to load projects:", error)
+        // Failed to load projects
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadProjects()
-  }, [])
+    loadProjects();
+  }, []);
 
   const createProject = useCallback((name: string) => {
     const newProject: ProjectData = {
@@ -142,41 +151,43 @@ export function useProjects() {
       annotations: {},
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    }
+    };
 
-    storage.saveProject(newProject)
-    setProjects((prev) => [...prev, newProject])
-    return newProject
-  }, [])
+    storage.saveProject(newProject);
+    setProjects((prev) => [...prev, newProject]);
+    return newProject;
+  }, []);
 
   const updateProject = useCallback(
     (projectId: string, updates: Partial<ProjectData>) => {
-      const updated = projects.map((p) => (p.id === projectId ? { ...p, ...updates, updatedAt: Date.now() } : p))
-      const updatedProject = updated.find((p) => p.id === projectId)
+      const updated = projects.map((p) =>
+        p.id === projectId ? { ...p, ...updates, updatedAt: Date.now() } : p
+      );
+      const updatedProject = updated.find((p) => p.id === projectId);
       if (updatedProject) {
-        storage.saveProject(updatedProject)
-        setProjects(updated)
+        storage.saveProject(updatedProject);
+        setProjects(updated);
       }
     },
-    [projects],
-  )
+    [projects]
+  );
 
   const removeProject = useCallback(
     (projectId: string) => {
-      storage.removeProject(projectId)
-      setProjects((prev) => prev.filter((p) => p.id !== projectId))
+      storage.removeProject(projectId);
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
       if (currentProject === projectId) {
-        setCurrentProject(null)
-        storage.setCurrentProject("")
+        setCurrentProject(null);
+        storage.setCurrentProject("");
       }
     },
-    [currentProject],
-  )
+    [currentProject]
+  );
 
   const switchProject = useCallback((projectId: string) => {
-    storage.setCurrentProject(projectId)
-    setCurrentProject(projectId)
-  }, [])
+    storage.setCurrentProject(projectId);
+    setCurrentProject(projectId);
+  }, []);
 
   return {
     projects,
@@ -186,7 +197,7 @@ export function useProjects() {
     updateProject,
     removeProject,
     switchProject,
-  }
+  };
 }
 
 export function useStorageInfo() {
@@ -194,19 +205,19 @@ export function useStorageInfo() {
     used: 0,
     total: 0,
     percentage: 0,
-  })
+  });
 
   const updateStorageInfo = useCallback(() => {
-    const info = storage.getStorageUsage()
-    setStorageInfo(info)
-  }, [])
+    const info = storage.getStorageUsage();
+    setStorageInfo(info);
+  }, []);
 
   useEffect(() => {
-    updateStorageInfo()
-  }, [updateStorageInfo])
+    updateStorageInfo();
+  }, [updateStorageInfo]);
 
   return {
     storageInfo,
     updateStorageInfo,
-  }
+  };
 }

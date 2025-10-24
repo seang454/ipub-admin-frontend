@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import HorizontalCard from '@/components/card/HorizontalCard.tsx';
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import HorizontalCard from "@/components/card/HorizontalCard.tsx";
 
 interface ResearchPaper {
   id: number;
@@ -47,8 +47,8 @@ export default function HorizontalCardCarousel({
       else setCardsToShow(2);
     };
     updateCardsToShow();
-    window.addEventListener('resize', updateCardsToShow);
-    return () => window.removeEventListener('resize', updateCardsToShow);
+    window.addEventListener("resize", updateCardsToShow);
+    return () => window.removeEventListener("resize", updateCardsToShow);
   }, []);
 
   const totalSlides = Math.ceil(papers.length / cardsToShow);
@@ -88,7 +88,7 @@ export default function HorizontalCardCarousel({
           className="flex transition-transform duration-500 ease-in-out gap-4 md:gap-6"
           style={{
             transform: `translateX(-${currentIndex * (100 / cardsToShow)}%)`,
-            alignItems: 'stretch',
+            alignItems: "stretch",
           }}
         >
           {papers.map((paper) => (
@@ -110,16 +110,16 @@ export default function HorizontalCardCarousel({
 
         <button
           onClick={prevSlide}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-gray-800/80 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-card border border-border hover:bg-muted rounded-full flex items-center justify-center transition-colors shadow-md"
         >
-          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-gray-800/80 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-card border border-border hover:bg-muted rounded-full flex items-center justify-center transition-colors shadow-md"
         >
-          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
         </button>
       </div>
 
@@ -130,8 +130,8 @@ export default function HorizontalCardCarousel({
             onClick={() => setCurrentIndex(index)}
             className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
               index === currentIndex
-                ? 'bg-secondary'
-                : 'bg-gray-400 hover:bg-gray-500'
+                ? "bg-secondary"
+                : "bg-muted-foreground hover:bg-muted-foreground/80"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

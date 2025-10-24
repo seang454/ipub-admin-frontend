@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import FeedbackCard, { Feedback } from '@/components/card/FeedbackCard';
+import React, { useState, useEffect, useCallback } from "react";
+import FeedbackCard, { Feedback } from "@/components/card/FeedbackCard";
 
 interface FeedbackCardCarouselProps {
   feedbacks: Feedback[];
@@ -33,8 +33,8 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
     };
     setCardsPerView(getCardsPerView());
     const handleResize = () => setCardsPerView(getCardsPerView());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Handle next slide
@@ -107,8 +107,8 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
 
   if (feedbacks.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-        <p className="text-gray-500">No feedbacks to display</p>
+      <div className="flex justify-center items-center h-64 bg-muted rounded-lg">
+        <p className="text-muted-foreground">No feedbacks to display</p>
       </div>
     );
   }
@@ -199,8 +199,8 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
               onClick={() => goToSlide(index * cardsPerView)}
               className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                 currentIndex === index * cardsPerView
-                  ? 'bg-blue-600'
-                  : 'bg-gray-300'
+                  ? "bg-secondary"
+                  : "bg-muted-foreground"
               }`}
               aria-label={`Go to feedback ${index + 1}`}
             />

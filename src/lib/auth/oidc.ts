@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 const BASE_URL = `${process.env.KEYCLOAK_ISSUER}/clients-registrations/openid-connect`;
 
 // Correct base URL for token/refresh/logout
@@ -48,8 +46,3 @@ export async function logoutRequest(refresh_token: string) {
     }),
   });
 }
-
-
-
-
-  

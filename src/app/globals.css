@@ -31,6 +31,32 @@
   --radius: 0.625rem;
   --button: var(--secondary);
   --search: #59768f;
+
+  /* Muted Colors */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  /* Destructive Colors */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Input Colors */
+  --input: #e5e7eb;
+  --input-foreground: var(--text-dark);
+
+  /* Ring/Focus */
+  --ring: #2563eb;
+
+  /* Chart Colors */
+  --chart-1: #2563eb;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #8b5cf6;
+  --chart-5: #ef4444;
+
+  /* Popover Colors */
+  --popover: #ffffff;
+  --popover-foreground: var(--text-dark);
 }
 
 .dark {
@@ -43,6 +69,32 @@
   --border: #334155;
   --dynamic: var(--text-white);
   --dynamic2: var(--text-white);
+
+  /* Muted Colors - Dark Mode */
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  /* Destructive Colors - Dark Mode */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  /* Input Colors - Dark Mode */
+  --input: #334155;
+  --input-foreground: var(--text-white);
+
+  /* Ring/Focus - Dark Mode */
+  --ring: #3b82f6;
+
+  /* Chart Colors - Dark Mode (slightly adjusted for better visibility) */
+  --chart-1: #3b82f6;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #f87171;
+
+  /* Popover Colors - Dark Mode */
+  --popover: #1e293b;
+  --popover-foreground: var(--text-white);
 }
 
 /* Tailwind theme bindings */
@@ -62,6 +114,20 @@
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
   --color-dynamic: var(--dynamic);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-input-foreground: var(--input-foreground);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

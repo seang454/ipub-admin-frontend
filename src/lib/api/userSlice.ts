@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   RegisterRequest,
   UpdateUserType,
@@ -24,10 +23,10 @@ export const userApi = createApi({
       }),
       providesTags: ["User"], // ✅ correct placement
     }),
-    getAUserByUuid: builder.query<User,{token:string,uuid:string}>({
-      query: ({token,uuid}) => ({
+    getAUserByUuid: builder.query<User, { token: string; uuid: string }>({
+      query: ({ token, uuid }) => ({
         url: `/user/${uuid}`,
-        method:"GET",
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },

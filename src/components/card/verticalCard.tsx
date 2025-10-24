@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { BookOpen, Calendar, Award, Star, Download, Eye } from 'lucide-react';
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { BookOpen, Calendar, Award, Star, Download, Eye } from "lucide-react";
 
 interface VerticalCardProps {
   title: string;
@@ -35,18 +35,18 @@ export default function VerticalCard({
   paperId,
   onDownloadPDF,
   onToggleBookmark,
-  className = '',
+  className = "",
 }: VerticalCardProps) {
   const router = useRouter();
   const displayAuthors =
-    authors.length > 2 ? [...authors.slice(0, 2), '...'] : authors;
+    authors.length > 2 ? [...authors.slice(0, 2), "..."] : authors;
 
   // Truncate abstract to 150 characters with ... if longer
   const displayAbstract = abstract
     ? abstract.length > 150
       ? `${abstract.slice(0, 150).trim()}...`
       : abstract
-    : '';
+    : "";
 
   const handleViewPaper = () => {
     router.push(`/papers/${paperId}`);
@@ -60,7 +60,7 @@ export default function VerticalCard({
       {image && (
         <div className="relative w-full h-32 sm:h-40 flex-shrink-0">
           <Image
-          unoptimized
+            unoptimized
             src={image}
             alt={title}
             fill
@@ -84,7 +84,7 @@ export default function VerticalCard({
           {authorImage && (
             <Image
               src={authorImage}
-              alt={authors[0] || 'Author'}
+              alt={authors[0] || "Author"}
               width={24}
               height={24}
               className="w-6 h-6 sm:w-8 sm:h-8 rounded-full mr-2 sm:mr-3 flex-shrink-0"
@@ -93,7 +93,7 @@ export default function VerticalCard({
             />
           )}
           <span className="text-sm sm:text-base text-foreground truncate">
-            {displayAuthors.join(', ')}
+            {displayAuthors.join(", ")}
           </span>
         </div>
 
@@ -120,11 +120,11 @@ export default function VerticalCard({
           <button
             onClick={onToggleBookmark}
             className="flex items-center space-x-1 hover:text-secondary transition-colors"
-            aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
           >
             <Star
               className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                isBookmarked ? 'fill-accent text-accent' : 'text-foreground'
+                isBookmarked ? "fill-accent text-accent" : "text-foreground"
               }`}
             />
           </button>
@@ -163,7 +163,7 @@ export default function VerticalCard({
           </button>
           <button
             onClick={onDownloadPDF}
-            className="flex items-center justify-center gap-1 px-3 py-2 sm:px-4 sm:py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition-colors text-sm sm:text-base flex-1"
+            className="flex items-center justify-center gap-1 px-3 py-2 sm:px-4 sm:py-2 bg-muted text-foreground rounded-md hover:bg-muted/80 transition-colors text-sm sm:text-base flex-1 border border-border"
             aria-label="Download PDF"
           >
             <Download className="w-4 h-4 sm:w-5 sm:h-5" />

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import AdviserStats from "@/components/advisers/adviser-stats";
 import { AdviserTable } from "@/components/advisers/adviser-table";
 import DocuhubLoader from "@/components/loader/docuhub-loading";
@@ -14,7 +14,7 @@ export default function AdviserPage() {
     { token: accessToken ?? "" },
     { skip: !accessToken }
   );
-    console.log("AdvisorData :>> ", AdvisorData);
+  console.log("AdvisorData :>> ", AdvisorData);
 
   // wait for next-auth to initialize
   if (status === "loading") return <div>Loading...</div>;
@@ -34,12 +34,12 @@ export default function AdviserPage() {
         </h1>
         <AdviserStats advisers={AdvisorData} />
 
-        <div className="mt-6 bg-white p-6 rounded-lg">
+        <div className="mt-6 bg-card p-6 rounded-lg border border-border shadow-sm">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-2xl font-semibold text-card-foreground mb-2">
               Advisers
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Manage users, roles, and permissions
             </p>
           </div>

@@ -21,6 +21,7 @@ import {
 import {
   type ChartConfig,
   ChartContainer,
+  ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -29,40 +30,25 @@ import { useMemo } from "react";
 
 export const description = "A modern area chart with enhanced styling";
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80, mentor: 120, publication: 90 },
-  {
-    month: "February",
-    desktop: 305,
-    mobile: 200,
-    mentor: 150,
-    publication: 110,
-  },
-  { month: "March", desktop: 237, mobile: 120, mentor: 130, publication: 100 },
-  { month: "April", desktop: 73, mobile: 190, mentor: 90, publication: 70 },
-  { month: "May", desktop: 209, mobile: 130, mentor: 140, publication: 120 },
-  { month: "June", desktop: 214, mobile: 140, mentor: 160, publication: 130 },
-];
-
 const chartConfig = {
-  desktop: {
-    label: "Desktop Users",
-    color: "hsl(210, 60%, 60%)", // Lighter blue
-    icon: BarChart3,
-  },
-  mobile: {
-    label: "Mobile Users",
-    color: "hsl(160, 60%, 55%)", // Lighter green
+  users: {
+    label: "Total Users",
+    color: "hsl(210, 60%, 65%)", // Light Blue
     icon: Users,
   },
-  mentor: {
-    label: "Mentorship Sessions",
-    color: "hsl(45, 80%, 60%)", // Lighter yellow
+  students: {
+    label: "Students",
+    color: "hsl(160, 55%, 60%)", // Light Green
+    icon: BarChart3,
+  },
+  mentors: {
+    label: "Advisors",
+    color: "hsl(270, 60%, 70%)", // Light Purple
     icon: Award,
   },
-  publication: {
-    label: "Publications",
-    color: "hsl(340, 70%, 65%)", // Lighter pink
+  papers: {
+    label: "Papers",
+    color: "hsl(340, 65%, 65%)", // Light Pink
     icon: BookOpen,
   },
 } satisfies ChartConfig;
@@ -73,50 +59,118 @@ export function ChartAreaStackedExpand({
   students,
   mentors,
 }: DashboardStatsProps) {
-  type CombinedData = { month: string; desktop: number };
-
-  console.log("papers Expand :>> ", papers);
-  console.log("user Expand :>> ", user);
-  console.log("students Expand :>> ", students);
-  console.log("mentors expand :>> ", mentors);
+  type CombinedData = {
+    month: string;
+    users: number;
+    students: number;
+    mentors: number;
+    papers: number;
+  };
 
   const combinedData: CombinedData[] = useMemo(() => {
-    if (!mentors) return [];
+    const currentYear = new Date().getFullYear();
 
-    // First 6 months
-    const monthNames = Array.from({ length: 6 }, (_, i) =>
-      new Date(2024, i, 1).toLocaleString("default", { month: "long" })
+    // Get month names for current year
+    const monthNames = Array.from({ length: 12 }, (_, i) =>
+      new Date(currentYear, i, 1).toLocaleString("default", { month: "long" })
     );
 
-    const monthCounts = mentors.reduce<Record<string, number>>(
-      (acc, mentor) => {
-        const month = new Date(mentor.createDate).toLocaleString("default", {
-          month: "long",
-        });
-        acc[month] = (acc[month] || 0) + 1;
+    // Count papers by month
+    const paperCounts =
+      papers?.papers.content.reduce<Record<string, number>>((acc, paper) => {
+        if (paper.publishedAt) {
+          const date = new Date(paper.publishedAt);
+          const month = date.toLocaleString("default", { month: "long" });
+          const year = date.getFullYear();
+          if (year === currentYear) {
+            acc[month] = (acc[month] || 0) + 1;
+          }
+        }
         return acc;
-      },
-      {}
-    );
+      }, {}) || {};
 
-    // Map each month individually
+    // Count users by month
+    const userCounts =
+      user?.reduce<Record<string, number>>((acc, u) => {
+        if (u.createDate) {
+          const date = new Date(u.createDate);
+          const month = date.toLocaleString("default", { month: "long" });
+          const year = date.getFullYear();
+          if (year === currentYear) {
+            acc[month] = (acc[month] || 0) + 1;
+          }
+        }
+        return acc;
+      }, {}) || {};
+
+    // Count students by month
+    const studentCounts =
+      students?.reduce<Record<string, number>>((acc, student) => {
+        if (student.createDate) {
+          const date = new Date(student.createDate);
+          const month = date.toLocaleString("default", { month: "long" });
+          const year = date.getFullYear();
+          if (year === currentYear) {
+            acc[month] = (acc[month] || 0) + 1;
+          }
+        }
+        return acc;
+      }, {}) || {};
+
+    // Count mentors by month
+    const mentorCounts =
+      mentors?.reduce<Record<string, number>>((acc, mentor) => {
+        if (mentor.createDate) {
+          const date = new Date(mentor.createDate);
+          const month = date.toLocaleString("default", { month: "long" });
+          const year = date.getFullYear();
+          if (year === currentYear) {
+            acc[month] = (acc[month] || 0) + 1;
+          }
+        }
+        return acc;
+      }, {}) || {};
+
+    // Combine all data
     return monthNames.map((month) => ({
       month,
-      desktop: monthCounts[month] || 0,
+      users: userCounts[month] || 0,
+      students: studentCounts[month] || 0,
+      mentors: mentorCounts[month] || 0,
+      papers: paperCounts[month] || 0,
     }));
-  }, [mentors]);
+  }, [papers, user, students, mentors]);
+
+  // Calculate totals for display
+  const totals = useMemo(() => {
+    return combinedData.reduce(
+      (acc, month) => ({
+        users: acc.users + month.users,
+        students: acc.students + month.students,
+        mentors: acc.mentors + month.mentors,
+        papers: acc.papers + month.papers,
+      }),
+      { users: 0, students: 0, mentors: 0, papers: 0 }
+    );
+  }, [combinedData]);
+
+  const chartId = "area-chart-stacked";
 
   return (
-    <Card className="bg-gradient-to-br from-card via-card/80 to-muted/20 border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card
+      data-chart={chartId}
+      className="border border-border shadow-sm hover:shadow-md transition-all duration-200 bg-card"
+    >
+      <ChartStyle id={chartId} config={chartConfig} />
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-primary">
+            <CardTitle className="text-2xl font-bold text-foreground">
               Platform Analytics Overview
             </CardTitle>
             <CardDescription className="text-muted-foreground text-base">
-              Comprehensive metrics across all platform channels for the last 6
-              months
+              Comprehensive metrics across all platform channels for{" "}
+              {new Date().getFullYear()}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
@@ -125,22 +179,28 @@ export function ChartAreaStackedExpand({
           </div>
         </div>
 
-        <div className="grid grid-cols-1  sm:grid-cols-2  gap-3 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
           {Object.entries(chartConfig).map(([key, config]) => {
             const Icon = config.icon;
+            const total = totals[key as keyof typeof totals];
             return (
               <div
                 key={key}
-                className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border/30"
+                className="flex flex-col gap-2 p-3 rounded-lg bg-muted/20 border border-border"
               >
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: config.color }}
-                />
-                <Icon className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">
-                  {config.label}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: config.color }}
+                  />
+                  <Icon className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-foreground">{total}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {config.label}
+                  </p>
+                </div>
               </div>
             );
           })}
@@ -148,10 +208,10 @@ export function ChartAreaStackedExpand({
       </CardHeader>
 
       <CardContent className="pt-0">
-        <ChartContainer config={chartConfig} className=" w-full">
+        <ChartContainer config={chartConfig} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={chartData}
+              data={combinedData}
               margin={{
                 top: 20,
                 right: 30,
@@ -186,49 +246,49 @@ export function ChartAreaStackedExpand({
                 cursor={{
                   stroke: "var(--accent)",
                   strokeWidth: 2,
-                  fillOpacity: 0.5,
-                }} // Changed strokeOpacity to fillOpacity
+                  fillOpacity: 0.1,
+                }}
                 content={
                   <ChartTooltipContent
-                    className="bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg rounded-lg"
-                    labelClassName="font-semibold text-popover-foreground"
+                    className="bg-card border border-border shadow-lg rounded-lg"
+                    labelClassName="font-semibold text-foreground"
                   />
                 }
               />
 
               <Area
-                dataKey="publication"
+                dataKey="users"
                 type="monotone"
-                fill="var(--color-publication)"
+                fill="var(--color-users)"
                 fillOpacity={0.3}
-                stroke="var(--color-publication)"
+                stroke="var(--color-users)"
                 strokeWidth={2}
                 stackId="a"
               />
               <Area
-                dataKey="mentor"
+                dataKey="students"
                 type="monotone"
-                fill="var(--color-mentor)"
+                fill="var(--color-students)"
                 fillOpacity={0.3}
-                stroke="var(--color-mentor)"
+                stroke="var(--color-students)"
                 strokeWidth={2}
                 stackId="a"
               />
               <Area
-                dataKey="mobile"
+                dataKey="mentors"
                 type="monotone"
-                fill="var(--color-mobile)"
+                fill="var(--color-mentors)"
                 fillOpacity={0.3}
-                stroke="var(--color-mobile)"
+                stroke="var(--color-mentors)"
                 strokeWidth={2}
                 stackId="a"
               />
               <Area
-                dataKey="desktop"
+                dataKey="papers"
                 type="monotone"
-                fill="var(--color-desktop)"
+                fill="var(--color-papers)"
                 fillOpacity={0.3}
-                stroke="var(--color-desktop)"
+                stroke="var(--color-papers)"
                 strokeWidth={2}
                 stackId="a"
               />
@@ -237,19 +297,25 @@ export function ChartAreaStackedExpand({
         </ChartContainer>
       </CardContent>
 
-      <CardFooter className="pt-4 border-t border-border/30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 w-full items-center justify-between">
-          <div className="items-center gap-3 sm:flex">
+      <CardFooter className="pt-4 border-t border-border">
+        <div className="flex flex-col sm:flex-row w-full items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-full">
               <TrendingUp className="h-4 w-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">+5.2%</span>
+              <span className="text-sm font-semibold text-foreground">
+                Total:{" "}
+                {totals.users +
+                  totals.students +
+                  totals.mentors +
+                  totals.papers}
+              </span>
             </div>
             <div className="text-sm text-muted-foreground">
-              Growth compared to previous period
+              Combined platform activity
             </div>
           </div>
-          <div className="text-sm font-medium text-foreground bg-muted/30 px-3 py-1.5 rounded-full">
-            January - June 2024
+          <div className="text-sm font-medium text-foreground bg-muted px-3 py-1.5 rounded-full">
+            {new Date().getFullYear()} Analytics
           </div>
         </div>
       </CardFooter>

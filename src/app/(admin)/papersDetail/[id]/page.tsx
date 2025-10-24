@@ -1,13 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+"use client";
 
-import { useState, useEffect, use } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useState, useEffect, use } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Download,
   Eye,
@@ -23,59 +27,65 @@ import {
   LinkIcon,
   MoreHorizontal,
   ArrowLeft,
-} from "lucide-react"
-import Link from "next/link"
-import PaperCard from "@/components/card/PaperCard"
-import dynamic from "next/dynamic"
-import "react-pdf/dist/Page/AnnotationLayer.css"
-import "react-pdf/dist/Page/TextLayer.css"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs"
-import { Textarea } from "@/components/ui/textarea" // Added Textarea
-import { faker } from "@faker-js/faker" // Added faker import
+} from "lucide-react";
+import Link from "next/link";
+import PaperCard from "@/components/card/PaperCard";
+import dynamic from "next/dynamic";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import { Textarea } from "@/components/ui/textarea"; // Added Textarea
+import { faker } from "@faker-js/faker"; // Added faker import
 
 // Dynamically import react-pdf components to avoid SSR issues
-const Document = dynamic(() => import("react-pdf").then((mod) => ({ default: mod.Document })), {
-  ssr: false,
-  loading: () => (
-    <div className="text-center text-muted-foreground py-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-      Loading PDF viewer...
-    </div>
-  ),
-})
+const Document = dynamic(
+  () => import("react-pdf").then((mod) => ({ default: mod.Document })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="text-center text-muted-foreground py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+        Loading PDF viewer...
+      </div>
+    ),
+  }
+);
 
-const Page = dynamic(() => import("react-pdf").then((mod) => ({ default: mod.Page })), {
-  ssr: false,
-})
+const Page = dynamic(
+  () => import("react-pdf").then((mod) => ({ default: mod.Page })),
+  {
+    ssr: false,
+  }
+);
 
 // Static data removed - now using real API data
 
 interface Comment {
-  id: number
-  author: string
-  date: string
-  content: string
-  rating: number
-  likes: number
+  id: number;
+  author: string;
+  date: string;
+  content: string;
+  rating: number;
+  likes: number;
   replies: {
-    id: number
-    author: string
-    date: string
-    content: string
-    likes: number
-  }[]
+    id: number;
+    author: string;
+    date: string;
+    content: string;
+    likes: number;
+  }[];
 }
 
 const generateFakeComments = (count = 3): Comment[] => {
   return Array.from({ length: count }, (_, index) => {
-    const repliesCount = faker.number.int({ min: 0, max: 4 })
+    const repliesCount = faker.number.int({ min: 0, max: 4 });
     const replies = Array.from({ length: repliesCount }, (_, replyIndex) => ({
       id: 100 + index * 10 + replyIndex,
       author: faker.person.fullName(),
       date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
       content: faker.lorem.sentences({ min: 1, max: 2 }),
       likes: faker.number.int({ min: 0, max: 10 }),
-    }))
+    }));
 
     return {
       id: index + 1,
@@ -85,66 +95,74 @@ const generateFakeComments = (count = 3): Comment[] => {
       rating: faker.number.int({ min: 3, max: 5 }),
       likes: faker.number.int({ min: 5, max: 20 }),
       replies,
-    }
-  })
-}
+    };
+  });
+};
 
 const generateFakePaper = () => ({
   title: faker.lorem.words({ min: 5, max: 10 }),
-  authors: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => faker.person.fullName()),
+  authors: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () =>
+    faker.person.fullName()
+  ),
   abstract: faker.lorem.paragraphs(3),
   publishedDate: faker.date.past({ years: 2 }).toISOString().split("T")[0],
   journal: faker.company.name() + " Journal",
   citations: faker.number.int({ min: 10, max: 500 }),
   downloads: faker.number.int({ min: 100, max: 5000 }),
   views: faker.number.int({ min: 500, max: 10000 }),
-  tags: Array.from({ length: faker.number.int({ min: 3, max: 6 }) }, () => faker.lorem.word()),
+  tags: Array.from({ length: faker.number.int({ min: 3, max: 6 }) }, () =>
+    faker.lorem.word()
+  ),
   fileUrl: faker.internet.url() + "/paper.pdf", // Added fileUrl property to fix TypeScript error
-})
+});
 
 export default function PaperDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params)
+  const { id } = use(params);
 
   // All useState hooks must be at the top level, before any conditional logic
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [numPages, setNumPages] = useState<number | null>(null)
-  const [pageNumber, setPageNumber] = useState(1)
-  const [pdfError, setPdfError] = useState<string | null>(null)
-  const [isClient, setIsClient] = useState(false)
-  const [paper, setPaper] = useState(generateFakePaper())
-  const [comments, setComments] = useState<Comment[]>([])
-  const [newComment, setNewComment] = useState("")
-  const [newReply, setNewReply] = useState<{ [key: number]: string }>({})
-  const [activeReplyCommentId, setActiveReplyCommentId] = useState<number | null>(null)
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  const [paper, setPaper] = useState(generateFakePaper());
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [newReply, setNewReply] = useState<{ [key: number]: string }>({});
+  const [activeReplyCommentId, setActiveReplyCommentId] = useState<
+    number | null
+  >(null);
   const [likedComments, setLikedComments] = useState<{
-    [key: number]: boolean
-  }>({})
-  const [likedReplies, setLikedReplies] = useState<{ [key: number]: boolean }>({})
+    [key: number]: boolean;
+  }>({});
+  const [likedReplies, setLikedReplies] = useState<{ [key: number]: boolean }>(
+    {}
+  );
   const [commentLikes, setCommentLikes] = useState<{ [key: number]: number }>(
-    {}, // Initialize empty, will be populated by fake data
-  )
+    {} // Initialize empty, will be populated by fake data
+  );
   const [replyLikes, setReplyLikes] = useState<{ [key: number]: number }>(
-    {}, // Initialize empty, will be populated by fake data
-  )
+    {} // Initialize empty, will be populated by fake data
+  );
   const [showAllReplies, setShowAllReplies] = useState<{
-    [key: number]: boolean
-  }>({})
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
-  const [editCommentContent, setEditCommentContent] = useState("")
-  const [rating, setRating] = useState(0) // Added rating state
+    [key: number]: boolean;
+  }>({});
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState("");
+  const [rating, setRating] = useState(0); // Added rating state
 
   // Set up PDF.js worker when component mounts
   useEffect(() => {
     if (typeof window !== "undefined") {
       import("react-pdf").then((pdfjs) => {
-        pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.pdfjs.version}/build/pdf.worker.min.mjs`
-      })
+        pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.pdfjs.version}/build/pdf.worker.min.mjs`;
+      });
     }
-  }, [])
+  }, []);
 
   // Fetch paper data using RTK Query - all hooks must be before conditionals
   // const {
@@ -169,9 +187,9 @@ export default function PaperDetailPage({
 
   // useEffect must also be before conditionals
   useEffect(() => {
-    setIsClient(true)
-    setComments(generateFakeComments(faker.number.int({ min: 2, max: 5 })))
-  }, [])
+    setIsClient(true);
+    setComments(generateFakeComments(faker.number.int({ min: 2, max: 5 })));
+  }, []);
 
   // Loading and error states - now after all hooks
   // if (paperLoading) return <LoadingPage />;
@@ -191,61 +209,67 @@ export default function PaperDetailPage({
   // }
 
   const handleDownloadPDF = () => {
-    console.log("Downloading PDF for paper:", paper?.title) // Changed to use fake paper title
-    const link = document.createElement("a")
+    console.log("Downloading PDF for paper:", paper?.title); // Changed to use fake paper title
+    const link = document.createElement("a");
     // Placeholder for actual file URL if available, otherwise use a dummy
-    link.href = paper?.fileUrl || "/dummy.pdf"
-    link.download = `${paper?.title || "paper"}.pdf`
-    link.target = "_blank"
-    link.click()
-  }
+    link.href = paper?.fileUrl || "/dummy.pdf";
+    link.download = `${paper?.title || "paper"}.pdf`;
+    link.target = "_blank";
+    link.click();
+  };
 
   const handleViewPDFInNewTab = () => {
     // Placeholder for actual file URL if available, otherwise use a dummy
     if (paper?.fileUrl || "/dummy.pdf") {
-      window.open(paper?.fileUrl || "/dummy.pdf", "_blank")
+      window.open(paper?.fileUrl || "/dummy.pdf", "_blank");
     }
-  }
+  };
 
   const handleToggleBookmark = () => {
-    setIsBookmarked(!isBookmarked)
-    console.log("Toggling bookmark for paper:", paper?.title) // Changed to use fake paper title
-  }
+    setIsBookmarked(!isBookmarked);
+    console.log("Toggling bookmark for paper:", paper?.title); // Changed to use fake paper title
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const handleShare = (platform: string) => {
-    const url = window.location.href
-    const title = paper?.title || "Paper" // Changed to use fake paper title
-    let shareUrl = ""
+    const url = window.location.href;
+    const title = paper?.title || "Paper"; // Changed to use fake paper title
+    let shareUrl = "";
     switch (platform) {
       case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`
-        window.open(shareUrl, "_blank", "noopener,noreferrer")
-        break
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          title
+        )}&url=${encodeURIComponent(url)}`;
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+        break;
       case "linkedin":
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
-        window.open(shareUrl, "_blank", "noopener,noreferrer")
-        break
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+          url
+        )}`;
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+        break;
       case "email":
-        shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`
-        window.open(shareUrl, "_blank", "noopener,noreferrer")
-        break
+        shareUrl = `mailto:?subject=${encodeURIComponent(
+          title
+        )}&body=${encodeURIComponent(url)}`;
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+        break;
       case "copy":
-        navigator.clipboard.writeText(url)
-        console.log("Copied link:", url)
-        break
+        navigator.clipboard.writeText(url);
+        console.log("Copied link:", url);
+        break;
       default:
-        return
+        return;
     }
-    console.log(`Sharing paper ${paper?.title} on ${platform}`) // Changed to use fake paper title
-  }
+    console.log(`Sharing paper ${paper?.title} on ${platform}`); // Changed to use fake paper title
+  };
 
   const handleAddComment = () => {
     if (newComment.trim()) {
@@ -257,64 +281,79 @@ export default function PaperDetailPage({
         rating: rating, // Use the selected rating
         likes: 0,
         replies: [],
-      }
-      setComments([newCommentObj, ...comments])
-      setNewComment("")
-      setRating(0) // Reset rating after posting
-      console.log("Adding comment:", newComment)
+      };
+      setComments([newCommentObj, ...comments]);
+      setNewComment("");
+      setRating(0); // Reset rating after posting
+      console.log("Adding comment:", newComment);
     }
-  }
+  };
 
   const handleAddReply = (commentId: number) => {
     if (newReply[commentId]?.trim()) {
       const newReplyObj = {
-        id: Math.max(...comments.flatMap((c) => c.replies.map((r) => r.id)), 0) + 1,
+        id:
+          Math.max(...comments.flatMap((c) => c.replies.map((r) => r.id)), 0) +
+          1,
         author: "User",
         date: new Date().toISOString().split("T")[0],
         content: newReply[commentId],
         likes: 0,
-      }
+      };
       setComments(
         comments.map((comment) =>
-          comment.id === commentId ? { ...comment, replies: [...comment.replies, newReplyObj] } : comment,
-        ),
-      )
-      setNewReply((prev) => ({ ...prev, [commentId]: "" }))
-      setActiveReplyCommentId(null)
-      console.log("Adding reply to comment", commentId, ":", newReply[commentId])
+          comment.id === commentId
+            ? { ...comment, replies: [...comment.replies, newReplyObj] }
+            : comment
+        )
+      );
+      setNewReply((prev) => ({ ...prev, [commentId]: "" }));
+      setActiveReplyCommentId(null);
+      console.log(
+        "Adding reply to comment",
+        commentId,
+        ":",
+        newReply[commentId]
+      );
     }
-  }
+  };
 
   const handleLikeComment = (commentId: number) => {
     setCommentLikes((prev) => ({
       ...prev,
-      [commentId]: likedComments[commentId] ? (prev[commentId] || 0) - 1 : (prev[commentId] || 0) + 1,
-    }))
+      [commentId]: likedComments[commentId]
+        ? (prev[commentId] || 0) - 1
+        : (prev[commentId] || 0) + 1,
+    }));
     setLikedComments((prev) => ({
       ...prev,
       [commentId]: !prev[commentId],
-    }))
-  }
+    }));
+  };
 
   const handleLikeReply = (replyId: number) => {
     setReplyLikes((prev) => ({
       ...prev,
-      [replyId]: likedReplies[replyId] ? (prev[replyId] || 0) - 1 : (prev[replyId] || 0) + 1,
-    }))
+      [replyId]: likedReplies[replyId]
+        ? (prev[replyId] || 0) - 1
+        : (prev[replyId] || 0) + 1,
+    }));
     setLikedReplies((prev) => ({
       ...prev,
       [replyId]: !prev[replyId],
-    }))
-  }
+    }));
+  };
 
   const handleReplyClick = (commentId: number) => {
-    setActiveReplyCommentId(activeReplyCommentId === commentId ? null : commentId)
-  }
+    setActiveReplyCommentId(
+      activeReplyCommentId === commentId ? null : commentId
+    );
+  };
 
   const handleEditComment = (commentId: number, content: string) => {
-    setEditingCommentId(commentId)
-    setEditCommentContent(content)
-  }
+    setEditingCommentId(commentId);
+    setEditCommentContent(content);
+  };
 
   const handleSaveEditComment = (commentId: number) => {
     if (editCommentContent.trim()) {
@@ -326,64 +365,65 @@ export default function PaperDetailPage({
                 content: editCommentContent,
                 date: new Date().toISOString().split("T")[0],
               }
-            : comment,
-        ),
-      )
-      setEditingCommentId(null)
-      setEditCommentContent("")
-      console.log("Edited comment:", commentId, editCommentContent)
+            : comment
+        )
+      );
+      setEditingCommentId(null);
+      setEditCommentContent("");
+      console.log("Edited comment:", commentId, editCommentContent);
     }
-  }
+  };
 
   const handleDeleteComment = (commentId: number) => {
-    setComments(comments.filter((comment) => comment.id !== commentId))
+    setComments(comments.filter((comment) => comment.id !== commentId));
     setCommentLikes((prev) => {
-      const updated = { ...prev }
-      delete updated[commentId]
-      return updated
-    })
-    console.log("Deleted comment:", commentId)
-  }
+      const updated = { ...prev };
+      delete updated[commentId];
+      return updated;
+    });
+    console.log("Deleted comment:", commentId);
+  };
 
   const toggleShowReplies = (commentId: number) => {
     setShowAllReplies((prev) => ({
       ...prev,
       [commentId]: !prev[commentId],
-    }))
-  }
+    }));
+  };
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    console.log("PDF loaded successfully, pages:", numPages)
-    setNumPages(numPages)
-    setPdfError(null)
-  }
+    console.log("PDF loaded successfully, pages:", numPages);
+    setNumPages(numPages);
+    setPdfError(null);
+  };
 
   const onDocumentLoadError = (error: Error) => {
-    console.error("PDF load error:", error)
-    setPdfError(`Failed to load PDF: ${error.message}. Please try downloading the file.`)
-  }
+    setPdfError(
+      `Failed to load PDF: ${error.message}. Please try downloading the file.`
+    );
+  };
 
   const goToPreviousPage = () => {
-    setPageNumber((prev) => Math.max(prev - 1, 1))
-  }
+    setPageNumber((prev) => Math.max(prev - 1, 1));
+  };
 
   const goToNextPage = () => {
-    setPageNumber((prev) => (numPages ? Math.min(prev + 1, numPages) : prev))
-  }
+    setPageNumber((prev) => (numPages ? Math.min(prev + 1, numPages) : prev));
+  };
 
   const regenerateData = () => {
-    setPaper(generateFakePaper())
-    setComments(generateFakeComments(faker.number.int({ min: 2, max: 5 })))
-    setLikedComments({}) // Reset likes
-    setLikedReplies({})
-    setCommentLikes({})
-    setReplyLikes({})
-    setEditingCommentId(null)
-    setEditCommentContent("")
-    setActiveReplyCommentId(null)
-    setNewComment("")
-    setRating(0)
-  }
+    setPaper(generateFakePaper());
+    setComments(generateFakeComments(faker.number.int({ min: 2, max: 5 })));
+    setLikedComments({}); // Reset likes
+    setLikedReplies({});
+    setCommentLikes({});
+    setReplyLikes({});
+    setEditingCommentId(null);
+    setEditCommentContent("");
+    setActiveReplyCommentId(null);
+    setNewComment("");
+    setRating(0);
+  };
 
   // Placeholder for author data, as it's not generated by faker in this merge
   const author = {
@@ -392,11 +432,15 @@ export default function PaperDetailPage({
     imageUrl: "/placeholder.svg",
     email: "",
     uuid: paper?.authors?.[0]?.split(" ")?.[0]?.toLowerCase() || "unknown", // Basic placeholder
-  }
-  const authorLoading = false // Placeholder
+  };
+  const authorLoading = false; // Placeholder
 
   // Placeholder for related papers
-  const relatedPapers:any = [] // Placeholder
+  const relatedPapers: Array<{
+    uuid: string;
+    title: string;
+    fileUrl: string;
+  }> = []; // Placeholder
 
   return (
     <div className="min-h-screen bg-background">
@@ -404,12 +448,16 @@ export default function PaperDetailPage({
         <div className="space-y-6">
           {/* Back Button */}
           <div className="flex items-center mt-10 gap-2 text-sm text-muted-foreground">
-            <Link href="/papers" className="hover:text-foreground flex items-center gap-2">
+            <Link
+              href="/papers"
+              className="hover:text-foreground flex items-center gap-2"
+            >
               <ArrowLeft className="h-4 w-4" />
               Back to Papers
             </Link>
             <span>/</span>
-            <span>{paper.tags?.[0] || "Research"}</span> {/* Using fake paper tags */}
+            <span>{paper.tags?.[0] || "Research"}</span>{" "}
+            {/* Using fake paper tags */}
             <span>/</span>
             <span className="text-foreground">Paper Details</span>
           </div>
@@ -418,7 +466,9 @@ export default function PaperDetailPage({
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1 space-y-4">
               <div className="flex items-start gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">{paper.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+                  {paper.title}
+                </h1>
                 <Badge
                   variant={"default"} // Assuming fake papers are approved
                   className="flex-shrink-0"
@@ -430,21 +480,31 @@ export default function PaperDetailPage({
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={author?.imageUrl || "/placeholder.svg"} alt={author?.fullName || "Author"} />
+                    <AvatarImage
+                      src={author?.imageUrl || "/placeholder.svg"}
+                      alt={author?.fullName || "Author"}
+                    />
                     <AvatarFallback className="text-xs">
                       {(author?.firstName || "A")
                         .split(" ")
-                        .map((n: any) => n[0])
+                        .map((n: string) => n[0])
                         .join("")}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hover:text-foreground">
-                    {authorLoading ? "Loading..." : author?.fullName || "Unknown Author"}
+                    {authorLoading
+                      ? "Loading..."
+                      : author?.fullName || "Unknown Author"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>Published: {formatDate(paper?.publishedDate || new Date().toISOString())}</span>
+                  <span>
+                    Published:{" "}
+                    {formatDate(
+                      paper?.publishedDate || new Date().toISOString()
+                    )}
+                  </span>
                 </div>
                 {/* Removed submitted date as it's not in fake data */}
               </div>
@@ -452,23 +512,29 @@ export default function PaperDetailPage({
               <div className="flex flex-wrap items-center gap-2">
                 {(paper.tags || []).map(
                   (
-                    category: any,
-                    index: number, // Using tags as categories
+                    category: string,
+                    index: number // Using tags as categories
                   ) => (
                     <Badge key={index} variant="secondary">
                       {category}
                     </Badge>
-                  ),
+                  )
                 )}
-                <Badge variant="default">Approved</Badge> {/* Assuming fake papers are approved */}
+                <Badge variant="default">Approved</Badge>{" "}
+                {/* Assuming fake papers are approved */}
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-muted-foreground">({comments.length} comments)</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({comments.length} comments)
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-row lg:flex-col gap-2 lg:w-48">
-              <Button className="flex-1 lg:flex-none" onClick={handleDownloadPDF}>
+              <Button
+                className="flex-1 lg:flex-none"
+                onClick={handleDownloadPDF}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </Button>
@@ -478,31 +544,51 @@ export default function PaperDetailPage({
                 onClick={handleToggleBookmark}
                 aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
               >
-                <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? "fill-accent text-accent" : ""}`} />
+                <Bookmark
+                  className={`h-4 w-4 mr-2 ${
+                    isBookmarked ? "fill-accent text-accent" : ""
+                  }`}
+                />
                 {isBookmarked ? "Saved" : "Save"}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex-1 lg:flex-none bg-transparent" aria-label="Share paper">
+                  <Button
+                    variant="outline"
+                    className="flex-1 lg:flex-none bg-transparent"
+                    aria-label="Share paper"
+                  >
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48">
                   <DropdownMenuItem onClick={() => handleShare("twitter")}>
-                    <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className="h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
                     Twitter/X
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleShare("linkedin")}>
-                    <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className="h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.024-3.037-1.85-3.037-1.85 0-2.132 1.447-2.132 2.941v5.665H9.352V9h3.414v1.561h.048c.476-.9 1.636-1.85 3.365-1.85 3.602 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.924 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                     </svg>
                     LinkedIn
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleShare("email")}>
-                    <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className="h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M0 3v18h24V3H0zm21.518 2L12 12.713 2.482 5h19.036zM2 19V7.287L12 15l10-7.713V19H2z" />
                     </svg>
                     Email
@@ -533,7 +619,8 @@ export default function PaperDetailPage({
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground leading-relaxed">
-                        {paper?.abstract || "No abstract available."} {/* Using fake paper abstract */}
+                        {paper?.abstract || "No abstract available."}{" "}
+                        {/* Using fake paper abstract */}
                       </p>
                     </CardContent>
                   </Card>
@@ -546,13 +633,13 @@ export default function PaperDetailPage({
                       <div className="flex flex-wrap gap-2">
                         {(paper.tags || []).map(
                           (
-                            category: any,
-                            index: number, // Using tags as categories
+                            category: string,
+                            index: number // Using tags as categories
                           ) => (
                             <Badge key={index} variant="outline">
                               {category}
                             </Badge>
-                          ),
+                          )
                         )}
                       </div>
                     </CardContent>
@@ -564,7 +651,8 @@ export default function PaperDetailPage({
                     <CardHeader>
                       <CardTitle>Full Content</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        View the PDF content directly in your browser. Use the navigation buttons below to browse pages.
+                        View the PDF content directly in your browser. Use the
+                        navigation buttons below to browse pages.
                       </p>
                     </CardHeader>
 
@@ -576,14 +664,17 @@ export default function PaperDetailPage({
                             <Button
                               variant="outline"
                               onClick={() => {
-                                setPdfError(null)
-                                setNumPages(null)
-                                setPageNumber(1)
+                                setPdfError(null);
+                                setNumPages(null);
+                                setPageNumber(1);
                               }}
                             >
                               Retry Loading PDF
                             </Button>
-                            <Button variant="default" onClick={handleViewPDFInNewTab}>
+                            <Button
+                              variant="default"
+                              onClick={handleViewPDFInNewTab}
+                            >
                               Open PDF in New Tab
                             </Button>
                           </div>
@@ -607,9 +698,11 @@ export default function PaperDetailPage({
                                 </div>
                               }
                               options={{
-                                cMapUrl: "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
+                                cMapUrl:
+                                  "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
                                 cMapPacked: true,
-                                standardFontDataUrl: "https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/",
+                                standardFontDataUrl:
+                                  "https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/",
                               }}
                             >
                               <Page
@@ -617,9 +710,15 @@ export default function PaperDetailPage({
                                 renderTextLayer={true}
                                 renderAnnotationLayer={true}
                                 className="shadow-lg border border-border rounded"
-                                width={isClient ? Math.min(600, window.innerWidth - 80) : 600}
-                                onLoadSuccess={() => console.log("Page loaded successfully")}
-                                onLoadError={(error) => console.error("Page load error:", error)}
+                                width={
+                                  isClient
+                                    ? Math.min(600, window.innerWidth - 80)
+                                    : 600
+                                }
+                                onLoadSuccess={() =>
+                                  console.log("Page loaded successfully")
+                                }
+                                onLoadError={() => {}}
                               />
                             </Document>
                           </div>
@@ -671,7 +770,9 @@ export default function PaperDetailPage({
                 <TabsContent value="comments" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Comments & Reviews ({comments.length})</CardTitle>
+                      <CardTitle>
+                        Comments & Reviews ({comments.length})
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {/* New Comment Form */}
@@ -689,18 +790,27 @@ export default function PaperDetailPage({
                           />
                           {/* Rating component */}
                           <div className="flex items-center gap-2 mt-2">
-                            <span className="text-sm text-muted-foreground">Rate:</span>
+                            <span className="text-sm text-muted-foreground">
+                              Rate:
+                            </span>
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
                                 className={`h-5 w-5 cursor-pointer ${
-                                  star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                  star <= rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
                                 }`}
                                 onClick={() => setRating(star)}
                               />
                             ))}
                           </div>
-                          <Button className="mt-2" size="sm" onClick={handleAddComment} disabled={!newComment.trim()}>
+                          <Button
+                            className="mt-2"
+                            size="sm"
+                            onClick={handleAddComment}
+                            disabled={!newComment.trim()}
+                          >
                             Post Comment
                           </Button>
                         </div>
@@ -709,7 +819,10 @@ export default function PaperDetailPage({
                       {/* Comments List */}
                       <div className="space-y-4">
                         {comments.map((comment) => (
-                          <div key={comment.id} className="border-b border-border pb-4 last:border-0">
+                          <div
+                            key={comment.id}
+                            className="border-b border-border pb-4 last:border-0"
+                          >
                             <div className="flex items-start gap-3">
                               <Avatar className="h-8 w-8">
                                 <AvatarFallback className="text-xs">
@@ -722,15 +835,21 @@ export default function PaperDetailPage({
                               <div className="flex-1">
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <span className="font-medium text-sm">{comment.author}</span>
-                                    <span className="text-xs text-muted-foreground ml-2">{comment.date}</span>
+                                    <span className="font-medium text-sm">
+                                      {comment.author}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      {comment.date}
+                                    </span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     {[...Array(5)].map((_, i) => (
                                       <Star
                                         key={i}
                                         className={`h-3 w-3 ${
-                                          i < comment.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                          i < comment.rating
+                                            ? "fill-yellow-400 text-yellow-400"
+                                            : "text-gray-300"
                                         }`}
                                       />
                                     ))}
@@ -748,11 +867,20 @@ export default function PaperDetailPage({
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                           <DropdownMenuItem
-                                            onClick={() => handleEditComment(comment.id, comment.content)}
+                                            onClick={() =>
+                                              handleEditComment(
+                                                comment.id,
+                                                comment.content
+                                              )
+                                            }
                                           >
                                             Edit
                                           </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handleDeleteComment(comment.id)}>
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              handleDeleteComment(comment.id)
+                                            }
+                                          >
                                             Delete
                                           </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -766,20 +894,26 @@ export default function PaperDetailPage({
                                       className="w-full p-2 border border-border rounded-md resize-none text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                                       rows={3}
                                       value={editCommentContent}
-                                      onChange={(e) => setEditCommentContent(e.target.value)}
+                                      onChange={(e) =>
+                                        setEditCommentContent(e.target.value)
+                                      }
                                     />
                                     <div className="flex gap-2 mt-2">
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => setEditingCommentId(null)}
+                                        onClick={() =>
+                                          setEditingCommentId(null)
+                                        }
                                         className="text-muted-foreground"
                                       >
                                         Cancel
                                       </Button>
                                       <Button
                                         size="sm"
-                                        onClick={() => handleSaveEditComment(comment.id)}
+                                        onClick={() =>
+                                          handleSaveEditComment(comment.id)
+                                        }
                                         disabled={!editCommentContent.trim()}
                                       >
                                         Save
@@ -787,20 +921,33 @@ export default function PaperDetailPage({
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-foreground mt-1">{comment.content}</p>
+                                  <p className="text-sm text-foreground mt-1">
+                                    {comment.content}
+                                  </p>
                                 )}
                                 <div className="flex items-center gap-4 mt-2">
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleLikeComment(comment.id)}
+                                    onClick={() =>
+                                      handleLikeComment(comment.id)
+                                    }
                                     className={`text-muted-foreground hover:text-secondary ${
-                                      likedComments[comment.id] ? "text-accent" : ""
+                                      likedComments[comment.id]
+                                        ? "text-accent"
+                                        : ""
                                     }`}
-                                    aria-label={likedComments[comment.id] ? "Unlike comment" : "Like comment"}
+                                    aria-label={
+                                      likedComments[comment.id]
+                                        ? "Unlike comment"
+                                        : "Like comment"
+                                    }
                                   >
                                     <ThumbsUp className="h-4 w-4 mr-1" />
-                                    <span>{commentLikes[comment.id] || comment.likes}</span>
+                                    <span>
+                                      {commentLikes[comment.id] ||
+                                        comment.likes}
+                                    </span>
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -817,7 +964,9 @@ export default function PaperDetailPage({
                                 {activeReplyCommentId === comment.id && (
                                   <div className="ml-6 mt-4 flex items-start gap-3">
                                     <Avatar className="h-6 w-6">
-                                      <AvatarFallback className="text-xs">U</AvatarFallback>
+                                      <AvatarFallback className="text-xs">
+                                        U
+                                      </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1">
                                       <textarea
@@ -836,15 +985,21 @@ export default function PaperDetailPage({
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => setActiveReplyCommentId(null)}
+                                          onClick={() =>
+                                            setActiveReplyCommentId(null)
+                                          }
                                           className="text-muted-foreground"
                                         >
                                           Cancel
                                         </Button>
                                         <Button
                                           size="sm"
-                                          onClick={() => handleAddReply(comment.id)}
-                                          disabled={!newReply[comment.id]?.trim()}
+                                          onClick={() =>
+                                            handleAddReply(comment.id)
+                                          }
+                                          disabled={
+                                            !newReply[comment.id]?.trim()
+                                          }
                                         >
                                           Reply
                                         </Button>
@@ -855,51 +1010,78 @@ export default function PaperDetailPage({
                                 {/* Replies */}
                                 {comment.replies.length > 0 && (
                                   <div className="ml-6 mt-4 space-y-4">
-                                    {(showAllReplies[comment.id] ? comment.replies : comment.replies.slice(0, 2)).map(
-                                      (reply) => (
-                                        <div key={reply.id} className="flex items-start gap-3">
-                                          <Avatar className="h-6 w-6">
-                                            <AvatarFallback className="text-xs">
-                                              {reply.author
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                              <div>
-                                                <span className="font-medium text-sm">{reply.author}</span>
-                                                <span className="text-xs text-muted-foreground ml-2">{reply.date}</span>
-                                              </div>
+                                    {(showAllReplies[comment.id]
+                                      ? comment.replies
+                                      : comment.replies.slice(0, 2)
+                                    ).map((reply) => (
+                                      <div
+                                        key={reply.id}
+                                        className="flex items-start gap-3"
+                                      >
+                                        <Avatar className="h-6 w-6">
+                                          <AvatarFallback className="text-xs">
+                                            {reply.author
+                                              .split(" ")
+                                              .map((n) => n[0])
+                                              .join("")}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1">
+                                          <div className="flex items-center justify-between">
+                                            <div>
+                                              <span className="font-medium text-sm">
+                                                {reply.author}
+                                              </span>
+                                              <span className="text-xs text-muted-foreground ml-2">
+                                                {reply.date}
+                                              </span>
                                             </div>
-                                            <p className="text-sm text-foreground mt-1">{reply.content}</p>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => handleLikeReply(reply.id)}
-                                              className={`text-muted-foreground hover:text-accent ${
-                                                likedReplies[reply.id] ? "text-accent" : ""
-                                              } mt-1`}
-                                              aria-label={likedReplies[reply.id] ? "Unlike reply" : "Like reply"}
-                                            >
-                                              <ThumbsUp className="h-4 w-4 mr-1" />
-                                              <span>{replyLikes[reply.id] || reply.likes}</span>
-                                            </Button>
                                           </div>
+                                          <p className="text-sm text-foreground mt-1">
+                                            {reply.content}
+                                          </p>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleLikeReply(reply.id)
+                                            }
+                                            className={`text-muted-foreground hover:text-accent ${
+                                              likedReplies[reply.id]
+                                                ? "text-accent"
+                                                : ""
+                                            } mt-1`}
+                                            aria-label={
+                                              likedReplies[reply.id]
+                                                ? "Unlike reply"
+                                                : "Like reply"
+                                            }
+                                          >
+                                            <ThumbsUp className="h-4 w-4 mr-1" />
+                                            <span>
+                                              {replyLikes[reply.id] ||
+                                                reply.likes}
+                                            </span>
+                                          </Button>
                                         </div>
-                                      ),
-                                    )}
+                                      </div>
+                                    ))}
                                     {comment.replies.length > 2 && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => toggleShowReplies(comment.id)}
+                                        onClick={() =>
+                                          toggleShowReplies(comment.id)
+                                        }
                                         className="text-muted-foreground hover:text-accent"
                                       >
                                         {showAllReplies[comment.id]
-                                          ? `Show Less (${comment.replies.length - 2} more)`
-                                          : `Show More (${comment.replies.length - 2} more)`}
+                                          ? `Show Less (${
+                                              comment.replies.length - 2
+                                            } more)`
+                                          : `Show More (${
+                                              comment.replies.length - 2
+                                            } more)`}
                                       </Button>
                                     )}
                                   </div>
@@ -924,7 +1106,7 @@ export default function PaperDetailPage({
                         <div className="p-3 bg-muted rounded-lg text-sm font-mono">
                           {author?.fullName || "Unknown Author"} (
                           {new Date(
-                            paper.publishedDate || paper.publishedDate, // Use fake paper publishedDate
+                            paper.publishedDate || paper.publishedDate // Use fake paper publishedDate
                           ).getFullYear()}
                           ). {paper.title}. <em>IPUB Academic Platform</em>.
                         </div>
@@ -932,19 +1114,25 @@ export default function PaperDetailPage({
                       <div>
                         <h4 className="font-medium mb-2">BibTeX</h4>
                         <div className="p-3 bg-muted rounded-lg text-sm font-mono">
-                          @article{"{"}paper{paper.title.replace(/\s+/g, "").toLowerCase().slice(0, 8)},{"}"},{" "}
-                          {/* Use fake paper title for key */}
+                          @article{"{"}paper
+                          {paper.title
+                            .replace(/\s+/g, "")
+                            .toLowerCase()
+                            .slice(0, 8)}
+                          ,{"}"}, {/* Use fake paper title for key */}
                           <br />
                           &nbsp;&nbsp;title={"{"} {paper.title} {"}"},<br />
-                          &nbsp;&nbsp;author={"{"} {paper.authors.join(" and ")} {"}"}, {/* Use fake paper authors */}
+                          &nbsp;&nbsp;author={"{"} {paper.authors.join(" and ")}{" "}
+                          {"}"}, {/* Use fake paper authors */}
                           <br />
                           &nbsp;&nbsp;year={"{"}{" "}
                           {new Date(
-                            paper.publishedDate || paper.publishedDate, // Use fake paper publishedDate
+                            paper.publishedDate || paper.publishedDate // Use fake paper publishedDate
                           ).getFullYear()}{" "}
                           {"}"},
                           <br />
-                          &nbsp;&nbsp;abstract={"{"} {paper.abstract} {"}"} {/* Use fake paper abstract */}
+                          &nbsp;&nbsp;abstract={"{"} {paper.abstract} {"}"}{" "}
+                          {/* Use fake paper abstract */}
                           <br />
                           {"}"}
                         </div>
@@ -973,12 +1161,15 @@ export default function PaperDetailPage({
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span>Status</span>
                     </div>
-                    <Badge variant="default">Approved</Badge> {/* Assuming fake papers are approved */}
+                    <Badge variant="default">Approved</Badge>{" "}
+                    {/* Assuming fake papers are approved */}
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between text-sm">
                     <span>Published</span>
-                    <span className="font-medium">{formatDate(paper.publishedDate)}</span>
+                    <span className="font-medium">
+                      {formatDate(paper.publishedDate)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span>Categories</span>
@@ -989,7 +1180,9 @@ export default function PaperDetailPage({
                   <div className="flex items-center justify-between text-sm">
                     <span>Author ID</span>
                     <span className="font-medium text-xs">
-                      {paper.authors?.[0]?.split(" ")?.[0]?.toLowerCase() || "Unknown"}... {/* Basic placeholder */}
+                      {paper.authors?.[0]?.split(" ")?.[0]?.toLowerCase() ||
+                        "Unknown"}
+                      ... {/* Basic placeholder */}
                     </span>
                   </div>
                 </CardContent>
@@ -1002,24 +1195,43 @@ export default function PaperDetailPage({
                 <CardContent>
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src="/placeholder.svg" alt={author?.fullName || "Author"} />
+                      <AvatarImage
+                        src="/placeholder.svg"
+                        alt={author?.fullName || "Author"}
+                      />
                       <AvatarFallback>
                         {(author?.fullName || "A")
                           .split(" ")
-                          .map((n: any) => n[0])
+                          .map((n: string) => n[0])
                           .join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <h4 className="font-medium">
-                        {authorLoading ? "Loading..." : author?.fullName || "Unknown Author"}
+                        {authorLoading
+                          ? "Loading..."
+                          : author?.fullName || "Unknown Author"}
                       </h4>
                       <p className="text-sm text-muted-foreground">Author</p>
                     </div>
                   </div>
-                  {author?.email && <p className="text-sm text-muted-foreground mb-3">{author.email}</p>}
-                  <Button variant="outline" size="sm" className="w-full bg-transparent" asChild disabled={!author}>
-                    <Link href={`/users/${paper.authors?.[0]?.split(" ")?.[0]?.toLowerCase() || ""}`}>
+                  {author?.email && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {author.email}
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-transparent"
+                    asChild
+                    disabled={!author}
+                  >
+                    <Link
+                      href={`/users/${
+                        paper.authors?.[0]?.split(" ")?.[0]?.toLowerCase() || ""
+                      }`}
+                    >
                       {" "}
                       {/* Placeholder link */}
                       View Profile
@@ -1035,17 +1247,25 @@ export default function PaperDetailPage({
                 <CardContent>
                   <div className="space-y-4">
                     {relatedPapers.length > 0 ? (
-                      relatedPapers.map((relatedPaper: any) => (
+                      relatedPapers.map((relatedPaper) => (
                         <PaperCard
                           key={relatedPaper.uuid}
                           paper={relatedPaper}
-                          onDownloadPDF={() => window.open(relatedPaper.fileUrl, "_blank")}
-                          onToggleBookmark={() => console.log(`Toggle bookmark for paper ${relatedPaper.uuid}`)}
+                          onDownloadPDF={() =>
+                            window.open(relatedPaper.fileUrl, "_blank")
+                          }
+                          onToggleBookmark={() =>
+                            console.log(
+                              `Toggle bookmark for paper ${relatedPaper.uuid}`
+                            )
+                          }
                           isBookmarked={false}
                         />
                       ))
                     ) : (
-                      <p className="text-muted-foreground">No related papers found.</p>
+                      <p className="text-muted-foreground">
+                        No related papers found.
+                      </p>
                     )}
                   </div>
                 </CardContent>
@@ -1055,5 +1275,5 @@ export default function PaperDetailPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

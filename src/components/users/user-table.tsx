@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useMemo, useEffect } from "react";
@@ -168,7 +167,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
     [allUsers, searchTerm, statusFilter]
   );
 
-  const columns = useMemo<ColumnDef<User, any>[]>(
+  const columns = useMemo<ColumnDef<User, unknown>[]>(
     () => [
       {
         accessorKey: "fullName",
@@ -313,7 +312,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                 onClick={() => {
                   setSelectedUser(row.original);
                   setViewOpen(true);
-                  setCurrentId(row.original.uuid)
+                  setCurrentId(row.original.uuid);
                 }}
               >
                 <Eye className="w-3.5 h-3.5 mr-2" />
@@ -446,8 +445,6 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         autoClose: 3000,
         theme: "colored",
       });
-
-      console.error("❌ Error creating user:", error);
     }
 
     reset(); // ✅ make sure reset() is defined (probably from react-hook-form)
@@ -552,7 +549,6 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("Error updating user:", error);
     }
   };
 
@@ -580,7 +576,6 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         autoClose: 3000,
         theme: "colored",
       });
-      console.error("Error updating user:", error);
     }
   };
 
@@ -662,12 +657,12 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary2 text-white bg-secondary shadow-sm">
+                <Button className="shadow-sm">
                   <Plus className="w-4 h-4 mr-2 " /> Add User
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+              <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold text-popover-foreground">
                     Add New User
@@ -750,7 +745,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                         <button
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                          className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
                         >
                           {showPassword ? (
                             <EyeOff className="w-5 h-5" />
@@ -778,7 +773,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                         <button
                           type="button"
                           onClick={() => setShowConfirm((prev) => !prev)}
-                          className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                          className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
                         >
                           {showConfirm ? (
                             <EyeOff className="w-5 h-5" />
@@ -953,7 +948,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
       {/* Promote/Role Management Dialog */}
       <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
-        <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-primary2">
               Manage User Roles
@@ -1046,7 +1041,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="p-6 bg-card border-border shadow-sm backdrop-blur-sm transition-all duration-200">
+        <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
           <DialogHeader>
             <DialogTitle className="text-popover-foreground">
               Edit User
@@ -1194,7 +1189,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
       {/* Delete Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
           <DialogHeader>
             <DialogTitle className="text-popover-foreground">
               Delete User
@@ -1231,7 +1226,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
       {/* View Dialog */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm ">
+        <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
           <DialogHeader>
             <DialogTitle className="text-popover-foreground">
               User Details

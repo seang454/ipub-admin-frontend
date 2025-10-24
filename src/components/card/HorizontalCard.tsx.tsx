@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { BookOpen, Calendar, Award, Star, Download, Eye } from 'lucide-react';
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { BookOpen, Calendar, Award, Star, Download, Eye } from "lucide-react";
 
 interface HorizontalCardProps {
   id: number; // Replace paperId with id
@@ -45,7 +45,14 @@ export default function HorizontalCard({
     <div className="w-full bg-card overflow-hidden rounded-lg flex flex-col md:flex-row shadow-md h-full">
       {/* Left Section - Image */}
       <div className="relative w-full md:w-1/3 h-56 md:h-auto flex-shrink-0">
-        <Image  unoptimized src={image} alt={title} fill className="object-cover" priority />
+        <Image
+          unoptimized
+          src={image}
+          alt={title}
+          fill
+          className="object-cover"
+          priority
+        />
       </div>
 
       {/* Right Section */}
@@ -67,7 +74,7 @@ export default function HorizontalCard({
               unoptimized
             />
           )}
-          <span className="text-sm text-foreground">{authors.join(', ')}</span>
+          <span className="text-sm text-foreground">{authors.join(", ")}</span>
         </div>
 
         {/* Metadata */}
@@ -87,11 +94,11 @@ export default function HorizontalCard({
           <button
             onClick={onToggleBookmark}
             className="flex items-center space-x-1 hover:text-secondary transition-colors"
-            aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
           >
             <Star
               className={`w-4 h-4 ${
-                isBookmarked ? 'fill-accent text-accent' : ''
+                isBookmarked ? "fill-accent text-accent" : ""
               }`}
             />
           </button>
@@ -126,7 +133,7 @@ export default function HorizontalCard({
           </button>
           <button
             onClick={onDownloadPDF}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-foreground/90 text-sm"
+            className="flex items-center space-x-2 px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted/80 text-sm border border-border"
             aria-label="Download PDF"
           >
             <Download className="w-4 h-4" />

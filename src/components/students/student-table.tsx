@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -140,20 +139,8 @@ export function StudentTable({
     value: boolean
   ) => {
     if (!selectedUser) return;
-    // Keep immediate UI feedback locally (optimistic), but refetch to get authoritative data.
-    // NOTE: roles persistence may require a different API endpoint; we still refetch so table updates.
-    // Update local preview by mapping through current students (non-persistent)
-    // This keeps UI responsive until server refetch overrides with real data.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (students as any) = students.map((u: User) =>
-      u.uuid === selectedUser.uuid
-        ? {
-            ...u,
-            [roleType]: value,
-            updateDate: new Date().toISOString().split("T")[0],
-          }
-        : u
-    );
+    // Refetch to get authoritative data from server.
+    // NOTE: roles persistence may require a different API endpoint; we refetch so table updates.
     void refetchStudents?.();
   };
   const [currentId, setCurrentId] = useState<string>("");
@@ -210,7 +197,9 @@ export function StudentTable({
         s.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus =
         statusFilter === "All" ||
-        (statusFilter === "Active" ? s.isActive === true : s.isActive === false);
+        (statusFilter === "Active"
+          ? s.isActive === true
+          : s.isActive === false);
       return matchesSearch && matchesStatus;
     });
   }, [students, searchTerm, statusFilter]);
@@ -225,7 +214,7 @@ export function StudentTable({
     setDeleteOpen(true); // Open delete confirmation
   };
 
-  const columns = useMemo<ColumnDef<User, any>[]>(
+  const columns = useMemo<ColumnDef<User, unknown>[]>(
     () => [
       {
         accessorKey: "fullName",
@@ -639,7 +628,7 @@ export function StudentTable({
   };
 
   const handleDeleteStudent = async () => {
-    console.log('currentId :>> ', currentId);
+    console.log("currentId :>> ", currentId);
     if (!currentId) return;
     try {
       await deleteStudent({
@@ -654,7 +643,6 @@ export function StudentTable({
       // refresh list
       void refetchStudents?.();
     } catch (err) {
-      console.error("Failed to delete student:", err);
       toast.error("Failed to delete student", {
         position: "top-left",
         autoClose: 3000,
@@ -705,10 +693,7 @@ export function StudentTable({
             <div className="flex gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-white border-slate-300 "
-                  >
+                  <Button variant="outline" className="bg-card border-border">
                     <Filter className="w-4 h-4 mr-2" />
                     {statusFilter} <ChevronDown className="ml-2 w-4 h-4" />
                   </Button>
@@ -736,12 +721,12 @@ export function StudentTable({
               </DropdownMenu>
               <Dialog open={addOpen} onOpenChange={setAddOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-primary2 text-white bg-secondary shadow-sm">
+                  <Button className="shadow-sm">
                     <Plus className="w-4 h-4 mr-2 " /> Add User
                   </Button>
                 </DialogTrigger>
 
-                <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+                <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
                   <DialogHeader>
                     <DialogTitle className="text-lg font-semibold text-popover-foreground">
                       Add New User
@@ -824,7 +809,7 @@ export function StudentTable({
                           <button
                             type="button"
                             onClick={() => setShowPassword((prev) => !prev)}
-                            className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                            className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
                           >
                             {showPassword ? (
                               <EyeOff className="w-5 h-5" />
@@ -852,7 +837,7 @@ export function StudentTable({
                           <button
                             type="button"
                             onClick={() => setShowConfirm((prev) => !prev)}
-                            className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                            className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
                           >
                             {showConfirm ? (
                               <EyeOff className="w-5 h-5" />
@@ -1017,7 +1002,7 @@ export function StudentTable({
                     <SelectItem
                       key={size}
                       value={size.toString()}
-                      className="border-0 bg-white"
+                      className="border-0 bg-card"
                     >
                       Show {size}
                     </SelectItem>
@@ -1029,7 +1014,7 @@ export function StudentTable({
         </div>
 
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border-0">
+          <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader className="pb-2">
               <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
@@ -1191,7 +1176,7 @@ export function StudentTable({
 
         {/* Manage Roles Dialog */}
         <Dialog open={promoteOpen} onOpenChange={setPromoteOpen}>
-          <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+          <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-primary2">
                 Manage User Roles
@@ -1283,7 +1268,7 @@ export function StudentTable({
         </Dialog>
         {/* Edit student dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-dynamic2">
                 Edit Student Information
@@ -1348,7 +1333,7 @@ export function StudentTable({
                 )}
 
                 {/* Upload Instructions */}
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Supported formats: JPG, PNG, GIF. Max size: 5MB
                 </p>
               </div>
@@ -1423,7 +1408,7 @@ export function StudentTable({
         </Dialog>
 
         <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DialogContent className="sm:max-w-md p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+          <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-dynamic2">
                 Delete User

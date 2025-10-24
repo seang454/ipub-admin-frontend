@@ -1,15 +1,15 @@
-'use client';
-import { usePathname } from 'next/navigation';
-import { Mail, Phone } from 'lucide-react';
+"use client";
+import { usePathname } from "next/navigation";
+import { Mail, Phone } from "lucide-react";
 
 export default function StickyBanner() {
   const pathname = usePathname();
   const hiddenPaths = [
-    '/login',
-    '/register',
-    '/dashboard',
-    '/student',
-    '/mentor',
+    "/login",
+    "/register",
+    "/dashboard",
+    "/student",
+    "/mentor",
   ];
   const shouldHide = hiddenPaths.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
@@ -26,7 +26,7 @@ export default function StickyBanner() {
             <Mail className="h-4 w-4 text-accent" />
             <a
               href="mailto:docuhub@gmail.com"
-              className="text-xs text-gray-100 sm:text-sm hover:text-accent transition-colors"
+              className="text-xs text-white sm:text-sm hover:text-accent transition-colors"
             >
               docuhub@gmail.com
             </a>
@@ -37,7 +37,7 @@ export default function StickyBanner() {
             <Phone className="h-4 w-4 text-accent" />
             <a
               href="tel:+85512312123"
-              className="text-xs text-gray-100 sm:text-sm hover:text-accent transition-colors"
+              className="text-xs text-white sm:text-sm hover:text-accent transition-colors"
             >
               +855-123-12123
             </a>
@@ -46,15 +46,15 @@ export default function StickyBanner() {
 
         {/* Right Section - Social Media */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <span className="hidden text-gray-100 sm:inline text-sm font-medium">
+          <span className="hidden text-white sm:inline text-sm font-medium">
             Follow Us:
           </span>
 
           {/* Social Media Icons */}
           <div className="flex gap-2 sm:gap-3">
             {/* Facebook */}
-            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition">
-              <a href="#" className="text-gray-400 hover:text-white">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition">
+              <a href="#" className="text-muted-foreground hover:text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -68,8 +68,8 @@ export default function StickyBanner() {
             </div>
 
             {/* Instagram */}
-            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition">
-              <a href="#" className="text-gray-400 hover:text-white">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition">
+              <a href="#" className="text-muted-foreground hover:text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -83,8 +83,8 @@ export default function StickyBanner() {
             </div>
 
             {/* GitHub */}
-            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition">
-              <a href="#" className="text-gray-400 hover:text-white">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition">
+              <a href="#" className="text-muted-foreground hover:text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -98,8 +98,8 @@ export default function StickyBanner() {
             </div>
 
             {/* YouTube */}
-            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition">
-              <a href="#" className="text-gray-400 hover:text-white">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition">
+              <a href="#" className="text-muted-foreground hover:text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"

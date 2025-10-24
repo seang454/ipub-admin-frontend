@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Adviser } from "@/components/advisers/zode";
 import {
   PaginationResponse,
@@ -27,23 +26,24 @@ export const AdviserApi = createApi({
       }),
       providesTags: ["Advisor"], // ✅ correct placement
     }),
-    createNewAdvisor: builder.mutation<{ message: string }, { token: string; user: RegisterRequest }>(
-      {
-        query: ({ token, user }) => ({
-          url: `/admin/adviser/create-adviser`,
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: user,
-          // backend returns plain text message (not JSON) so instruct RTK to parse as text
-          responseHandler: "text",
-        }),
-        // transform the plain text into the expected shape { message: string }
-        transformResponse: (response: string) => ({ message: response }),
-        invalidatesTags: ["Advisor"], // ✅ tells RTK Query to refetch any query tagged 'Advisor'
-      }
-    ),
+    createNewAdvisor: builder.mutation<
+      { message: string },
+      { token: string; user: RegisterRequest }
+    >({
+      query: ({ token, user }) => ({
+        url: `/admin/adviser/create-adviser`,
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: user,
+        // backend returns plain text message (not JSON) so instruct RTK to parse as text
+        responseHandler: "text",
+      }),
+      // transform the plain text into the expected shape { message: string }
+      transformResponse: (response: string) => ({ message: response }),
+      invalidatesTags: ["Advisor"], // ✅ tells RTK Query to refetch any query tagged 'Advisor'
+    }),
     updateAdvisor: builder.mutation<
       void,
       { uuid: string; updateUser: Adviser; token: string }
