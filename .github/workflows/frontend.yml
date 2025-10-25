@@ -128,6 +128,13 @@ jobs:
             IMAGE_SIZE=$(docker images docuhub-frontend:latest --format "{{.Size}}")
             log "📦 Image size: $IMAGE_SIZE"
 
+            # 5️⃣ Clean up any existing test containers
+            log "🧹 Cleaning up any existing test containers..."
+            if docker ps -a | grep -q docuhub-frontend-new; then
+              docker stop docuhub-frontend-new 2>/dev/null || true
+              docker rm docuhub-frontend-new 2>/dev/null || true
+            fi
+
             # 5️⃣ Run new container on temporary port for health check
             log "🚀 Starting new Docker container on port 3001..."
             docker run -d \
