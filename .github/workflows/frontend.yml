@@ -142,15 +142,28 @@ jobs:
               --log-opt max-file=3 \
               docuhub-frontend:latest
 
-            # Wait for container to start here
-            sleep 5
+            # Wait for container to start
+            log "⏳ Waiting for container to initialize..."
+            sleep 8
+
+            # Debug: Show all containers
+            log "📋 All containers:"
+            docker ps -a | grep docuhub || true
 
             # Check if container is running
-            if ! docker ps | grep -q docuhub-frontend-new; then
-              log "❌ Container failed to start!"
-              docker logs docuhub-frontend-new
+            CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' docuhub-frontend-new 2>/dev/null || echo "not-found")
+            log "Container status: $CONTAINER_STATUS"
+
+            if [ "$CONTAINER_STATUS" != "running" ]; then
+              log "❌ Container is not running! Status: $CONTAINER_STATUS"
+              log "Container logs:"
+              docker logs docuhub-frontend-new 2>&1 || true
+              log "Container inspect:"
+              docker inspect docuhub-frontend-new || true
               exit 1
             fi
+
+            log "✅ Container is running!"
 
             # 6️⃣ Health check - wait for app to be ready
             log "🏥 Running health check..."

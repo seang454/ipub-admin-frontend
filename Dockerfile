@@ -83,10 +83,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy public assets
-COPY --from=builder /app/public ./public
+# Copy public folder from builder (standalone needs this)
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Copy standalone Next.js output (includes minimal node_modules)
+# Copy standalone output (this contains server.js and minimal dependencies)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -105,4 +105,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
 # Start the Next.js application using standalone server
+# Use exec form to ensure proper signal handling
 CMD ["node", "server.js"]
