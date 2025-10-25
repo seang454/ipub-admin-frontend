@@ -188,24 +188,19 @@ jobs:
             if [ "$HEALTH_CHECK_PASSED" = true ]; then
               log "🔄 Switching traffic to new container..."
               
-              # Backup old container name if exists
-              OLD_CONTAINER_EXISTS=false
-              if docker ps -a | grep -q docuhub-frontend-container; then
-                OLD_CONTAINER_EXISTS=true
-                docker rename docuhub-frontend-container docuhub-frontend-old || true
+              # Stop and remove old container if exists
+              if docker ps -a | grep -q "docuhub-frontend-container"; then
+                log "🛑 Stopping old container..."
+                docker stop docuhub-frontend-container 2>/dev/null || true
+                docker rm docuhub-frontend-container 2>/dev/null || true
               fi
 
-              # Stop new container temporarily
+              # Stop and remove the test container on port 3001
               docker stop docuhub-frontend-new
+              docker rm docuhub-frontend-new
               
-              # Rename new container to production name
-              docker rename docuhub-frontend-new docuhub-frontend-container
-
-              # Start final container on port 3000
-              docker start docuhub-frontend-container
-              docker stop docuhub-frontend-container
-              docker rm docuhub-frontend-container
-              
+              # Start new container on port 3000 with production name
+              log "🚀 Starting production container on port 3000..."
               docker run -d \
                 -p 3000:3000 \
                 --env-file .env.production \
@@ -223,24 +218,10 @@ jobs:
               
               if curl -f -s http://localhost:3000 > /dev/null; then
                 log "✅ New container responding on port 3000!"
-                
-                # Remove old container if it exists
-                if [ "$OLD_CONTAINER_EXISTS" = true ]; then
-                  log "🗑️ Removing old container..."
-                  docker stop docuhub-frontend-old 2>/dev/null || true
-                  docker rm docuhub-frontend-old 2>/dev/null || true
-                fi
               else
                 log "❌ New container not responding on port 3000!"
-                
-                # Rollback: restore old container if exists
-                if [ "$OLD_CONTAINER_EXISTS" = true ]; then
-                  log "⚠️ Rolling back to old container..."
-                  docker stop docuhub-frontend-container || true
-                  docker rm docuhub-frontend-container || true
-                  docker rename docuhub-frontend-old docuhub-frontend-container || true
-                  docker start docuhub-frontend-container || true
-                fi
+                log "Container logs:"
+                docker logs --tail 50 docuhub-frontend-container
                 exit 1
               fi
 
