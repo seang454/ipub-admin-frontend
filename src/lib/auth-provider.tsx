@@ -28,11 +28,14 @@ export default function AuthProvider({ children, session }: AuthProviderProps) {
   return (
     <SessionProvider
       session={session}
-      // Check session every 5 minutes (300 seconds)
-      // This will trigger the JWT callback to check and refresh the token
-      refetchInterval={5 * 60}
-      // Refetch session when window gains focus
-      refetchOnWindowFocus={true}
+      // Check session every 15 minutes (900 seconds)
+      // Reduced from 5 minutes to minimize unnecessary requests
+      refetchInterval={15 * 60}
+      // Disable refetch on window focus to prevent excessive requests
+      // Session will still be checked every 15 minutes automatically
+      refetchOnWindowFocus={false}
+      // Don't refetch when offline
+      refetchWhenOffline={false}
     >
       <SessionMonitor>{children}</SessionMonitor>
     </SessionProvider>

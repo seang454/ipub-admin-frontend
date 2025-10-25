@@ -20,10 +20,13 @@ export default function FetchResponseToken(): AuthResponse | null {
         setAuthResponse(body);
 
         // Redirect after fetching
-      } catch (err) {}
+      } catch {
+        // Silently fail if endpoint is not available
+      }
     };
 
     fetchProtected();
-  }, [authResponse?.access_token]);
+    // Empty dependency array - only run once on mount
+  }, []);
   return authResponse;
 }
