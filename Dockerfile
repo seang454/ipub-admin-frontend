@@ -4,7 +4,17 @@
 FROM node:20-alpine AS deps
 
 # Install necessary build tools for native modules
-RUN apk add --no-cache libc6-compat
+# These are required for packages like: fabric, pg, canvas, etc.
+RUN apk add --no-cache \
+    libc6-compat \
+    python3 \
+    make \
+    g++ \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    pixman-dev
 
 WORKDIR /app
 
@@ -12,12 +22,22 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies with clean install
-RUN npm ci
+# Note: We need ALL dependencies including devDependencies for the build stage
+RUN npm ci --prefer-offline --no-audit
 
 # ==========================================
 # 🔨 BUILDER STAGE - Build the Next.js app
 # ==========================================
 FROM node:20-alpine AS builder
+
+# Install build dependencies (needed for canvas/fabric during build)
+RUN apk add --no-cache \
+    libc6-compat \
+    cairo \
+    jpeg \
+    pango \
+    giflib \
+    pixman
 
 WORKDIR /app
 
@@ -38,6 +58,15 @@ RUN npm run build
 # 🚀 RUNNER STAGE - Production runtime (70% smaller!)
 # ==========================================
 FROM node:20-alpine AS runner
+
+# Install runtime libraries (needed for canvas/fabric at runtime)
+RUN apk add --no-cache \
+    libc6-compat \
+    cairo \
+    jpeg \
+    pango \
+    giflib \
+    pixman
 
 WORKDIR /app
 
