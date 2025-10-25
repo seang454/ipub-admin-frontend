@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Search,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -471,6 +472,15 @@ export default function NotificationPage() {
     <div className="min-h-screen bg-background-root p-4 md:p-8">
       <ToastContainer />
       <div className="max-w-4xl mx-auto">
+        {/* Back to Dashboard Button */}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-2 text-dynamic2 hover:text-blue-600 transition-colors group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back to Dashboard</span>
+        </Link>
+
         {/* Header */}
         <div className="rounded-2xl border mb-6 p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">

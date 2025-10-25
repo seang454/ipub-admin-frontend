@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, LayoutDashboard } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../ui/button";
 import Image from "next/image";
@@ -36,7 +36,7 @@ export default function NavbarGuest() {
     try {
       await i18n.changeLanguage(newLang);
       setCurrentLang(newLang);
-    } catch (err) {
+    } catch {
       toast.error("Failed to change language", {
         position: "top-right",
         autoClose: 2000,
@@ -47,12 +47,7 @@ export default function NavbarGuest() {
 
   if (!mounted) return null;
 
-  const navLinks = [
-    { path: "/", name: t("home") },
-    { path: "/browse", name: t("browse") },
-    { path: "/about", name: t("about") },
-    { path: "/contact", name: t("contact") },
-  ];
+  const navLinks = [{ path: "/", name: t("home") }];
 
   return (
     <nav className="fixed top-14 left-0 w-full z-40 border-b bg-background border-border py-2 shadow-md">
@@ -121,12 +116,24 @@ export default function NavbarGuest() {
               <button onClick={() => signIn("keycloak")}>{t("signup")}</button>
             </Button>
           ) : (
-            <Button
-              asChild
-              className="bg-accent text-white hover:bg-accent/90 font-semibold"
-            >
-              <button onClick={() => signOut()}>{t("Sign Out")}</button>
-            </Button>
+            <>
+              <Button
+                asChild
+                variant="outline"
+                className="border-accent text-accent hover:bg-accent/10 font-semibold"
+              >
+                <Link href="/dashboard" className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Go to Dashboard
+                </Link>
+              </Button>
+              <Button
+                asChild
+                className="bg-accent text-white hover:bg-accent/90 font-semibold"
+              >
+                <button onClick={() => signOut()}>{t("Sign Out")}</button>
+              </Button>
+            </>
           )}
         </div>
 
@@ -186,17 +193,35 @@ export default function NavbarGuest() {
                   {currentLang.toUpperCase()}
                 </span>
               </div>
+            </div>
+            {/* Mobile action buttons */}
+            <div className="flex flex-col gap-3 mt-3">
               {data?.accessToken ? (
-                <Button
-                  asChild
-                  className="bg-accent text-white hover:bg-accent/90 font-semibold"
-                >
-                  <button onClick={() => signOut()}>{t("Sign Out")}</button>
-                </Button>
+                <>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-accent text-accent hover:bg-accent/10 font-semibold w-full"
+                  >
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2 justify-center"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Go to Dashboard
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    className="bg-accent text-white hover:bg-accent/90 font-semibold w-full"
+                  >
+                    <button onClick={() => signOut()}>{t("Sign Out")}</button>
+                  </Button>
+                </>
               ) : (
                 <Button
                   asChild
-                  className="bg-accent text-white hover:bg-accent/90 font-semibold"
+                  className="bg-accent text-white hover:bg-accent/90 font-semibold w-full"
                 >
                   <button onClick={() => signIn("keycloak")}>
                     {t("signup")}

@@ -46,12 +46,7 @@ export default function NavbarUser() {
 
   if (!mounted) return null;
 
-  const navLinks = [
-    { path: "/", name: t("home") },
-    { path: "/browse", name: t("browse") },
-    { path: "/about", name: t("about") },
-    { path: "/contact", name: t("contact") },
-  ];
+  const navLinks = [{ path: "/", name: t("home") }];
 
   return (
     <nav className="fixed top-14 left-0 w-full z-40 border-b bg-background border-border py-2 shadow-md">

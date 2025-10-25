@@ -13,6 +13,7 @@ import {
   Clock,
   Send,
   User,
+  ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,8 +54,17 @@ export default function StudentDetailPage() {
     : "/notification";
 
   return (
-    <div className="min-h-screen bg-background-root px-4">
+    <div className="min-h-screen bg-background-root px-4 py-8">
       <div className="max-w-6xl mx-auto">
+        {/* Back to Dashboard Button */}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-2 text-dynamic2 hover:text-blue-600 transition-colors group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back to Dashboard</span>
+        </Link>
+
         {/* Header Card */}
         <div className=" rounded-2xl shadow-xl overflow-hidden mb-6 bg-card border-border hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
           <div className="h-32 bg-secondary"></div>
