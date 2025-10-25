@@ -153,7 +153,7 @@ jobs:
             log "⏳ Waiting for container to initialize..."
             sleep 8
 
-            # Debug: Show all containers
+            # Debug: Show all containers 
             log "📋 All containers:"
             docker ps -a | grep docuhub || true
 
@@ -208,12 +208,12 @@ jobs:
             if [ "$HEALTH_CHECK_PASSED" = true ]; then
               log "🔄 Switching traffic to new container..."
               
-              # Stop and remove old container if exists
-              if docker ps -a | grep -q "docuhub-frontend-container"; then
-                log "🛑 Stopping old container..."
-                docker stop docuhub-frontend-container 2>/dev/null || true
-                docker rm docuhub-frontend-container 2>/dev/null || true
-              fi
+              # Stop and remove ALL old frontend containers
+              log "🛑 Stopping all old containers..."
+              docker stop docuhub-frontend-container 2>/dev/null || true
+              docker stop docuhub-frontend-old 2>/dev/null || true
+              docker rm docuhub-frontend-container 2>/dev/null || true
+              docker rm docuhub-frontend-old 2>/dev/null || true
 
               # Stop and remove the test container on port 3001
               docker stop docuhub-frontend-new
