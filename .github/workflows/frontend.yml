@@ -52,9 +52,15 @@ jobs:
               # Stash any local changes
               git stash || true
               
+              # Update remote URL with token for authentication
+              git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/seang454/ipub-admin-frontend.git
+              
               # Fetch and reset
               git fetch origin
               git reset --hard origin/main
+              
+              # Remove token from remote URL for security
+              git remote set-url origin https://github.com/seang454/ipub-admin-frontend.git
               
               # Show current commit here
               log "Current commit: $(git log -1 --oneline)"
@@ -62,6 +68,10 @@ jobs:
               log "📂 Cloning repo..."
               git clone https://${{ secrets.PAT_TOKEN }}@github.com/seang454/ipub-admin-frontend.git $HOME/docuhub-frontend
               cd $HOME/docuhub-frontend
+              
+              # Remove token from remote URL for security
+              git remote set-url origin https://github.com/seang454/ipub-admin-frontend.git
+              
               log "Cloned commit: $(git log -1 --oneline)"
             fi
 
