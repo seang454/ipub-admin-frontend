@@ -199,6 +199,17 @@ jobs:
               docker stop docuhub-frontend-new
               docker rm docuhub-frontend-new
               
+              # Wait for ports to be released
+              log "⏳ Waiting for ports to be released..."
+              sleep 3
+              
+              # Verify port 3000 is free, if not kill the process
+              if lsof -ti:3000 >/dev/null 2>&1; then
+                log "⚠️ Port 3000 still in use, force killing process..."
+                lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+                sleep 2
+              fi
+              
               # Start new container on port 3000 with production name
               log "🚀 Starting production container on port 3000..."
               docker run -d \
