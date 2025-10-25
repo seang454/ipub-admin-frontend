@@ -23,7 +23,7 @@ COPY package*.json ./
 
 # Install dependencies with clean install
 # Note: We need ALL dependencies including devDependencies for the build stage
-RUN npm ci --prefer-offline --no-audit
+RUN npm ci --no-audit
 
 # ==========================================
 # 🔨 BUILDER STAGE - Build the Next.js app
