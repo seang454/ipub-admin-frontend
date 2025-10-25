@@ -113,6 +113,7 @@ jobs:
 
             DOCKER_BUILDKIT=1 docker build \
               --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --build-arg NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }} \
               --cache-from docuhub-frontend:latest \
               --progress=plain \
               -t docuhub-frontend:latest \
@@ -141,7 +142,7 @@ jobs:
               --log-opt max-file=3 \
               docuhub-frontend:latest
 
-            # Wait for container to start
+            # Wait for container to start here
             sleep 5
 
             # Check if container is running

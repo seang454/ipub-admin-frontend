@@ -51,6 +51,11 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Accept NEXT_PUBLIC_ environment variables as build arguments
+# These are embedded into the client-side JavaScript during build
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 # Build the Next.js application (standalone output enabled in next.config.ts)
 RUN npm run build
 
