@@ -70,30 +70,36 @@ const stats = [
 export function PaperStats({ papers }: { papers: PapersResponse }) {
   console.log("papers in stats:>> ", papers);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
       {stats.map((stat) => (
         <Card
           key={stat.title}
           className={cn(
-            " hover:-translate-y-1 cursor-pointer border-2",
-            stat.bgColor,
+            "p-4 sm:p-5 md:p-6 hover:-translate-y-1 cursor-pointer border-2 transition-all duration-200 bg-card",
             stat.borderColor
           )}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-medium mb-2 text-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-foreground truncate">
                 {stat.title}
               </p>
-              <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-2xl sm:text-2xl md:text-3xl font-bold text-foreground">
+                {stat.value}
+              </p>
             </div>
             <div
               className={cn(
-                "p-3 rounded-full bg-card/80 backdrop-blur-sm shadow-sm",
+                "p-2 sm:p-2.5 md:p-3 rounded-full bg-card/80 backdrop-blur-sm shadow-sm flex-shrink-0",
                 "flex items-center justify-center"
               )}
             >
-              <stat.icon className={cn("w-6 h-6", stat.iconColor)} />
+              <stat.icon
+                className={cn(
+                  "w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6",
+                  stat.iconColor
+                )}
+              />
             </div>
           </div>
         </Card>

@@ -65,23 +65,23 @@ export default function AdviserStats({
   advisers: UsersResponse | undefined;
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.title}
-            className="p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+            className="p-4 sm:p-5 md:p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
             style={{
               backgroundColor: "var(--card)",
               color: "var(--card-foreground)",
               border: "1px solid var(--border)",
             }}
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
                 <p
-                  className="text-sm font-medium mb-1"
+                  className="text-xs sm:text-sm font-medium mb-1 truncate"
                   style={{
                     color: "var(--muted-foreground, var(--foreground))",
                   }}
@@ -90,29 +90,29 @@ export default function AdviserStats({
                 </p>
 
                 <p
-                  className="text-2xl font-bold mb-2"
+                  className="text-xl sm:text-2xl font-bold mb-2"
                   style={{ color: "var(--card-foreground)" }}
                 >
                   {stat.value}
                 </p>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap">
                   {stat.trend === "up" && (
                     <TrendingUp
-                      className="w-4 h-4"
+                      className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
                       style={{ color: "var(--success, #16a34a)" }}
                     />
                   )}
                   {stat.trend === "down" && (
                     <TrendingDown
-                      className="w-4 h-4"
+                      className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
                       style={{ color: "var(--destructive, #ef4444)" }}
                     />
                   )}
 
                   <span
                     className={cn(
-                      "text-sm font-medium",
+                      "text-xs sm:text-sm font-medium",
                       stat.trend === "up" && "text-[var(--success,#16a34a)]",
                       stat.trend === "down" &&
                         "text-[var(--destructive,#ef4444)]",
@@ -124,7 +124,7 @@ export default function AdviserStats({
                   </span>
 
                   <span
-                    className="text-xs"
+                    className="text-xs sm:text-sm hidden sm:inline"
                     style={{ color: "var(--muted-foreground,#6b7280)" }}
                   >
                     from last month
@@ -134,7 +134,7 @@ export default function AdviserStats({
 
               <div className="flex-shrink-0">
                 <Icon
-                  className="w-8 h-8"
+                  className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
                   style={{
                     color: `var(${stat.iconVar || "--primary"})`,
                   }}

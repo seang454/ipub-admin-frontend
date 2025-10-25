@@ -1029,81 +1029,79 @@ export function StudentTable({
           </table>
         </div>
 
-        <div className="bg-card border-t border-border px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-                className="border-gray-600 text-dynamic2"
-              >
-                First
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="border-gray-600 text-dynamic2"
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="border-gray-600 text-dynamic2"
-              >
-                Next
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-                className="border-gray-600 text-dynamic2"
-              >
-                Last
-              </Button>
-            </div>
+        <div className="bg-muted/30 border-t border-border px-6 py-4 sm:flex flex-col items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              className="border-border hover:bg-muted hover:text-muted-foreground"
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="border-border hover:bg-muted hover:text-muted-foreground"
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="border-border hover:bg-muted hover:text-muted-foreground"
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              className="border-border hover:bg-muted hover:text-muted-foreground"
+            >
+              Last
+            </Button>
+          </div>
 
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-600">
-                Showing{" "}
-                {table.getState().pagination.pageIndex *
-                  table.getState().pagination.pageSize +
-                  1}{" "}
-                to{" "}
-                {Math.min(
-                  (table.getState().pagination.pageIndex + 1) *
-                    table.getState().pagination.pageSize,
-                  filteredStudents.length
-                )}{" "}
-                of {filteredStudents.length} students
-              </span>
-              <Select
-                value={table.getState().pagination.pageSize.toString()}
-                onValueChange={(value) => table.setPageSize(Number(value))}
-              >
-                <SelectTrigger className="w-32 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-0">
-                  {[10, 20, 30].map((size) => (
-                    <SelectItem
-                      key={size}
-                      value={size.toString()}
-                      className="border-0 bg-card"
-                    >
-                      Show {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Showing{" "}
+              {table.getState().pagination.pageIndex *
+                table.getState().pagination.pageSize +
+                1}{" "}
+              to{" "}
+              {Math.min(
+                (table.getState().pagination.pageIndex + 1) *
+                  table.getState().pagination.pageSize,
+                filteredStudents.length
+              )}{" "}
+              of {filteredStudents.length} students
+            </span>
+            <Select
+              value={table.getState().pagination.pageSize.toString()}
+              onValueChange={(value) => table.setPageSize(Number(value))}
+            >
+              <SelectTrigger className="w-32 h-8 border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                {[10, 20, 30].map((size) => (
+                  <SelectItem
+                    key={size}
+                    value={size.toString()}
+                    className="text-foreground"
+                  >
+                    Show {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

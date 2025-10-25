@@ -118,7 +118,7 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
 
   return (
     <div
-      className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      className="relative w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
@@ -127,7 +127,7 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
     >
       {/* Navigation controls */}
       {showControls && feedbacks.length > cardsPerView && (
-        <div className="absolute -top-12 right-4 flex space-x-2 z-10 sm:right-6 lg:right-8">
+        <div className="absolute -top-10 sm:-top-12 right-2 sm:right-4 md:right-6 lg:right-8 flex space-x-1 sm:space-x-2 z-10">
           <button
             onClick={prevSlide}
             className="focus:outline-none"
@@ -138,7 +138,7 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
               width="44"
               height="44"
               viewBox="0 0 24 24"
-              className="-scale-x-100 w-10 h-10 sm:w-11 sm:h-11 text-accent"
+              className="-scale-x-100 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 text-accent"
             >
               <path
                 fill="currentColor"
@@ -156,7 +156,7 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
               width="44"
               height="44"
               viewBox="0 0 24 24"
-              className="w-10 h-10 sm:w-11 sm:h-11 text-accent"
+              className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 text-accent"
             >
               <path
                 fill="currentColor"
@@ -178,7 +178,7 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
           {feedbacks.map((feedback) => (
             <div
               key={feedback.id}
-              className={`flex-shrink-0 px-2 sm:px-4 w-full sm:w-1/2 lg:w-1/2`}
+              className={`flex-shrink-0 px-1 sm:px-2 md:px-4 w-full sm:w-1/2 lg:w-1/2`}
             >
               <div className="flex justify-center">
                 <FeedbackCard feedback={feedback} />
@@ -190,14 +190,14 @@ const FeedbackCardCarousel: React.FC<FeedbackCardCarouselProps> = ({
 
       {/* Indicators */}
       {showIndicators && feedbacks.length > cardsPerView && (
-        <div className="flex justify-center mt-4 sm:mt-6 space-x-2">
+        <div className="flex justify-center mt-4 sm:mt-6 space-x-1.5 sm:space-x-2">
           {Array.from({
             length: Math.ceil(feedbacks.length / cardsPerView),
           }).map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index * cardsPerView)}
-              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${
                 currentIndex === index * cardsPerView
                   ? "bg-secondary"
                   : "bg-muted-foreground"

@@ -1,39 +1,39 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import WorksCard from '@/components/card/WorksCard';
-import { useTranslation } from 'next-i18next';
+import React, { useState } from "react";
+import WorksCard from "@/components/card/WorksCard";
+import { useTranslation } from "next-i18next";
 
-type UserType = 'Public User' | 'Student' | 'Adviser';
+type UserType = "Public User" | "Student" | "Adviser";
 
 const WorksCardGrid: React.FC = () => {
-  const { t } = useTranslation('common'); // Use your JSON namespace
-  const [selectedUser, setSelectedUser] = useState<UserType>('Public User');
+  const { t } = useTranslation("common"); // Use your JSON namespace
+  const [selectedUser, setSelectedUser] = useState<UserType>("Public User");
 
   const cardsData = {
-    'Public User': [
-      { title: t('pu_card1_title'), description: t('pu_card1_desc') },
-      { title: t('pu_card2_title'), description: t('pu_card2_desc') },
-      { title: t('pu_card3_title'), description: t('pu_card3_desc') },
-      { title: t('pu_card4_title'), description: t('pu_card4_desc') },
+    "Public User": [
+      { title: t("pu_card1_title"), description: t("pu_card1_desc") },
+      { title: t("pu_card2_title"), description: t("pu_card2_desc") },
+      { title: t("pu_card3_title"), description: t("pu_card3_desc") },
+      { title: t("pu_card4_title"), description: t("pu_card4_desc") },
     ],
     Student: [
-      { title: t('student_card1_title'), description: t('student_card1_desc') },
-      { title: t('student_card2_title'), description: t('student_card2_desc') },
-      { title: t('student_card3_title'), description: t('student_card3_desc') },
-      { title: t('student_card4_title'), description: t('student_card4_desc') },
+      { title: t("student_card1_title"), description: t("student_card1_desc") },
+      { title: t("student_card2_title"), description: t("student_card2_desc") },
+      { title: t("student_card3_title"), description: t("student_card3_desc") },
+      { title: t("student_card4_title"), description: t("student_card4_desc") },
     ],
     Adviser: [
-      { title: t('adviser_card1_title'), description: t('adviser_card1_desc') },
-      { title: t('adviser_card2_title'), description: t('adviser_card2_desc') },
-      { title: t('adviser_card3_title'), description: t('adviser_card3_desc') },
-      { title: t('adviser_card4_title'), description: t('adviser_card4_desc') },
+      { title: t("adviser_card1_title"), description: t("adviser_card1_desc") },
+      { title: t("adviser_card2_title"), description: t("adviser_card2_desc") },
+      { title: t("adviser_card3_title"), description: t("adviser_card3_desc") },
+      { title: t("adviser_card4_title"), description: t("adviser_card4_desc") },
     ],
   };
 
   const userIcons = [
     {
-      type: 'Public User',
+      type: "Public User",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +52,7 @@ const WorksCardGrid: React.FC = () => {
       ),
     },
     {
-      type: 'Student',
+      type: "Student",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +71,7 @@ const WorksCardGrid: React.FC = () => {
       ),
     },
     {
-      type: 'Adviser',
+      type: "Adviser",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -95,36 +95,38 @@ const WorksCardGrid: React.FC = () => {
   ] as const;
 
   return (
-    <section className="min-h-screen items-center justify-center bg-background flex flex-col items-center justify-start p-4 mt-20">
+    <section className="min-h-screen items-center justify-center bg-background flex flex-col items-center justify-start p-3 sm:p-4 md:p-6 mt-12 sm:mt-16 md:mt-20">
       {/* Top Section: User Icons */}
-      <h2 className="text-section-headings text-center mb-20">
-        {t('how_it_works')}
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12 sm:mb-16 md:mb-20">
+        {t("how_it_works")}
       </h2>
-      <div className="flex justify-center gap-10">
+      <div className="flex flex-wrap justify-center gap-6 sm:gap-8 md:gap-10">
         {userIcons.map((user) => (
           <div
             key={user.type}
             onClick={() => setSelectedUser(user.type as UserType)}
             className={`flex flex-col items-center cursor-pointer transition transform ${
-              selectedUser === user.type ? 'scale-110' : 'scale-100'
+              selectedUser === user.type ? "scale-110" : "scale-100"
             }`}
           >
             <div
-              className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-3xl mb-2 ${
+              className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 flex items-center justify-center text-2xl sm:text-2xl md:text-3xl mb-2 ${
                 selectedUser === user.type
-                  ? 'border-secondary text-secondary'
-                  : 'border-text-dark text-text-dark'
+                  ? "border-secondary text-secondary"
+                  : "border-text-dark text-text-dark"
               }`}
             >
               {user.icon}
             </div>
-            <span className="text-gray-700 font-medium">{t(user.type)}</span>
+            <span className="text-gray-700 font-medium text-sm sm:text-base text-center">
+              {t(user.type)}
+            </span>
           </div>
         ))}
       </div>
 
       {/* Bottom Section: Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl mt-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 w-full max-w-7xl mt-6 sm:mt-8 md:mt-10 px-2 sm:px-4">
         {cardsData[selectedUser].map((card, index) => (
           <WorksCard
             key={index}

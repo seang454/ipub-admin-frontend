@@ -37,7 +37,7 @@ const data = {
     { title: "Advisers", url: "/advisers", icon: UserCheck },
     { title: "Students", url: "/students", icon: GraduationCap },
     { title: "Proposals", url: "/proposals", icon: BookText },
-    { title: "Notification", url: "/notification", icon: BellIcon}
+    { title: "Notification", url: "/notification", icon: BellIcon },
   ],
 };
 
@@ -56,26 +56,35 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <div
           className="
-            flex items-center justify-between px-4 py-4 mx-2 mt-2
+            flex items-center justify-between 
+            px-2 sm:px-3 md:px-4 
+            py-2 sm:py-3 md:py-4 
+            mx-1 sm:mx-2 
+            mt-1 sm:mt-2
             bg-secondary
             rounded-lg shadow-md
           "
         >
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div
               className="
-                flex h-10 w-10 items-center justify-center 
-                rounded-xl 
+                flex 
+                h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 
+                items-center justify-center 
+                rounded-lg sm:rounded-xl 
                 bg-secondary
                 text-white shadow-lg
+                flex-shrink-0
               "
             >
-              <Shield className="h-5 w-5 text-white" />
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <div className="grid flex-1 text-left leading-tight">
-              <span className="truncate font-bold text-lg text-white">Admin Panel</span>
-              <span className="truncate text-sm text-white">
+            <div className="grid flex-1 text-left leading-tight min-w-0">
+              <span className="truncate font-bold text-sm sm:text-base md:text-lg text-white">
+                Admin Panel
+              </span>
+              <span className="truncate text-xs sm:text-sm text-white/90">
                 Management System
               </span>
             </div>
@@ -84,24 +93,36 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           {/* Theme Toggle Button */}
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-lg hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition"
+            className="
+              p-1.5 sm:p-2 
+              rounded-md sm:rounded-lg 
+              hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20 
+              transition-colors
+              flex-shrink-0
+            "
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? (
-              <Sun className="h-5 w-5 text-yellow-400" />
+              <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
             ) : (
-              <Moon className="h-5 w-5 text-gray-600" />
+              <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
             )}
           </button>
         </div>
       </SidebarHeader>
 
       {/* Main Navigation */}
-      <SidebarContent className="px-2 mt-2">
+      <SidebarContent className="px-1 sm:px-2 mt-1 sm:mt-2">
         <NavMain
           items={data.navMain.map((item) => ({
             ...item,
             className: `
-              flex items-center gap-3 px-3 py-2 rounded-lg
+              flex items-center 
+              gap-2 sm:gap-3 
+              px-2 sm:px-3 
+              py-1.5 sm:py-2 
+              rounded-md sm:rounded-lg
+              text-sm sm:text-base
               transition-colors duration-200
               hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20
               ${
@@ -115,7 +136,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="px-2 pb-4">
+      <SidebarFooter className="px-1 sm:px-2 pb-2 sm:pb-4">
         <NavUser user={data.user} />
       </SidebarFooter>
 

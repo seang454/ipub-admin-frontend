@@ -45,35 +45,39 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground py-2 sm:py-3"
             >
-              <Avatar>
+              <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                 <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
+                <AvatarFallback className="text-xs sm:text-sm">
+                  CN
+                </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-xs sm:text-sm leading-tight min-w-0">
                 <span className="truncate font-semibold">{user.name}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-3 sm:size-4 flex-shrink-0" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg border-none bg-white"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-48 sm:min-w-56 rounded-lg border-none bg-white dark:bg-gray-900"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal rounded-lg">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg">
                   <Avatar>
                     <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
+                    <AvatarFallback className="text-xs">CN</AvatarFallback>
                   </Avatar>
-                  <AvatarFallback className="rounded-lg">AD</AvatarFallback>
+                  <AvatarFallback className="rounded-lg text-xs">
+                    AD
+                  </AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-left text-xs sm:text-sm leading-tight min-w-0">
                   <span className="truncate font-semibold">{user.name}</span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
@@ -83,26 +87,29 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard" className="cursor-pointer">
-                  <LayoutDashboard />
+                <Link
+                  href="/dashboard"
+                  className="cursor-pointer text-xs sm:text-sm py-2"
+                >
+                  <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
                   Dashboard
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BadgeCheck />
+              <DropdownMenuItem className="text-xs sm:text-sm py-2">
+                <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
+              <DropdownMenuItem className="text-xs sm:text-sm py-2">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs sm:text-sm py-2 text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
             >
-              <LogOut />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

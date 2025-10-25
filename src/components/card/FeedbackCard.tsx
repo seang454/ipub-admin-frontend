@@ -46,22 +46,15 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
 
   return (
     <div
-      className={`card ${showBorder ? "border" : ""} ${className}`}
-      style={{
-        width: "650px",
-        height: "259px",
-        marginTop: "20px",
-        borderRadius: "8px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-      }}
+      className={`card ${
+        showBorder ? "border" : ""
+      } ${className} w-full sm:w-[580px] md:w-[650px] min-h-[240px] sm:min-h-[259px] mt-5 rounded-lg flex flex-col gap-4 sm:gap-5 p-4 sm:p-5 md:p-6`}
     >
       <div className="flex items-center justify-between">
         {/* Profile section */}
-        <div className="flex items-center">
+        <div className="flex items-center min-w-0 flex-1">
           {feedback.userImage ? (
-            <div className="relative h-16 w-16 rounded-full overflow-hidden mr-4">
+            <div className="relative h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 rounded-full overflow-hidden mr-3 sm:mr-4 flex-shrink-0">
               <Image
                 src={feedback.userImage}
                 alt={feedback.userName}
@@ -71,18 +64,18 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
               />
             </div>
           ) : (
-            <div className="h-12 w-12 rounded-full bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center mr-4">
-              <span className="text-secondary dark:text-accent font-medium">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <span className="text-secondary dark:text-accent font-medium text-lg sm:text-xl">
                 {feedback.userName.charAt(0)}
               </span>
             </div>
           )}
-          <div>
-            <p className="text-subheadings text-[var(--color-foreground)]">
+          <div className="min-w-0">
+            <p className="text-base sm:text-lg md:text-xl font-semibold text-[var(--color-foreground)] truncate">
               {feedback.userName}
             </p>
             {feedback.userTitle && (
-              <p className="text-small-text text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {feedback.userTitle}
               </p>
             )}
@@ -95,7 +88,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
           width="46"
           height="46"
           viewBox="0 0 16 16"
-          className="-scale-x-100 text-accent dark:text-accent"
+          className="-scale-x-100 text-accent dark:text-accent w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 flex-shrink-0"
         >
           <path
             fill="currentColor"
@@ -106,10 +99,10 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
 
       {/* Rating and date row */}
       {(feedback.rating !== undefined || feedback.date) && (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           {feedback.rating !== undefined && renderRating(feedback.rating)}
           {feedback.date && (
-            <span className="text-small-text text-muted-foreground">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {feedback.date}
             </span>
           )}
@@ -117,7 +110,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
       )}
 
       {/* Content */}
-      <p className="text-body-text text-[var(--color-foreground)] flex-grow">
+      <p className="text-sm sm:text-base text-[var(--color-foreground)] flex-grow">
         &ldquo;{feedback.content}&rdquo;
       </p>
     </div>

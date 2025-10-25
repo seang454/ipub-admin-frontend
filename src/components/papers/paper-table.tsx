@@ -1025,153 +1025,136 @@ export default function PaperManagement({
             </div>
           </div>
 
-          <div className="overflow-hidden">
-            <div className="w-full">
-              <table className="w-full table-fixed">
-                <thead className="bg-muted/50 backdrop-blur-sm border-0">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header, index) => (
-                        <th
-                          key={header.id}
-                          colSpan={header.colSpan}
-                          className={`px-3 py-4 text-left text-xs font-bold text-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted transition-colors ${
-                            index === 0
-                              ? "w-2/5"
-                              : index === 1
-                              ? "w-1/6"
-                              : index === 2
-                              ? "w-1/6"
-                              : index === 3
-                              ? "w-1/6"
-                              : "w-16"
-                          }`}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          <div className="flex items-center gap-2">
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                            {header.column.getIsSorted() && (
-                              <ArrowUp
-                                className={`w-3 h-3 ${
-                                  header.column.getIsSorted() === "desc"
-                                    ? "rotate-180"
-                                    : ""
-                                }`}
-                              />
-                            )}
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody className="bg-card divide-y-0">
-                  {table.getRowModel().rows.map((row, index) => (
-                    <tr
-                      key={row.id}
-                      className={`hover:bg-muted/50 transition-colors ${
-                        index % 2 === 0 ? "bg-card" : "bg-card"
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="p-6 bg-card border-0 shadow-sm hover:shadow-md transition-all duration-200 hover:bg-muted/30 backdrop-blur-sm text-foreground"
-                        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50 border-b border-border">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted/80 transition-colors"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <div className="flex items-center gap-2">
                           {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
+                            header.column.columnDef.header,
+                            header.getContext()
                           )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          {header.column.getIsSorted() && (
+                            <ArrowUp
+                              className={`w-3 h-3 ${
+                                header.column.getIsSorted() === "desc"
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                            />
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {table.getRowModel().rows.map((row, index) => (
+                  <tr
+                    key={row.id}
+                    className={`hover:bg-muted/50 transition-colors ${
+                      index % 2 === 0 ? "bg-card" : "bg-muted/20"
+                    }`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <div className="bg-muted/30 backdrop-blur-sm border-0 px-6 py-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  aria-label="Go to first page"
-                >
-                  First
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  aria-label="Go to previous page"
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  aria-label="Go to next page"
-                >
-                  Next
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  aria-label="Go to last page"
-                >
-                  Last
-                </Button>
-              </div>
-              <div className="flex items-center gap-4 border-0">
-                <span className="text-sm text-muted-foreground">
-                  Showing{" "}
-                  {table.getState().pagination.pageIndex *
-                    table.getState().pagination.pageSize +
-                    1}{" "}
-                  to{" "}
-                  {Math.min(
-                    (table.getState().pagination.pageIndex + 1) *
-                      table.getState().pagination.pageSize,
-                    filteredPapers.length
-                  )}{" "}
-                  of {filteredPapers.length} Papers
-                </span>
-                <Select
-                  value={table.getState().pagination.pageSize.toString()}
-                  onValueChange={(value) => table.setPageSize(Number(value))}
-                >
-                  <SelectTrigger className="w-32 h-8 border-0 bg-card text-foreground">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-0">
-                    {[10, 20, 30].map((size) => (
-                      <SelectItem
-                        className="text-foreground hover:bg-muted"
-                        key={size}
-                        value={size.toString()}
-                      >
-                        Show {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="bg-muted/30 border-t border-border px-6 py-4 sm:flex flex-col items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                className="border-border hover:bg-muted hover:text-muted-foreground"
+                aria-label="Go to first page"
+              >
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="border-border hover:bg-muted hover:text-muted-foreground"
+                aria-label="Go to previous page"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="border-border hover:bg-muted hover:text-muted-foreground"
+                aria-label="Go to next page"
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                className="border-border hover:bg-muted hover:text-muted-foreground"
+                aria-label="Go to last page"
+              >
+                Last
+              </Button>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                Showing{" "}
+                {table.getState().pagination.pageIndex *
+                  table.getState().pagination.pageSize +
+                  1}{" "}
+                to{" "}
+                {Math.min(
+                  (table.getState().pagination.pageIndex + 1) *
+                    table.getState().pagination.pageSize,
+                  filteredPapers.length
+                )}{" "}
+                of {filteredPapers.length} Papers
+              </span>
+              <Select
+                value={table.getState().pagination.pageSize.toString()}
+                onValueChange={(value) => table.setPageSize(Number(value))}
+              >
+                <SelectTrigger className="w-32 h-8 border-border bg-card text-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {[10, 20, 30].map((size) => (
+                    <SelectItem
+                      className="text-foreground hover:bg-muted"
+                      key={size}
+                      value={size.toString()}
+                    >
+                      Show {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

@@ -1,65 +1,75 @@
-import React from 'react';
-import Image from 'next/image';
+import React from "react";
+import Image from "next/image";
 
 const DiscussionForumSection: React.FC = () => {
   return (
-    <section className="bg-gray-100 py-12 w-300 justify-around justify-betwee items-center px-6 md:px-20 flex flex-col md:flex-row gap-12 mx-auto">
+    <section className="bg-gray-100 py-8 sm:py-10 md:py-12 w-full items-center px-4 sm:px-6 md:px-10 lg:px-20 flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-12 mx-auto">
       {/* Left side: Image container with blue blob */}
-      <div className="relative w-64 h-[460px] flex-shrink-0">
+      <div className="relative w-48 h-[320px] sm:w-56 sm:h-[380px] md:w-64 md:h-[460px] flex-shrink-0">
         {/* Blue blob background with blur */}
         <div
-          className="absolute -top-12 -left-12 w-74 h-[460px] bg-blue-600 rounded-[80%_44%_44%_70%/_100%_100%_100%_100%] filter drop-shadow-lg"
-          style={{ filter: 'blur(8px)' }}
+          className="absolute -top-8 sm:-top-10 md:-top-12 -left-8 sm:-left-10 md:-left-12 w-52 h-[320px] sm:w-60 sm:h-[380px] md:w-72 md:h-[460px] bg-blue-600 rounded-[80%_44%_44%_70%/_100%_100%_100%_100%] filter drop-shadow-lg"
+          style={{ filter: "blur(8px)" }}
         ></div>
-        <div className="absolute -top-12 -left-12 w-72 h-[460px] bg-blue-600 rounded-[80%_44%_44%_70%/_100%_100%_100%_100%] filter drop-shadow-lg backdrop-blur-md"></div>
+        <div className="absolute -top-8 sm:-top-10 md:-top-12 -left-8 sm:-left-10 md:-left-12 w-52 h-[320px] sm:w-60 sm:h-[380px] md:w-72 md:h-[460px] bg-blue-600 rounded-[80%_44%_44%_70%/_100%_100%_100%_100%] filter drop-shadow-lg backdrop-blur-md"></div>
         {/* Person image */}
         <Image
           src="/hero-section/DiscussionForumSection.png"
           alt="Person holding laptop"
-          className="relative h-full -top-4 left-4 scale-135 object-contain"
-          width={256} // Adjust based on actual image width
-          height={460} // Match container height
+          className="relative h-full -top-2 sm:-top-3 md:-top-4 left-2 sm:left-3 md:left-4 scale-135 object-contain"
+          width={256}
+          height={460}
         />
       </div>
 
       {/* Right side: Text and stats */}
-      <div className="max-w-xl flex flex-col gap-6">
+      <div className="max-w-xl flex flex-col gap-4 sm:gap-5 md:gap-6 text-center md:text-left">
         {/* Label */}
-        <p className="text-sm text-blue-600 font-semibold uppercase tracking-widest">
+        <p className="text-xs sm:text-sm text-blue-600 font-semibold uppercase tracking-widest">
           DOCUHUB DISCUSSION FORUM
         </p>
 
         {/* Main heading */}
-        <h2 className="text-4xl font-extrabold text-gray-900 leading-tight">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
           Connect, Share, and Learn Together
         </h2>
 
         {/* Description */}
-        <p className="text-gray-600 text-md leading-relaxed">
-          Join DocuHub’s Discussion Forum—a vibrant space for exchanging ideas,
-          sharing research insights, and supporting fellow learners. Collaborate
-          with a global academic community and expand your knowledge through
-          meaningful conversations and mentorship.
+        <p className="text-gray-600 text-sm sm:text-base md:text-md leading-relaxed">
+          Join DocuHub&apos;s Discussion Forum—a vibrant space for exchanging
+          ideas, sharing research insights, and supporting fellow learners.
+          Collaborate with a global academic community and expand your knowledge
+          through meaningful conversations and mentorship.
         </p>
 
         {/* Stats container */}
-        <div className="flex gap-6 mt-4">
+        <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 md:mt-4">
           {/* Stat Item */}
-          <div className="bg-white rounded-xl px-6 py-8 flex flex-col items-center shadow-md w-24">
-            <span className="text-blue-600 font-bold text-3xl">12k</span>
-            <span className="font-semibold text-gray-800 mt-2">Members</span>
+          <div className="bg-white rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-20 sm:w-22 md:w-24">
+            <span className="text-blue-600 font-bold text-2xl sm:text-2xl md:text-3xl">
+              12k
+            </span>
+            <span className="font-semibold text-gray-800 mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm">
+              Members
+            </span>
           </div>
 
-          <div className="bg-white rounded-xl px-6 py-8 flex flex-col items-center shadow-md w-28">
-            <span className="text-blue-600 font-bold text-3xl">98+</span>
-            <span className="font-semibold text-gray-800 mt-2">
+          <div className="bg-white rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-24 sm:w-26 md:w-28">
+            <span className="text-blue-600 font-bold text-2xl sm:text-2xl md:text-3xl">
+              98+
+            </span>
+            <span className="font-semibold text-gray-800 mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm text-center">
               Discussions
             </span>
           </div>
 
-          <div className="bg-white rounded-xl px-6 py-8 flex flex-col items-center shadow-md w-28">
-            <span className="text-blue-600 font-bold text-3xl">10+</span>
-            <span className="font-semibold text-gray-800 mt-2">Advisers</span>
+          <div className="bg-white rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-20 sm:w-22 md:w-28">
+            <span className="text-blue-600 font-bold text-2xl sm:text-2xl md:text-3xl">
+              10+
+            </span>
+            <span className="font-semibold text-gray-800 mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm">
+              Advisers
+            </span>
           </div>
         </div>
       </div>
