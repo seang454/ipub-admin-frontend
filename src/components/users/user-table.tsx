@@ -202,7 +202,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         ),
       },
       {
-        accessorKey: "status",
+        accessorKey: "isActive",
         header: "Status",
         cell: (info) => (
           <Badge
@@ -216,8 +216,8 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
             <div
               className={`w-2 h-2 rounded-full mr-2 ${
                 info.getValue<boolean>() === true
-                  ? "bg-emerald-500"
-                  : "bg-red-500"
+                  ? "bg-emerald-600 dark:bg-emerald-400"
+                  : "bg-red-600 dark:bg-red-400"
               }`}
             />
             {info.getValue<boolean>() === true ? "Active" : "Inactive"}
@@ -662,150 +662,224 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold text-popover-foreground">
-                    Add New User
-                  </DialogTitle>
+              <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto bg-card border-border">
+                <DialogHeader className="space-y-3 pb-6 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-primary/10">
+                      <UserIcon className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-2xl font-bold text-dynamic">
+                        Add New User
+                      </DialogTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Fill in the information below to create a new user
+                        account
+                      </p>
+                    </div>
+                  </div>
                 </DialogHeader>
 
                 <form
                   onSubmit={handleSubmit(onSubmit)}
-                  className="space-y-4 py-4"
+                  className="space-y-6 py-6"
                 >
-                  {/* First and Last Name */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label>First Name</Label>
-                      <Input
-                        {...register("firstname")}
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      />
-                      {errors.firstname && (
-                        <p className="text-red-500 text-sm">
-                          {errors.firstname.message}
-                        </p>
-                      )}
-                    </div>
+                  {/* Personal Information Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-dynamic uppercase tracking-wide flex items-center gap-2">
+                      <div className="h-px flex-1 bg-border" />
+                      <span>Personal Information</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </h3>
 
-                    <div className="space-y-1">
-                      <Label>Last Name</Label>
-                      <Input
-                        {...register("lastname")}
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      />
-                      {errors.lastname && (
-                        <p className="text-red-500 text-sm">
-                          {errors.lastname.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Username */}
-                  <div className="space-y-1">
-                    <Label>Username</Label>
-                    <Input
-                      {...register("username")}
-                      className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    />
-                    {errors.username && (
-                      <p className="text-red-500 text-sm">
-                        {errors.username.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div className="space-y-1">
-                    <Label>Email</Label>
-                    <Input
-                      type="email"
-                      {...register("email")}
-                      className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Passwords */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Password */}
-                    <div className="space-y-1 relative">
-                      <Label>Password</Label>
-                      <div className="relative">
+                    {/* First and Last Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-dynamic2 font-medium flex items-center gap-1">
+                          First Name <span className="text-destructive">*</span>
+                        </Label>
                         <Input
-                          type={showPassword ? "text" : "password"}
-                          {...register("password")}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg pr-10"
+                          {...register("firstname")}
+                          placeholder="Enter first name"
+                          className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
+                        {errors.firstname && (
+                          <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                            <span className="font-medium">⚠</span>{" "}
+                            {errors.firstname.message}
+                          </p>
+                        )}
                       </div>
-                      {errors.password && (
-                        <p className="text-red-500 text-sm">
-                          {errors.password.message}
+
+                      <div className="space-y-2">
+                        <Label className="text-dynamic2 font-medium flex items-center gap-1">
+                          Last Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          {...register("lastname")}
+                          placeholder="Enter last name"
+                          className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                        />
+                        {errors.lastname && (
+                          <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                            <span className="font-medium">⚠</span>{" "}
+                            {errors.lastname.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Account Information Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-dynamic uppercase tracking-wide flex items-center gap-2">
+                      <div className="h-px flex-1 bg-border" />
+                      <span>Account Information</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </h3>
+
+                    {/* Username */}
+                    <div className="space-y-2">
+                      <Label className="text-dynamic2 font-medium flex items-center gap-1">
+                        Username <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        {...register("username")}
+                        placeholder="Choose a unique username"
+                        className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                      />
+                      {errors.username && (
+                        <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                          <span className="font-medium">⚠</span>{" "}
+                          {errors.username.message}
                         </p>
                       )}
                     </div>
 
-                    {/* Confirm Password */}
-                    <div className="space-y-1 relative">
-                      <Label>Confirm Password</Label>
-                      <div className="relative">
-                        <Input
-                          type={showConfirm ? "text" : "password"}
-                          {...register("confirmedPassword")}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirm((prev) => !prev)}
-                          className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                        >
-                          {showConfirm ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                      {errors.confirmedPassword && (
-                        <p className="text-red-500 text-sm">
-                          {errors.confirmedPassword.message}
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label className="text-dynamic2 font-medium flex items-center gap-1">
+                        Email Address{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        type="email"
+                        {...register("email")}
+                        placeholder="user@example.com"
+                        className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                      />
+                      {errors.email && (
+                        <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                          <span className="font-medium">⚠</span>{" "}
+                          {errors.email.message}
                         </p>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Security Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-dynamic uppercase tracking-wide flex items-center gap-2">
+                      <div className="h-px flex-1 bg-border" />
+                      <span>Security</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </h3>
+
+                    {/* Passwords */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Password */}
+                      <div className="space-y-2">
+                        <Label className="text-dynamic2 font-medium flex items-center gap-1">
+                          Password <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            {...register("password")}
+                            placeholder="Enter secure password"
+                            className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-dynamic2 transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+                        {errors.password && (
+                          <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                            <span className="font-medium">⚠</span>{" "}
+                            {errors.password.message}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div className="space-y-2">
+                        <Label className="text-dynamic2 font-medium flex items-center gap-1">
+                          Confirm Password{" "}
+                          <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            type={showConfirm ? "text" : "password"}
+                            {...register("confirmedPassword")}
+                            placeholder="Confirm your password"
+                            className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirm((prev) => !prev)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-dynamic2 transition-colors"
+                          >
+                            {showConfirm ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+                        {errors.confirmedPassword && (
+                          <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                            <span className="font-medium">⚠</span>{" "}
+                            {errors.confirmedPassword.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Footer */}
-                  <DialogFooter className="pt-4">
+                  <DialogFooter className="pt-6 border-t border-border gap-3">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setAddOpen(false)}
-                      className="border-slate-300 rounded-lg"
+                      className="min-w-[120px] h-11"
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-primary2 text-white bg-secondary rounded-lg"
+                      className="min-w-[120px] h-11 bg-primary hover:bg-primary/90"
+                      disabled={isLoading}
                     >
-                      {isLoading ? "Adding..." : "Add User"}{" "}
-                      {/* show loading text */}{" "}
+                      {isLoading ? (
+                        <>
+                          <span className="animate-spin mr-2">⏳</span>
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add User
+                        </>
+                      )}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -931,10 +1005,10 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
               value={table.getState().pagination.pageSize.toString()}
               onValueChange={(v) => table.setPageSize(Number(v))}
             >
-              <SelectTrigger className="w-20 h-8 border-border bg-background">
+              <SelectTrigger className="w-20 h-8 border-input bg-background">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border">
+              <SelectContent className="bg-popover border-input">
                 {[5, 10, 20, 30].map((size) => (
                   <SelectItem key={size} value={size.toString()}>
                     {size}
@@ -1017,7 +1091,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                     }
                     className={
                       selectedUser.isStudent
-                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        ? "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700"
                         : "border-border hover:bg-muted"
                     }
                   >
@@ -1041,144 +1115,240 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-          <DialogHeader>
-            <DialogTitle className="text-popover-foreground">
-              Edit User
-            </DialogTitle>
+        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
+          <DialogHeader className="space-y-3 pb-6 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-secondary/10">
+                <Edit className="w-6 h-6 text-secondary" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-dynamic">
+                  Edit User
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Update user information and account settings
+                </p>
+              </div>
+            </div>
           </DialogHeader>
 
           {selectedUser && (
             <form
               onSubmit={handleEditSubmit(handleEditUser)}
-              className="space-y-4 py-4"
+              className="space-y-6 py-6"
             >
-              <div className="grid grid-cols-2 gap-4">
-                {/* Username */}
+              {/* Account Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-dynamic uppercase tracking-wide flex items-center gap-2">
+                  <div className="h-px flex-1 bg-border" />
+                  <span>Account Information</span>
+                  <div className="h-px flex-1 bg-border" />
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Username */}
+                  <div className="space-y-2">
+                    <Label className="text-dynamic2 font-medium">
+                      Username
+                    </Label>
+                    <Input
+                      {...registerEdit("userName")}
+                      className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                    />
+                    {editErrors.userName && (
+                      <p className="text-destructive text-xs flex items-center gap-1">
+                        <span className="font-medium">⚠</span>{" "}
+                        {editErrors.userName.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Gender */}
+                  <div className="space-y-2">
+                    <Label className="text-dynamic2 font-medium">Gender</Label>
+                    <Select
+                      onValueChange={(v) =>
+                        setEditValue("gender", v as "Male" | "Female" | "Other")
+                      }
+                    >
+                      <SelectTrigger className="h-11 bg-background border-input">
+                        <SelectValue
+                          placeholder={selectedUser.gender || "Select gender"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-input">
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {editErrors.gender && (
+                      <p className="text-destructive text-xs flex items-center gap-1">
+                        <span className="font-medium">⚠</span>{" "}
+                        {editErrors.gender.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email */}
                 <div className="space-y-2">
-                  <Label>Username</Label>
-                  <Input {...registerEdit("userName")} />
-                  {editErrors.userName && (
-                    <p className="text-red-500 text-sm">
-                      {editErrors.userName.message}
+                  <Label className="text-dynamic2 font-medium">
+                    Email Address
+                  </Label>
+                  <Input
+                    type="email"
+                    {...registerEdit("email")}
+                    className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                  />
+                  {editErrors.email && (
+                    <p className="text-destructive text-xs flex items-center gap-1">
+                      <span className="font-medium">⚠</span>{" "}
+                      {editErrors.email.message}
                     </p>
                   )}
                 </div>
 
-                {/* Gender */}
+                {/* Status */}
                 <div className="space-y-2">
-                  <Label>Gender</Label>
+                  <Label className="text-dynamic2 font-medium">
+                    Account Status
+                  </Label>
                   <Select
                     onValueChange={(v) =>
-                      setEditValue("gender", v as "Male" | "Female" | "Other")
+                      setEditValue("isActive", v === "true")
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 bg-background border-input">
                       <SelectValue
-                        placeholder={selectedUser.gender || "Select"}
+                        placeholder={
+                          selectedUser.isActive ? "Active" : "Inactive"
+                        }
                       />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                    <SelectContent className="bg-popover border-input">
+                      <SelectItem value="true">✅ Active</SelectItem>
+                      <SelectItem value="false">❌ Inactive</SelectItem>
                     </SelectContent>
                   </Select>
-                  {editErrors.gender && (
-                    <p className="text-red-500 text-sm">
-                      {editErrors.gender.message}
-                    </p>
-                  )}
                 </div>
               </div>
 
-              {/* Email */}
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" {...registerEdit("email")} />
-                {editErrors.email && (
-                  <p className="text-red-500 text-sm">
-                    {editErrors.email.message}
-                  </p>
-                )}
-              </div>
+              {/* Personal Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-dynamic uppercase tracking-wide flex items-center gap-2">
+                  <div className="h-px flex-1 bg-border" />
+                  <span>Personal Information</span>
+                  <div className="h-px flex-1 bg-border" />
+                </h3>
 
-              {/* Full Name */}
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input {...registerEdit("fullName")} />
-              </div>
-
-              {/* First and Last Name */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Full Name */}
                 <div className="space-y-2">
-                  <Label>First Name</Label>
-                  <Input {...registerEdit("firstName")} />
+                  <Label className="text-dynamic2 font-medium">Full Name</Label>
+                  <Input
+                    {...registerEdit("fullName")}
+                    placeholder="Enter full name"
+                    className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label>Last Name</Label>
-                  <Input {...registerEdit("lastName")} />
-                </div>
-              </div>
 
-              {/* Status */}
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  onValueChange={(v) => setEditValue("isActive", v === "true")}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        selectedUser.isActive ? "Active" : "Inactive"
-                      }
+                {/* First and Last Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-dynamic2 font-medium">
+                      First Name
+                    </Label>
+                    <Input
+                      {...registerEdit("firstName")}
+                      placeholder="Enter first name"
+                      className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
                     />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Bio */}
-              <div className="space-y-2">
-                <Label>Bio</Label>
-                <Textarea {...registerEdit("bio")} placeholder="User bio..." />
-              </div>
-
-              {/* Address */}
-              <div className="space-y-2">
-                <Label>Address</Label>
-                <Input {...registerEdit("address")} />
-              </div>
-
-              {/* Contact + Telegram */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Contact Number</Label>
-                  <Input
-                    {...registerEdit("contactNumber")}
-                    placeholder="+855..."
-                  />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-dynamic2 font-medium">
+                      Last Name
+                    </Label>
+                    <Input
+                      {...registerEdit("lastName")}
+                      placeholder="Enter last name"
+                      className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                    />
+                  </div>
                 </div>
+
+                {/* Bio */}
                 <div className="space-y-2">
-                  <Label>Telegram ID</Label>
-                  <Input
-                    {...registerEdit("telegramId")}
-                    placeholder="@username"
+                  <Label className="text-dynamic2 font-medium">Bio</Label>
+                  <Textarea
+                    {...registerEdit("bio")}
+                    placeholder="Write a brief bio..."
+                    className="min-h-[100px] bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all resize-none"
                   />
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditOpen(false)}>
+              {/* Contact Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-dynamic uppercase tracking-wide flex items-center gap-2">
+                  <div className="h-px flex-1 bg-border" />
+                  <span>Contact Information</span>
+                  <div className="h-px flex-1 bg-border" />
+                </h3>
+
+                {/* Address */}
+                <div className="space-y-2">
+                  <Label className="text-dynamic2 font-medium flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Address
+                  </Label>
+                  <Input
+                    {...registerEdit("address")}
+                    placeholder="Enter full address"
+                    className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                  />
+                </div>
+
+                {/* Contact + Telegram */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-dynamic2 font-medium flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Contact Number
+                    </Label>
+                    <Input
+                      {...registerEdit("contactNumber")}
+                      placeholder="+855 12 345 678"
+                      className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-dynamic2 font-medium flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" />
+                      Telegram ID
+                    </Label>
+                    <Input
+                      {...registerEdit("telegramId")}
+                      placeholder="@username"
+                      className="h-11 bg-background border-input focus:border-ring focus:ring-ring/20 focus:ring-2 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="pt-6 border-t border-border gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(false)}
+                  className="min-w-[120px] h-11"
+                >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-primary2 hover:bg-secondary text-primary-foreground"
+                  className="min-w-[120px] h-11 bg-secondary hover:bg-secondary/90"
                 >
+                  <Edit className="w-4 h-4 mr-2" />
                   Save Changes
                 </Button>
               </DialogFooter>
@@ -1226,96 +1396,97 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
 
       {/* View Dialog */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-          <DialogHeader>
-            <DialogTitle className="text-popover-foreground">
-              User Details
-            </DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-16 h-16 ring-2 ring-border shadow-sm">
-                  <AvatarImage
-                    src={
-                      selectedUser.imageUrl ||
-                      "/placeholder.svg?height=64&width=64" ||
-                      "/placeholder.svg"
-                    }
-                  />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold text-lg">
-                    {selectedUser.firstName?.[0]}
-                    {selectedUser.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold text-foreground text-lg">
-                    {selectedUser.fullName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    @{selectedUser.userName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedUser.email}
-                  </p>
-                </div>
+        <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+          <DialogHeader className="pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-blue-500/10 dark:bg-blue-400/10">
+                <Eye className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
+              <DialogTitle className="text-2xl font-bold text-foreground">
+                User Details
+              </DialogTitle>
+            </div>
+          </DialogHeader>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Status
-                  </Label>
+          {selectedUser && (
+            <div className="space-y-6 py-6">
+              {/* Hero Card */}
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900 p-6 border border-border">
+                <div className="relative flex items-center gap-4">
+                  <Avatar className="w-20 h-20 ring-4 ring-white dark:ring-slate-800 shadow-lg">
+                    <AvatarImage
+                      src={
+                        selectedUser.imageUrl ||
+                        "/placeholder.svg?height=80&width=80"
+                      }
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold text-2xl">
+                      {selectedUser.firstName?.[0]}
+                      {selectedUser.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-2xl font-bold text-foreground truncate">
+                      {selectedUser.fullName}
+                    </h3>
+                    <p className="text-muted-foreground font-medium mt-1">
+                      @{selectedUser.userName}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {selectedUser.email}
+                    </p>
+                  </div>
                   <Badge
                     variant="secondary"
-                    className={
-                      selectedUser.isActive === true
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 mt-1 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
-                        : "bg-red-50 text-red-700 border-red-200 mt-1 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
-                    }
+                    className={`${
+                      selectedUser.isActive
+                        ? "bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-700"
+                        : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700"
+                    } px-4 py-1.5 text-sm font-semibold shadow-sm border`}
                   >
-                    {selectedUser.isActive === true ? "Active" : "Inactive"}
+                    <div
+                      className={`w-2 h-2 rounded-full mr-2 ${
+                        selectedUser.isActive ? "bg-emerald-700" : "bg-red-700"
+                      } animate-pulse`}
+                    />
+                    {selectedUser.isActive ? "Active" : "Inactive"}
                   </Badge>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Gender
-                  </Label>
-                  <p className="text-sm text-foreground mt-1">
-                    {selectedUser.gender || "Not specified"}
-                  </p>
                 </div>
               </div>
 
-              <div>
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Roles
-                </Label>
-                <div className="flex flex-wrap gap-2 mt-1">
+              {/* Roles Card */}
+              <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-foreground text-lg">
+                    User Roles
+                  </h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   {selectedUser.isAdmin && (
                     <Badge
                       variant="outline"
-                      className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
+                      className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800 px-3 py-1.5 text-sm font-medium"
                     >
-                      <Shield className="w-3 h-3 mr-1" />
+                      <Shield className="w-4 h-4 mr-1.5" />
                       Admin
                     </Badge>
                   )}
                   {selectedUser.isAdvisor && (
                     <Badge
                       variant="outline"
-                      className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800"
+                      className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 px-3 py-1.5 text-sm font-medium"
                     >
-                      <TrendingUp className="w-3 h-3 mr-1" />
+                      <TrendingUp className="w-4 h-4 mr-1.5" />
                       Advisor
                     </Badge>
                   )}
                   {selectedUser.isStudent && (
                     <Badge
                       variant="outline"
-                      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
+                      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1.5 text-sm font-medium"
                     >
-                      <UserIcon className="w-3 h-3 mr-1" />
+                      <UserIcon className="w-4 h-4 mr-1.5" />
                       Student
                     </Badge>
                   )}
@@ -1325,86 +1496,152 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                     !selectedUser.isStudent && (
                       <Badge
                         variant="outline"
-                        className="bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                        className="bg-muted text-muted-foreground border-border px-3 py-1.5 text-sm font-medium"
                       >
-                        <UserIcon className="w-3 h-3 mr-1" />
+                        <UserIcon className="w-4 h-4 mr-1.5" />
                         User
                       </Badge>
                     )}
                 </div>
               </div>
 
-              {selectedUser.bio && (
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Bio
-                  </Label>
-                  <p className="text-sm text-foreground mt-1">
-                    {selectedUser.bio}
-                  </p>
+              {/* Personal Information Card */}
+              <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <UserIcon className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-foreground text-lg">
+                    Personal Information
+                  </h4>
                 </div>
-              )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Gender
+                    </Label>
+                    <p className="text-sm font-medium text-foreground">
+                      {selectedUser.gender || "Not specified"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Joined Date
+                    </Label>
+                    <p className="text-sm font-medium text-foreground">
+                      {selectedUser.createDate}
+                    </p>
+                  </div>
+                </div>
+                {selectedUser.bio && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Bio
+                    </Label>
+                    <p className="text-sm text-foreground mt-2 leading-relaxed">
+                      {selectedUser.bio}
+                    </p>
+                  </div>
+                )}
+              </div>
 
+              {/* Contact Information Card */}
               {(selectedUser.address ||
                 selectedUser.contactNumber ||
                 selectedUser.telegramId) && (
-                <div className="space-y-3">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Contact Information
-                  </Label>
-                  {selectedUser.address && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">
-                        {selectedUser.address}
-                      </span>
-                    </div>
-                  )}
-                  {selectedUser.contactNumber && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">
-                        {selectedUser.contactNumber}
-                      </span>
-                    </div>
-                  )}
-                  {selectedUser.telegramId && (
-                    <div className="flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">
-                        {selectedUser.telegramId}
-                      </span>
-                    </div>
-                  )}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Phone className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Contact Information
+                    </h4>
+                  </div>
+                  <div className="space-y-3">
+                    {selectedUser.address && (
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                        <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Address
+                          </Label>
+                          <p className="text-sm font-medium text-foreground mt-1">
+                            {selectedUser.address}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedUser.contactNumber && (
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                        <Phone className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Phone Number
+                          </Label>
+                          <p className="text-sm font-medium text-foreground mt-1">
+                            {selectedUser.contactNumber}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedUser.telegramId && (
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                        <MessageCircle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Telegram
+                          </Label>
+                          <p className="text-sm font-medium text-foreground mt-1">
+                            {selectedUser.telegramId}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Joined
-                  </Label>
-                  <p className="text-sm text-foreground mt-1">
-                    {selectedUser.createDate}
-                  </p>
+              {/* Activity Timeline Card */}
+              <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-foreground text-lg">
+                    Activity Timeline
+                  </h4>
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Last Updated
-                  </Label>
-                  <p className="text-sm text-foreground mt-1">
-                    {selectedUser.updateDate}
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg bg-background/50">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Account Created
+                    </Label>
+                    <p className="text-sm font-medium text-foreground mt-1">
+                      {selectedUser.createDate}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background/50">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Last Updated
+                    </Label>
+                    <p className="text-sm font-medium text-foreground mt-1">
+                      {selectedUser.updateDate}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Link href={`/users/${currentId}`}>Go to</Link>
+
+          <DialogFooter className="pt-6 border-t border-border gap-3">
+            <Link href={`/users/${currentId}`}>
+              <Button
+                variant="outline"
+                className="border-input hover:bg-accent transition-colors"
+              >
+                <UserIcon className="w-4 h-4 mr-2" />
+                View Full Profile
+              </Button>
+            </Link>
             <Button
               variant="outline"
               onClick={() => setViewOpen(false)}
-              className="border-border hover:bg-muted"
+              className="border-input hover:bg-accent transition-colors"
             >
               Close
             </Button>

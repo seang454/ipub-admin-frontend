@@ -45,6 +45,12 @@ import {
   Mail,
   Phone,
   MapPin,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
+  Info,
+  MessageCircle,
+  FileText,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -264,7 +270,9 @@ export function StudentTable({
             >
               <div
                 className={`w-2 h-2 rounded-full mr-2 ${
-                  active ? "bg-emerald-500" : "bg-red-500"
+                  active
+                    ? "bg-emerald-600 dark:bg-emerald-400"
+                    : "bg-red-600 dark:bg-red-400"
                 }`}
               />
               {active ? "Active" : "Inactive"}
@@ -687,7 +695,7 @@ export function StudentTable({
                 placeholder="Search students by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                className="pl-10 border-input focus:border-ring focus:ring-ring bg-background shadow-sm transition-all"
               />
             </div>
             <div className="flex gap-3">
@@ -726,150 +734,236 @@ export function StudentTable({
                   </Button>
                 </DialogTrigger>
 
-                <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold text-popover-foreground">
-                      Add New User
-                    </DialogTitle>
+                <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto bg-card border-border">
+                  <DialogHeader className="space-y-3 pb-6 border-b border-border">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-blue-500/10 dark:bg-blue-400/10">
+                        <UserIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-2xl font-bold text-foreground">
+                          Add New Student
+                        </DialogTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Fill in the information below to create a new student
+                          account
+                        </p>
+                      </div>
+                    </div>
                   </DialogHeader>
 
                   <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-4 py-4"
+                    className="space-y-6 py-6"
                   >
-                    {/* First and Last Name */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label>First Name</Label>
-                        <Input
-                          {...register("firstname")}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        />
-                        {errors.firstname && (
-                          <p className="text-red-500 text-sm">
-                            {errors.firstname.message}
-                          </p>
-                        )}
+                    {/* Personal Information Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2">
+                        <div className="h-px flex-1 bg-border"></div>
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                          Personal Information
+                        </h3>
+                        <div className="h-px flex-1 bg-border"></div>
                       </div>
 
-                      <div className="space-y-1">
-                        <Label>Last Name</Label>
-                        <Input
-                          {...register("lastname")}
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        />
-                        {errors.lastname && (
-                          <p className="text-red-500 text-sm">
-                            {errors.lastname.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Username */}
-                    <div className="space-y-1">
-                      <Label>Username</Label>
-                      <Input
-                        {...register("username")}
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      />
-                      {errors.username && (
-                        <p className="text-red-500 text-sm">
-                          {errors.username.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Email */}
-                    <div className="space-y-1">
-                      <Label>Email</Label>
-                      <Input
-                        type="email"
-                        {...register("email")}
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      />
-                      {errors.email && (
-                        <p className="text-red-500 text-sm">
-                          {errors.email.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Passwords */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Password */}
-                      <div className="space-y-1 relative">
-                        <Label>Password</Label>
-                        <div className="relative">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            First Name
+                            <span className="text-destructive">*</span>
+                          </Label>
                           <Input
-                            type={showPassword ? "text" : "password"}
-                            {...register("password")}
-                            className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg pr-10"
+                            {...register("firstname")}
+                            placeholder="Enter first name"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                            className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
+                          {errors.firstname && (
+                            <div className="flex items-center gap-1.5 text-destructive text-sm">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>{errors.firstname.message}</span>
+                            </div>
+                          )}
                         </div>
-                        {errors.password && (
-                          <p className="text-red-500 text-sm">
-                            {errors.password.message}
-                          </p>
-                        )}
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            Last Name
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            {...register("lastname")}
+                            placeholder="Enter last name"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                          />
+                          {errors.lastname && (
+                            <div className="flex items-center gap-1.5 text-destructive text-sm">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>{errors.lastname.message}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Account Information Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2">
+                        <div className="h-px flex-1 bg-border"></div>
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                          Account Information
+                        </h3>
+                        <div className="h-px flex-1 bg-border"></div>
                       </div>
 
-                      {/* Confirm Password */}
-                      <div className="space-y-1 relative">
-                        <Label>Confirm Password</Label>
-                        <div className="relative">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            Username
+                            <span className="text-destructive">*</span>
+                          </Label>
                           <Input
-                            type={showConfirm ? "text" : "password"}
-                            {...register("confirmedPassword")}
-                            className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg pr-10"
+                            {...register("username")}
+                            placeholder="Choose a unique username"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirm((prev) => !prev)}
-                            className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                          >
-                            {showConfirm ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
+                          {errors.username && (
+                            <div className="flex items-center gap-1.5 text-destructive text-sm">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>{errors.username.message}</span>
+                            </div>
+                          )}
                         </div>
-                        {errors.confirmedPassword && (
-                          <p className="text-red-500 text-sm">
-                            {errors.confirmedPassword.message}
-                          </p>
-                        )}
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            Email Address
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            type="email"
+                            {...register("email")}
+                            placeholder="student@example.com"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                          />
+                          {errors.email && (
+                            <div className="flex items-center gap-1.5 text-destructive text-sm">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>{errors.email.message}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Security Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2">
+                        <div className="h-px flex-1 bg-border"></div>
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                          Security
+                        </h3>
+                        <div className="h-px flex-1 bg-border"></div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                            Password
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              {...register("password")}
+                              placeholder="Enter secure password"
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring pr-10 transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                          {errors.password && (
+                            <div className="flex items-center gap-1.5 text-destructive text-sm">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>{errors.password.message}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                            Confirm Password
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type={showConfirm ? "text" : "password"}
+                              {...register("confirmedPassword")}
+                              placeholder="Confirm password"
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring pr-10 transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirm((prev) => !prev)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showConfirm ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                          {errors.confirmedPassword && (
+                            <div className="flex items-center gap-1.5 text-destructive text-sm">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>{errors.confirmedPassword.message}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     {/* Footer */}
-                    <DialogFooter className="pt-4">
+                    <DialogFooter className="pt-6 border-t border-border gap-3">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setAddOpen(false)}
-                        className="border-slate-300 rounded-lg"
+                        className="min-w-[120px] border-input hover:bg-accent transition-colors"
                       >
                         Cancel
                       </Button>
                       <Button
                         type="submit"
-                        className="bg-primary2 text-white bg-secondary rounded-lg"
+                        disabled={createIsLoading}
+                        className="min-w-[120px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-colors"
                       >
-                        {/* {isLoading ? "Adding..." : "Add User"}{" "} */}
-                        {/* show loading text */}{" "}
+                        {createIsLoading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="animate-spin">⏳</span>
+                            Adding...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Plus className="w-4 h-4" />
+                            Add Student
+                          </span>
+                        )}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -1014,159 +1108,247 @@ export function StudentTable({
         </div>
 
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-          <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border-border">
-            <DialogHeader className="pb-2">
-              <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
-                  <Eye className="w-5 h-5" />
+          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+            <DialogHeader className="pb-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-blue-500/10 dark:bg-blue-400/10">
+                  <Eye className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                User Details
-              </DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-foreground">
+                  Student Details
+                </DialogTitle>
+              </div>
             </DialogHeader>
 
             {selectedStudent && (
-              <div className="space-y-6 py-2">
-                {/* Hero card */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900">
-                  <div className="relative p-6 flex items-start gap-4">
-                    <Avatar className="w-16 h-16 rounded-xl border-4 border-white dark:border-slate-800 shadow-md">
+              <div className="space-y-6 py-6">
+                {/* Hero Card */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900 p-6 border border-border">
+                  <div className="relative flex items-center gap-4">
+                    <Avatar className="w-20 h-20 ring-4 ring-white dark:ring-slate-800 shadow-lg">
                       <AvatarImage
-                        src={selectedStudent.imageUrl || "/placeholder.svg"}
+                        src={
+                          selectedStudent.imageUrl ||
+                          "/placeholder.svg?height=80&width=80"
+                        }
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-semibold rounded-xl">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold text-2xl">
                         {selectedStudent.fullName
                           ?.split(" ")
                           .map((n: string) => n[0])
-                          .join("") || "U"}
+                          .join("") || "S"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-foreground truncate">
-                        {selectedStudent.fullName || "Unknown User"}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-2xl font-bold text-foreground truncate">
+                        {selectedStudent.fullName || "Unknown Student"}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-muted-foreground font-medium mt-1">
+                        @{selectedStudent.userName || "N/A"}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         {selectedStudent.email || "N/A"}
                       </p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Details grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Username
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.userName || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Email
-                    </Label>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-foreground">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <span>{selectedStudent.email || "N/A"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Role
-                    </Label>
-                    <div className="mt-1">
-                      <Badge
-                        variant="outline"
-                        className={
-                          selectedStudent.isAdmin
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : selectedStudent.isAdvisor
-                            ? "bg-purple-50 text-purple-700 border-purple-200"
-                            : selectedStudent.isStudent
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-slate-50 text-slate-700 border-slate-200"
-                        }
-                      >
-                        {selectedStudent.isAdmin
-                          ? "Admin"
-                          : selectedStudent.isAdvisor
-                          ? "Advisor"
-                          : selectedStudent.isStudent
-                          ? "Student"
-                          : "User"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Status
-                    </Label>
                     <Badge
                       variant="secondary"
-                      className={`mt-1 ${
+                      className={`${
                         selectedStudent.isActive
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-red-50 text-red-700 border-red-200"
-                      }`}
+                          ? "bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-700"
+                          : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700"
+                      } px-4 py-1.5 text-sm font-semibold shadow-sm border`}
                     >
-                      <span
+                      <div
                         className={`w-2 h-2 rounded-full mr-2 ${
                           selectedStudent.isActive
-                            ? "bg-emerald-500"
-                            : "bg-red-500"
-                        }`}
+                            ? "bg-emerald-700"
+                            : "bg-red-700"
+                        } animate-pulse`}
                       />
                       {selectedStudent.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Created Date
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.createDate || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Updated Date
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.updateDate || "N/A"}
-                    </p>
-                  </div>
+                </div>
 
-                  {selectedStudent.contactNumber && (
-                    <div>
+                {/* Roles Card */}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Student Roles
+                    </h4>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedStudent.isAdmin && (
+                      <Badge
+                        variant="outline"
+                        className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <Shield className="w-4 h-4 mr-1.5" />
+                        Admin
+                      </Badge>
+                    )}
+                    {selectedStudent.isAdvisor && (
+                      <Badge
+                        variant="outline"
+                        className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <TrendingUp className="w-4 h-4 mr-1.5" />
+                        Advisor
+                      </Badge>
+                    )}
+                    {selectedStudent.isStudent && (
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <UserIcon className="w-4 h-4 mr-1.5" />
+                        Student
+                      </Badge>
+                    )}
+                    {selectedStudent.isUser &&
+                      !selectedStudent.isAdmin &&
+                      !selectedStudent.isAdvisor &&
+                      !selectedStudent.isStudent && (
+                        <Badge
+                          variant="outline"
+                          className="bg-muted text-muted-foreground border-border px-3 py-1.5 text-sm font-medium"
+                        >
+                          <UserIcon className="w-4 h-4 mr-1.5" />
+                          User
+                        </Badge>
+                      )}
+                  </div>
+                </div>
+
+                {/* Personal Information Card */}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <UserIcon className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Personal Information
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Contact
+                        Gender
                       </Label>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-foreground">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span>{selectedStudent.contactNumber}</span>
-                      </div>
+                      <p className="text-sm font-medium text-foreground">
+                        {selectedStudent.gender || "Not specified"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Joined Date
+                      </Label>
+                      <p className="text-sm font-medium text-foreground">
+                        {selectedStudent.createDate || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedStudent.bio && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Bio
+                      </Label>
+                      <p className="text-sm text-foreground mt-2 leading-relaxed">
+                        {selectedStudent.bio}
+                      </p>
                     </div>
                   )}
-                  {selectedStudent.address && (
-                    <div className="sm:col-span-2">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Address
-                      </Label>
-                      <div className="flex items-start gap-2 mt-1 text-sm text-foreground">
-                        <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                        <span>{selectedStudent.address}</span>
-                      </div>
+                </div>
+
+                {/* Contact Information Card */}
+                {(selectedStudent.address ||
+                  selectedStudent.contactNumber ||
+                  selectedStudent.telegramId) && (
+                  <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Phone className="w-5 h-5 text-primary" />
+                      <h4 className="font-semibold text-foreground text-lg">
+                        Contact Information
+                      </h4>
                     </div>
-                  )}
+                    <div className="space-y-3">
+                      {selectedStudent.address && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                          <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Address
+                            </Label>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {selectedStudent.address}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedStudent.contactNumber && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                          <Phone className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Phone Number
+                            </Label>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {selectedStudent.contactNumber}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedStudent.telegramId && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                          <MessageCircle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Telegram
+                            </Label>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {selectedStudent.telegramId}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Activity Timeline Card */}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Activity Timeline
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 rounded-lg bg-background/50">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Account Created
+                      </Label>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {selectedStudent.createDate || "N/A"}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-background/50">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Last Updated
+                      </Label>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {selectedStudent.updateDate || "N/A"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-6 border-t border-border">
               <Button
                 variant="outline"
                 onClick={() => setViewOpen(false)}
-                className="border-0 hover:bg-muted"
+                className="border-input hover:bg-accent transition-colors"
               >
                 Close
               </Button>
@@ -1245,7 +1427,7 @@ export function StudentTable({
                       }
                       className={
                         selectedUser.isStudent
-                          ? "bg-blue-600 hover:bg-blue-700 text-white"
+                          ? "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700"
                           : "border-border hover:bg-muted"
                       }
                     >
@@ -1268,142 +1450,207 @@ export function StudentTable({
         </Dialog>
         {/* Edit student dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-dynamic2">
-                Edit Student Information
-              </DialogTitle>
+          <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
+            <DialogHeader className="space-y-3 pb-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-purple-500/10 dark:bg-purple-400/10">
+                  <Edit className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold text-foreground">
+                    Edit Student Information
+                  </DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Update student details and academic information
+                  </p>
+                </div>
+              </div>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              {/* Student Card Image Upload */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-dynamic2">
-                  Student Card Image
-                </Label>
 
-                {/* Image Preview */}
-                {uploadedImage && (
-                  <div className="relative w-full max-w-xs">
-                    <Image
-                      unoptimized
-                      src={uploadedImage}
-                      alt="Student Card Preview"
-                      width={300}
-                      height={200}
-                      className="rounded-lg border border-gray-300 object-cover"
+            <form
+              onSubmit={editHandleSubmit(handleEditStudent)}
+              className="space-y-6 py-6"
+            >
+              {/* Student Card Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2">
+                  <div className="h-px flex-1 bg-border"></div>
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    Student Card
+                  </h3>
+                  <div className="h-px flex-1 bg-border"></div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    Student Card Image
+                  </Label>
+
+                  {uploadedImage && (
+                    <div className="relative w-full max-w-sm mx-auto">
+                      <div className="relative rounded-xl overflow-hidden border-2 border-border shadow-md">
+                        <Image
+                          unoptimized
+                          src={uploadedImage}
+                          alt="Student Card Preview"
+                          width={400}
+                          height={250}
+                          className="w-full h-auto object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleRemoveImage}
+                          className="absolute top-3 right-3 rounded-full w-8 h-8 p-0 shadow-lg"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
                     <Button
                       type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={handleRemoveImage}
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 border-input hover:bg-accent transition-colors"
                     >
-                      ×
+                      <FileText className="w-4 h-4 mr-2" />
+                      {uploadedImage ? "Change Image" : "Upload Image"}
                     </Button>
+                    {uploadedImage && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleRemoveImage}
+                        className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove
+                      </Button>
+                    )}
                   </div>
-                )}
 
-                {/* File Input */}
-                <div className="flex items-center space-x-2">
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="whitespace-nowrap"
-                  >
-                    Choose Image
-                  </Button>
+                  {editErrors.studentCardUrl && (
+                    <div className="flex items-center gap-1.5 text-destructive text-sm">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>{editErrors.studentCardUrl.message}</span>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5" />
+                    Supported formats: JPG, PNG, GIF. Max size: 5MB
+                  </p>
+                </div>
+              </div>
+
+              {/* Academic Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2">
+                  <div className="h-px flex-1 bg-border"></div>
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    Academic Information
+                  </h3>
+                  <div className="h-px flex-1 bg-border"></div>
                 </div>
 
-                {/* Form field is handled programmatically via editSetValue */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      University
+                    </Label>
+                    <Input
+                      {...editRegister("university")}
+                      placeholder="Enter university name"
+                      className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                    />
+                    {editErrors.university && (
+                      <div className="flex items-center gap-1.5 text-destructive text-sm">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{editErrors.university.message}</span>
+                      </div>
+                    )}
+                  </div>
 
-                {editErrors.studentCardUrl && (
-                  <p className="text-red-500 text-sm">
-                    {editErrors.studentCardUrl.message}
-                  </p>
-                )}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      Major
+                    </Label>
+                    <Input
+                      {...editRegister("major")}
+                      placeholder="Enter major/field of study"
+                      className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                    />
+                    {editErrors.major && (
+                      <div className="flex items-center gap-1.5 text-destructive text-sm">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{editErrors.major.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                {/* Upload Instructions */}
-                <p className="text-xs text-muted-foreground">
-                  Supported formats: JPG, PNG, GIF. Max size: 5MB
-                </p>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    Years of Study
+                  </Label>
+                  <Input
+                    type="text"
+                    {...editRegister("yearsOfStudy")}
+                    placeholder="e.g., 3 or Year 3"
+                    className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                  />
+                  {editErrors.yearsOfStudy && (
+                    <div className="flex items-center gap-1.5 text-destructive text-sm">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>{editErrors.yearsOfStudy.message}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* University */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-dynamic2">
-                  University
-                </Label>
-                <Input
-                  {...editRegister("university")}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                />
-                {editErrors.university && (
-                  <p className="text-red-500 text-sm">
-                    {editErrors.university.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Major */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-dynamic2">
-                  Major
-                </Label>
-                <Input
-                  {...editRegister("major")}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                />
-                {editErrors.major && (
-                  <p className="text-red-500 text-sm">
-                    {editErrors.major.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Years of Study */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-dynamic2">
-                  Years of Study
-                </Label>
-                <Input
-                  type="text"
-                  {...editRegister("yearsOfStudy")}
-                  className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                />
-                {editErrors.yearsOfStudy && (
-                  <p className="text-red-500 text-sm">
-                    {editErrors.yearsOfStudy.message}
-                  </p>
-                )}
-              </div>
-
-              <DialogFooter>
+              <DialogFooter className="pt-6 border-t border-border gap-3">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setEditOpen(false)}
-                  className="border-slate-300"
+                  className="min-w-[120px] border-input hover:bg-accent transition-colors"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  onClick={editHandleSubmit(handleEditStudent)}
-                  className="bg-primary2 text-white bg-secondary"
+                  disabled={updateIsLoading}
+                  className="min-w-[120px] bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white transition-colors"
                 >
-                  Save Changes
+                  {updateIsLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin">⏳</span>
+                      Saving...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Save Changes
+                    </span>
+                  )}
                 </Button>
               </DialogFooter>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
 

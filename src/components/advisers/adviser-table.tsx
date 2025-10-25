@@ -42,6 +42,15 @@ import {
   Shield,
   TrendingUp,
   User as UserIcon,
+  Mail,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  Briefcase,
+  Phone,
+  MapPin,
+  MessageCircle,
+  Calendar,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -279,7 +288,9 @@ export function AdviserTable({
             >
               <div
                 className={`w-2 h-2 rounded-full mr-2 ${
-                  active ? "bg-emerald-500" : "bg-red-500"
+                  active
+                    ? "bg-emerald-600 dark:bg-emerald-400"
+                    : "bg-red-600 dark:bg-red-400"
                 }`}
               />
               {active ? "Active" : "Inactive"}
@@ -621,7 +632,7 @@ export function AdviserTable({
                 placeholder="Search advisers by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                className="pl-10 border-input focus:border-ring focus:ring-ring bg-background shadow-sm transition-all"
               />
             </div>
             <div className="flex gap-3">
@@ -663,154 +674,236 @@ export function AdviserTable({
                   </Button>
                 </DialogTrigger>
                 <DialogContent
-                  className="p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
+                  className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto bg-card border-border"
                   ref={dialogRef}
                   tabIndex={-1}
                 >
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-dynamic   flex items-center gap-2">
-                      <Plus className="w-5 h-5" />
-                      Add New Adviser
-                    </DialogTitle>
+                  <DialogHeader className="space-y-3 pb-6 border-b border-border">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-purple-500/10 dark:bg-purple-400/10">
+                        <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-2xl font-bold text-foreground">
+                          Add New Adviser
+                        </DialogTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Fill in the information below to create a new adviser
+                          account
+                        </p>
+                      </div>
+                    </div>
                   </DialogHeader>
-                  <div className="space-y-5 py-4">
-                    <div className="grid grid-cols-2 gap-4 ">
-                      <div className="space-y-2">
-                        <Label className=" text-sm font-semibold text-dynamic ">
-                          First Name
-                        </Label>
-                        <Input
-                          value={createFormData.firstname}
-                          onChange={(e) =>
-                            setCreateFormData({
-                              ...createFormData,
-                              firstname: e.target.value,
-                            })
-                          }
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        />
+
+                  <div className="space-y-6 py-6">
+                    {/* Personal Information Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2">
+                        <div className="h-px flex-1 bg-border"></div>
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                          Personal Information
+                        </h3>
+                        <div className="h-px flex-1 bg-border"></div>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-dynamic ">
-                          Last Name
-                        </Label>
-                        <Input
-                          value={createFormData.lastname}
-                          onChange={(e) =>
-                            setCreateFormData({
-                              ...createFormData,
-                              lastname: e.target.value,
-                            })
-                          }
-                          className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-dynamic ">
-                        Username
-                      </Label>
-                      <Input
-                        value={createFormData.username}
-                        onChange={(e) =>
-                          setCreateFormData({
-                            ...createFormData,
-                            username: e.target.value,
-                          })
-                        }
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-dynamic ">
-                        Email
-                      </Label>
-                      <Input
-                        type="email"
-                        value={createFormData.email}
-                        onChange={(e) =>
-                          setCreateFormData({
-                            ...createFormData,
-                            email: e.target.value,
-                          })
-                        }
-                        className="border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2 relative">
-                        <Label className="text-sm font-semibold text-dynamic ">
-                          Password
-                        </Label>
-                        <div className="relative">
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            First Name
+                            <span className="text-destructive">*</span>
+                          </Label>
                           <Input
-                            type={showPassword ? "text" : "password"}
-                            value={createFormData.password}
+                            value={createFormData.firstname}
                             onChange={(e) =>
                               setCreateFormData({
                                 ...createFormData,
-                                password: e.target.value,
+                                firstname: e.target.value,
                               })
                             }
-                            className="pr-10 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                            placeholder="Enter first name"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((v) => !v)}
-                            className="absolute inset-y-0 right-2 flex items-center text-slate-500"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            Last Name
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            value={createFormData.lastname}
+                            onChange={(e) =>
+                              setCreateFormData({
+                                ...createFormData,
+                                lastname: e.target.value,
+                              })
+                            }
+                            placeholder="Enter last name"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                          />
                         </div>
                       </div>
-                      <div className="space-y-2 relative">
-                        <Label className="text-sm font-semibold text-dynamic ">
-                          Confirm Password
-                        </Label>
-                        <div className="relative">
+                    </div>
+
+                    {/* Account Information Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2">
+                        <div className="h-px flex-1 bg-border"></div>
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                          Account Information
+                        </h3>
+                        <div className="h-px flex-1 bg-border"></div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            Username
+                            <span className="text-destructive">*</span>
+                          </Label>
                           <Input
-                            type={showConfirm ? "text" : "password"}
-                            value={createFormData.confirmedPassword}
+                            value={createFormData.username}
                             onChange={(e) =>
                               setCreateFormData({
                                 ...createFormData,
-                                confirmedPassword: e.target.value,
+                                username: e.target.value,
                               })
                             }
-                            className="pr-10 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                            placeholder="Choose a unique username"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirm((v) => !v)}
-                            className="absolute inset-y-0 right-2 flex items-center text-slate-500"
-                          >
-                            {showConfirm ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            Email Address
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            type="email"
+                            value={createFormData.email}
+                            onChange={(e) =>
+                              setCreateFormData({
+                                ...createFormData,
+                                email: e.target.value,
+                              })
+                            }
+                            placeholder="adviser@example.com"
+                            className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Security Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2">
+                        <div className="h-px flex-1 bg-border"></div>
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                          Security
+                        </h3>
+                        <div className="h-px flex-1 bg-border"></div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                            Password
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              value={createFormData.password}
+                              onChange={(e) =>
+                                setCreateFormData({
+                                  ...createFormData,
+                                  password: e.target.value,
+                                })
+                              }
+                              placeholder="Enter secure password"
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring pr-10 transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((v) => !v)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                            Confirm Password
+                            <span className="text-destructive">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type={showConfirm ? "text" : "password"}
+                              value={createFormData.confirmedPassword}
+                              onChange={(e) =>
+                                setCreateFormData({
+                                  ...createFormData,
+                                  confirmedPassword: e.target.value,
+                                })
+                              }
+                              placeholder="Confirm password"
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring pr-10 transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirm((v) => !v)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showConfirm ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <DialogFooter>
+
+                  <DialogFooter className="pt-6 border-t border-border gap-3">
                     <Button
+                      type="button"
                       variant="outline"
                       onClick={() => setAddOpen(false)}
-                      className="border-slate-300 dark:border-slate-600 text-slate-900 "
+                      className="min-w-[120px] border-input hover:bg-accent transition-colors"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={handleAddAdvisor}
-                      className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white shadow-sm"
+                      disabled={creating}
+                      className="min-w-[120px] bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white transition-colors"
                     >
-                      Add Adviser
+                      {creating ? (
+                        <span className="flex items-center gap-2">
+                          <span className="animate-spin">⏳</span>
+                          Adding...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Plus className="w-4 h-4" />
+                          Add Adviser
+                        </span>
+                      )}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -980,29 +1073,34 @@ export function AdviserTable({
         {/* View Dialog */}
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
           <DialogContent
-            className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border-0"
+            className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border"
             ref={dialogRef}
             tabIndex={-1}
           >
-            <DialogHeader className="pb-2">
-              <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
-                  <Eye className="w-5 h-5" />
+            <DialogHeader className="pb-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-purple-500/10 dark:bg-purple-400/10">
+                  <Eye className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                Adviser Details
-              </DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-foreground">
+                  Adviser Details
+                </DialogTitle>
+              </div>
             </DialogHeader>
 
             {selectedStudent && (
-              <div className="space-y-6 py-2">
-                {/* Hero card */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800 dark:via-blue-900 dark:to-indigo-900">
-                  <div className="relative p-6 flex items-start gap-4">
-                    <Avatar className="w-16 h-16 rounded-xl border-4 border-white dark:border-slate-800 shadow-md">
+              <div className="space-y-6 py-6">
+                {/* Hero Card */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-slate-800 dark:via-purple-900 dark:to-indigo-900 p-6 border border-border">
+                  <div className="relative flex items-center gap-4">
+                    <Avatar className="w-20 h-20 ring-4 ring-white dark:ring-slate-800 shadow-lg">
                       <AvatarImage
-                        src={selectedStudent.imageUrl || "/placeholder.svg"}
+                        src={
+                          selectedStudent.imageUrl ||
+                          "/placeholder.svg?height=80&width=80"
+                        }
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-semibold">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold text-2xl">
                         {(
                           selectedStudent.fullName ??
                           `${selectedStudent.firstName ?? ""} ${
@@ -1011,134 +1109,221 @@ export function AdviserTable({
                         )
                           .split(" ")
                           .map((n) => n[0])
-                          .join("") || "U"}
+                          .join("") || "A"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-foreground truncate">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-2xl font-bold text-foreground truncate">
                         {selectedStudent.fullName ||
                           selectedStudent.userName ||
-                          "Unknown"}
+                          "Unknown Adviser"}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-muted-foreground font-medium mt-1">
+                        @{selectedStudent.userName || "N/A"}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         {selectedStudent.email || "N/A"}
                       </p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Details grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Username
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.userName || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Email
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.email || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Role
-                    </Label>
-                    <div className="mt-1">
-                      <Badge
-                        variant="outline"
-                        className={
-                          selectedStudent.isAdmin
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : selectedStudent.isAdvisor
-                            ? "bg-purple-50 text-purple-700 border-purple-200"
-                            : selectedStudent.isStudent
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-slate-50 text-slate-700 border-slate-200"
-                        }
-                      >
-                        {selectedStudent.isAdmin
-                          ? "Admin"
-                          : selectedStudent.isAdvisor
-                          ? "Advisor"
-                          : selectedStudent.isStudent
-                          ? "Student"
-                          : "User"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Status
-                    </Label>
                     <Badge
                       variant="secondary"
-                      className={`mt-1 ${
+                      className={`${
                         selectedStudent.isActive
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-red-50 text-red-700 border-red-200"
-                      }`}
+                          ? "bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-700"
+                          : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700"
+                      } px-4 py-1.5 text-sm font-semibold shadow-sm border`}
                     >
-                      <span
+                      <div
                         className={`w-2 h-2 rounded-full mr-2 ${
                           selectedStudent.isActive
-                            ? "bg-emerald-500"
-                            : "bg-red-500"
-                        }`}
+                            ? "bg-emerald-700"
+                            : "bg-red-700"
+                        } animate-pulse`}
                       />
                       {selectedStudent.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Created Date
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.createDate || "N/A"}
-                    </p>
+                </div>
+
+                {/* Roles Card */}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Adviser Roles
+                    </h4>
                   </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Updated Date
-                    </Label>
-                    <p className="text-sm text-foreground mt-1">
-                      {selectedStudent.updateDate || "N/A"}
-                    </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedStudent.isAdmin && (
+                      <Badge
+                        variant="outline"
+                        className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <Shield className="w-4 h-4 mr-1.5" />
+                        Admin
+                      </Badge>
+                    )}
+                    {selectedStudent.isAdvisor && (
+                      <Badge
+                        variant="outline"
+                        className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <TrendingUp className="w-4 h-4 mr-1.5" />
+                        Advisor
+                      </Badge>
+                    )}
+                    {selectedStudent.isStudent && (
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <UserIcon className="w-4 h-4 mr-1.5" />
+                        Student
+                      </Badge>
+                    )}
+                    {selectedStudent.isUser &&
+                      !selectedStudent.isAdmin &&
+                      !selectedStudent.isAdvisor &&
+                      !selectedStudent.isStudent && (
+                        <Badge
+                          variant="outline"
+                          className="bg-muted text-muted-foreground border-border px-3 py-1.5 text-sm font-medium"
+                        >
+                          <UserIcon className="w-4 h-4 mr-1.5" />
+                          User
+                        </Badge>
+                      )}
                   </div>
-                  {selectedStudent.contactNumber && (
-                    <div>
+                </div>
+
+                {/* Personal Information Card */}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <UserIcon className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Personal Information
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Contact
+                        Gender
                       </Label>
-                      <p className="text-sm text-foreground mt-1">
-                        {selectedStudent.contactNumber}
+                      <p className="text-sm font-medium text-foreground">
+                        {selectedStudent.gender || "Not specified"}
                       </p>
                     </div>
-                  )}
-                  {selectedStudent.address && (
-                    <div className="sm:col-span-2">
+                    <div className="space-y-1">
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Address
+                        Joined Date
                       </Label>
-                      <p className="text-sm text-foreground mt-1">
-                        {selectedStudent.address}
+                      <p className="text-sm font-medium text-foreground">
+                        {selectedStudent.createDate || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedStudent.bio && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Bio
+                      </Label>
+                      <p className="text-sm text-foreground mt-2 leading-relaxed">
+                        {selectedStudent.bio}
                       </p>
                     </div>
                   )}
                 </div>
+
+                {/* Contact Information Card */}
+                {(selectedStudent.address ||
+                  selectedStudent.contactNumber ||
+                  selectedStudent.telegramId) && (
+                  <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Phone className="w-5 h-5 text-primary" />
+                      <h4 className="font-semibold text-foreground text-lg">
+                        Contact Information
+                      </h4>
+                    </div>
+                    <div className="space-y-3">
+                      {selectedStudent.address && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                          <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Address
+                            </Label>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {selectedStudent.address}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedStudent.contactNumber && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                          <Phone className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Phone Number
+                            </Label>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {selectedStudent.contactNumber}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedStudent.telegramId && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                          <MessageCircle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Telegram
+                            </Label>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {selectedStudent.telegramId}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Activity Timeline Card */}
+                <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-foreground text-lg">
+                      Activity Timeline
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 rounded-lg bg-background/50">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Account Created
+                      </Label>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {selectedStudent.createDate || "N/A"}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-background/50">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Last Updated
+                      </Label>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {selectedStudent.updateDate || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-6 border-t border-border">
               <Button
                 variant="outline"
                 onClick={() => setViewOpen(false)}
-                className="border-0 hover:bg-muted"
+                className="border-input hover:bg-accent transition-colors"
               >
                 Close
               </Button>
@@ -1149,131 +1334,194 @@ export function AdviserTable({
         {/* //edit  */}
 
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-200" />
-                Edit Adviser
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-5 py-4">
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 ">
-                    Experience (years)
-                  </Label>
-                  <input
-                    {...register("experienceYears")}
-                    className="w-full border-slate-300 rounded-lg px-3 py-2"
-                    placeholder="e.g. 5"
-                  />
-                  {errors.experienceYears && (
-                    <p className="text-red-500 text-xs">
-                      {errors.experienceYears.message as unknown as string}
-                    </p>
-                  )}
+          <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
+            <DialogHeader className="space-y-3 pb-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-indigo-500/10 dark:bg-indigo-400/10">
+                  <Edit className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 ">
-                    LinkedIn
-                  </Label>
-                  <input
-                    {...register("linkedinUrl")}
-                    className="w-full border-slate-300 rounded-lg px-3 py-2"
-                    placeholder="https://linkedin.com/..."
-                  />
-                  {errors.linkedinUrl && (
-                    <p className="text-red-500 text-xs">
-                      {errors.linkedinUrl.message as unknown as string}
-                    </p>
-                  )}
+                <div>
+                  <DialogTitle className="text-2xl font-bold text-foreground">
+                    Edit Adviser
+                  </DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Update adviser professional information and contact details
+                  </p>
                 </div>
               </div>
+            </DialogHeader>
 
-              {/* Status */}
-              <div className="grid grid-cols-2 gap-4 mt-2">
+            <form
+              onSubmit={handleSubmit(handleEditAdvisor)}
+              className="space-y-6 py-6"
+            >
+              {/* Professional Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2">
+                  <div className="h-px flex-1 bg-border"></div>
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    Professional Information
+                  </h3>
+                  <div className="h-px flex-1 bg-border"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      Years of Experience
+                    </Label>
+                    <Input
+                      {...register("experienceYears")}
+                      type="number"
+                      placeholder="e.g., 5"
+                      className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                    />
+                    {errors.experienceYears && (
+                      <div className="flex items-center gap-1.5 text-destructive text-sm">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{errors.experienceYears.message as string}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      Office Location
+                    </Label>
+                    <Input
+                      {...register("office")}
+                      value={editFormData.office}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          office: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., Room 301, Building A"
+                      className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700">
-                    Status
+                  <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-muted-foreground" />
+                    Account Status
                   </Label>
                   <Select
                     value={editFormData.status ? "true" : "false"}
                     onValueChange={(v) => {
-                      // update both react-hook-form and local state so UI stays in sync
                       setEditFormData({
                         ...editFormData,
                         status: v === "true",
                       });
-                      // form expects "ACTIVE" | "INACTIVE" | undefined, map boolean to those values
                       setValue("status", v === "true" ? "ACTIVE" : "INACTIVE");
                     }}
                   >
-                    <SelectTrigger className="w-full h-10 border-slate-300 rounded-lg">
+                    <SelectTrigger className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-0">
-                      <SelectItem value="true">Active</SelectItem>
-                      <SelectItem value="false">Inactive</SelectItem>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="true" className="text-foreground">
+                        Active
+                      </SelectItem>
+                      <SelectItem value="false" className="text-foreground">
+                        Inactive
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 ">
-                    Office
-                  </Label>
-                  <Input
-                    {...register("office")}
-                    value={editFormData.office}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        office: e.target.value,
-                      })
-                    }
-                    className="border-slate-300 rounded-lg"
-                  />
+              </div>
+
+              {/* Contact & Social Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2">
+                  <div className="h-px flex-1 bg-border"></div>
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    Contact & Social Links
+                  </h3>
+                  <div className="h-px flex-1 bg-border"></div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-muted-foreground"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                      </svg>
+                      LinkedIn Profile URL
+                    </Label>
+                    <Input
+                      {...register("linkedinUrl")}
+                      placeholder="https://linkedin.com/in/username"
+                      className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                    />
+                    {errors.linkedinUrl && (
+                      <div className="flex items-center gap-1.5 text-destructive text-sm">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{errors.linkedinUrl.message as string}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      Other Social Links
+                    </Label>
+                    <Input
+                      {...register("socialLinks")}
+                      value={editFormData.socialLinks}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          socialLinks: e.target.value,
+                        })
+                      }
+                      placeholder="https://twitter.com/username or other social media"
+                      className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                    />
+                    {errors.socialLinks && (
+                      <div className="flex items-center gap-1.5 text-destructive text-sm">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{errors.socialLinks.message as string}</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5" />
+                      You can add links to Twitter, GitHub, personal website,
+                      etc.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Social Links */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-slate-700">
-                  Social Links
-                </Label>
-                <Input
-                  {...register("socialLinks")}
-                  value={editFormData.socialLinks}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      socialLinks: e.target.value,
-                    })
-                  }
-                  className="border-slate-300 rounded-lg"
-                  placeholder="https://twitter.com/..."
-                />
-                {errors.socialLinks && (
-                  <p className="text-red-500 text-xs">
-                    {errors.socialLinks.message as unknown as string}
-                  </p>
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setEditOpen(false)}
-                className="border-slate-300"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit(handleEditAdvisor)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                Save Changes
-              </Button>
-            </DialogFooter>
+              <DialogFooter className="pt-6 border-t border-border gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(false)}
+                  className="min-w-[120px] border-input hover:bg-accent transition-colors"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="min-w-[120px] bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Save Changes
+                  </span>
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 

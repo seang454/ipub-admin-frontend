@@ -736,7 +736,7 @@ export default function PaperManagement({
                   placeholder="Search papers by title or abstract..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-0 focus:border-indigo-500 focus:ring-indigo-500 bg-card text-foreground shadow-sm"
+                  className="pl-10 border-input focus:border-ring focus:ring-ring bg-background text-foreground shadow-sm transition-all"
                   aria-label="Search papers"
                 />
               </div>
@@ -771,177 +771,231 @@ export default function PaperManagement({
                     </Button>
                   </DialogTrigger>
 
-                  <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-                    <VisuallyHidden>
-                      <DialogTitle className="text-dynamic2">
-                        Add New Paper
-                      </DialogTitle>
-                    </VisuallyHidden>
-
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl font-semibold mb-4 text-dynamic2">
-                        Add New Paper
-                      </DialogTitle>
+                  <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto bg-card border-border">
+                    <DialogHeader className="space-y-3 pb-6 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-lg bg-blue-500/10 dark:bg-blue-400/10">
+                          <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <DialogTitle className="text-2xl font-bold text-foreground">
+                            Add New Paper
+                          </DialogTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Upload a research paper and provide its details
+                          </p>
+                        </div>
+                      </div>
                     </DialogHeader>
 
                     <form
                       onSubmit={handleSubmit(handleAddPaper)}
-                      className="space-y-5"
+                      className="space-y-6 py-6"
                     >
-                      {/* Title */}
-                      <div>
-                        <Label className="text-sm font-medium text-dynamic2">
-                          Title *
-                        </Label>
-                        <Input
-                          {...register("title")}
-                          placeholder="Enter paper title"
-                          className="bg-gray-800 border border-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        {errors.title && (
-                          <p className=" text-sm mt-1 text-dynamic2">
-                            {errors.title.message}
-                          </p>
-                        )}
-                      </div>
+                      {/* Paper Information Section */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2">
+                          <div className="h-px flex-1 bg-border"></div>
+                          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                            Paper Information
+                          </h3>
+                          <div className="h-px flex-1 bg-border"></div>
+                        </div>
 
-                      {/* Abstract */}
-                      <div>
-                        <Label className="text-sm font-medium text-dynamic2">
-                          Abstract *
-                        </Label>
-                        <Textarea
-                          {...register("abstractText")}
-                          rows={3}
-                          placeholder="Enter abstract"
-                          className="bg-gray-800 border border-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        {errors.abstractText && (
-                          <p className="text-red-400 text-sm mt-1">
-                            {errors.abstractText.message}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* File Upload */}
-                      <div>
-                        <Label className="text-sm font-medium text-dynamic2">
-                          Upload File (PDF) *
-                        </Label>
-                        <Input
-                          type="file"
-                          accept=".pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              setTimeout(
-                                () => setValue("file", file as File),
-                                0
-                              );
-                              setFilePreview(file.name);
-                            }
-                          }}
-                          className="bg-gray-800 border border-gray-700 text-white file:text-blue-400"
-                        />
-                        {filePreview && (
-                          <div className="mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-blue-400" />
-                            <span className="text-sm truncate">
-                              {filePreview}
-                            </span>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-muted-foreground" />
+                              Title
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              {...register("title")}
+                              placeholder="Enter paper title"
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                            />
+                            {errors.title && (
+                              <div className="flex items-center gap-1.5 text-destructive text-sm">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>{errors.title.message}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {errors.file && (
-                          <p className="text-red-400 text-sm mt-1">
-                            {errors.file.message}
-                          </p>
-                        )}
-                      </div>
 
-                      {/* Thumbnail Upload */}
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Upload Thumbnail *
-                        </Label>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              setTimeout(
-                                () => setValue("thumbnail", file as File),
-                                0
-                              );
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                setThumbnailPreview(reader.result as string);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                          className="bg-gray-800 border border-gray-700 text-white file:text-blue-400"
-                        />
-                        {thumbnailPreview && (
-                          <div className="mt-3 flex justify-center">
-                            <div className="relative">
-                              <Image
-                                unoptimized
-                                width={100}
-                                height={100}
-                                src={thumbnailPreview}
-                                alt="Thumbnail preview"
-                                className="w-32 h-32 object-cover rounded-lg border-2 border-blue-700 shadow-lg"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setThumbnailPreview("");
-                                  setValue("thumbnail", "" as unknown as File);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md"
-                              >
-                                ✕
-                              </button>
-                            </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-muted-foreground" />
+                              Abstract
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                              {...register("abstractText")}
+                              rows={4}
+                              placeholder="Provide a brief summary of the paper"
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors resize-none"
+                            />
+                            {errors.abstractText && (
+                              <div className="flex items-center gap-1.5 text-destructive text-sm">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>{errors.abstractText.message}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {errors.thumbnail && (
-                          <p className="text-red-400 text-sm mt-1">
-                            {errors.thumbnail.message}
-                          </p>
-                        )}
+
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <Filter className="w-4 h-4 text-muted-foreground" />
+                              Category
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                setValue("categoryUuid", value)
+                              }
+                            >
+                              <SelectTrigger className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors">
+                                <SelectValue placeholder="Select a category" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover border-border">
+                                {categoriesData?.content.map((cat) => (
+                                  <SelectItem
+                                    key={cat.uuid}
+                                    value={cat.uuid}
+                                    className="text-foreground"
+                                  >
+                                    {cat.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {errors.categoryUuid && (
+                              <div className="flex items-center gap-1.5 text-destructive text-sm">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>{errors.categoryUuid.message}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Category */}
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Category *
-                        </Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setValue("categoryUuid", value)
-                          }
-                        >
-                          <SelectTrigger className="bg-gray-800 border border-gray-700 text-white focus:ring-2 focus:ring-blue-500">
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-gray-900 text-white border border-gray-700">
-                            {categoriesData?.content.map((cat) => (
-                              <SelectItem key={cat.uuid} value={cat.uuid}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.categoryUuid && (
-                          <p className="text-red-400 text-sm mt-1">
-                            {errors.categoryUuid.message}
-                          </p>
-                        )}
+                      {/* File Uploads Section */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2">
+                          <div className="h-px flex-1 bg-border"></div>
+                          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                            File Uploads
+                          </h3>
+                          <div className="h-px flex-1 bg-border"></div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-muted-foreground" />
+                              PDF Document
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              type="file"
+                              accept=".pdf"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setTimeout(
+                                    () => setValue("file", file as File),
+                                    0
+                                  );
+                                  setFilePreview(file.name);
+                                }
+                              }}
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer transition-colors"
+                            />
+                            {filePreview && (
+                              <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-3">
+                                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                <span className="text-sm text-foreground truncate flex-1">
+                                  {filePreview}
+                                </span>
+                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                              </div>
+                            )}
+                            {errors.file && (
+                              <div className="flex items-center gap-1.5 text-destructive text-sm">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>{errors.file.message}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-muted-foreground" />
+                              Thumbnail Image
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setTimeout(
+                                    () => setValue("thumbnail", file as File),
+                                    0
+                                  );
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setThumbnailPreview(
+                                      reader.result as string
+                                    );
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="bg-background border-input text-foreground focus:border-ring focus:ring-ring file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer transition-colors"
+                            />
+                            {thumbnailPreview && (
+                              <div className="mt-3 flex justify-center">
+                                <div className="relative rounded-xl overflow-hidden border-2 border-border shadow-md">
+                                  <Image
+                                    unoptimized
+                                    width={200}
+                                    height={200}
+                                    src={thumbnailPreview}
+                                    alt="Thumbnail preview"
+                                    className="w-48 h-48 object-cover"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setThumbnailPreview("");
+                                      setValue(
+                                        "thumbnail",
+                                        "" as unknown as File
+                                      );
+                                    }}
+                                    className="absolute top-2 right-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full w-7 h-7 flex items-center justify-center shadow-lg transition-colors"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {errors.thumbnail && (
+                              <div className="flex items-center gap-1.5 text-destructive text-sm">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>{errors.thumbnail.message}</span>
+                              </div>
+                            )}
+                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Info className="w-3.5 h-3.5" />
+                              Recommended: 400x400px, JPG or PNG format
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
-                      <DialogFooter className="flex justify-end gap-3 pt-4 border-t border-gray-700 mt-4">
+                      <DialogFooter className="pt-6 border-t border-border gap-3">
                         <Button
                           type="button"
                           variant="outline"
@@ -950,15 +1004,18 @@ export default function PaperManagement({
                             setFilePreview("");
                             setThumbnailPreview("");
                           }}
-                          className="bg-gray-700 hover:bg-gray-600 text-white border-none"
+                          className="min-w-[120px] border-input hover:bg-accent transition-colors"
                         >
                           Cancel
                         </Button>
                         <Button
                           type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="min-w-[120px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-colors"
                         >
-                          <Plus className="w-4 h-4 mr-2" /> Add Paper
+                          <span className="flex items-center gap-2">
+                            <Plus className="w-4 h-4" />
+                            Add Paper
+                          </span>
                         </Button>
                       </DialogFooter>
                     </form>
@@ -1316,183 +1373,255 @@ export default function PaperManagement({
           </Dialog>
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-card border-border shadow-sm">
-              <VisuallyHidden>
-                <DialogTitle>Edit Paper</DialogTitle>
-              </VisuallyHidden>
-
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-semibold flex items-center gap-2 text-white">
-                  <Edit className="w-5 h-5 text-indigo-400" /> Edit Paper
-                </DialogTitle>
+            <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto bg-card border-border">
+              <DialogHeader className="space-y-3 pb-6 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-indigo-500/10 dark:bg-indigo-400/10">
+                    <Edit className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl font-bold text-foreground">
+                      Edit Paper
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Update paper details and files
+                    </p>
+                  </div>
+                </div>
               </DialogHeader>
 
               <form
                 onSubmit={editHandleSubmit(handleEditPaper)}
-                className="space-y-5 py-4"
+                className="space-y-6 py-6"
                 noValidate
               >
-                {/* Title */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Title *</Label>
-                  <Input
-                    {...editRegister("title", {
-                      required: "Title is required",
-                    })}
-                    placeholder="Enter paper title"
-                    className="bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {editErrors.title && (
-                    <p className="text-sm text-red-400">
-                      {editErrors.title.message}
-                    </p>
-                  )}
-                </div>
+                {/* Paper Information Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2">
+                    <div className="h-px flex-1 bg-border"></div>
+                    <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                      Paper Information
+                    </h3>
+                    <div className="h-px flex-1 bg-border"></div>
+                  </div>
 
-                {/* Abstract */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Abstract *</Label>
-                  <Textarea
-                    {...editRegister("abstractText", {
-                      required: "Abstract is required",
-                    })}
-                    rows={4}
-                    placeholder="Enter abstract"
-                    className="bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {editErrors.abstractText && (
-                    <p className="text-sm text-red-400">
-                      {editErrors.abstractText.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* File URL Upload */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Upload File *</Label>
-                  <Input
-                    type="file"
-                    accept=".pdf,.docx,.txt,image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setTimeout(
-                          () =>
-                            editSetValue("fileUrl", file as unknown as string),
-                          0
-                        );
-                        setFilePreview(file.name); // Just save the file name, not base64
-                      }
-                    }}
-                    className="bg-gray-800 border border-gray-700 text-white file:text-blue-400"
-                  />
-                  {filePreview && (
-                    <div className="mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-400" />
-                      <span className="text-sm truncate">{filePreview}</span>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        Title
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        {...editRegister("title", {
+                          required: "Title is required",
+                        })}
+                        placeholder="Enter paper title"
+                        className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
+                      />
+                      {editErrors.title && (
+                        <div className="flex items-center gap-1.5 text-destructive text-sm">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>{editErrors.title.message}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {editErrors.fileUrl && (
-                    <p className="text-sm text-red-400">
-                      {editErrors.fileUrl.message}
-                    </p>
-                  )}
-                </div>
 
-                {/* Thumbnail Image Upload */}
-                <div>
-                  <Label className="text-sm font-medium">
-                    Upload Thumbnail *
-                  </Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setTimeout(
-                          () => editSetValue("thumbnailUrl", file as File),
-                          0
-                        );
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setThumbnailPreview(reader.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="bg-gray-800 border border-gray-700 text-white file:text-blue-400"
-                  />
-                  {thumbnailPreview && (
-                    <div className="mt-3 flex justify-center">
-                      <div className="relative">
-                        <Image
-                          unoptimized
-                          width={100}
-                          height={100}
-                          src={thumbnailPreview}
-                          alt="Thumbnail preview"
-                          className="w-32 h-32 object-cover rounded-lg border-2 border-blue-700 shadow-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setThumbnailPreview("");
-                            editSetValue("thumbnailUrl", "" as unknown as File);
-                          }}
-                          className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md"
-                        >
-                          ✕
-                        </button>
-                      </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        Abstract
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Textarea
+                        {...editRegister("abstractText", {
+                          required: "Abstract is required",
+                        })}
+                        rows={4}
+                        placeholder="Provide a brief summary of the paper"
+                        className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors resize-none"
+                      />
+                      {editErrors.abstractText && (
+                        <div className="flex items-center gap-1.5 text-destructive text-sm">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>{editErrors.abstractText.message}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {errors.thumbnail && (
-                    <p className="text-red-400 text-sm mt-1">
-                      {errors.thumbnail.message}
-                    </p>
-                  )}
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-muted-foreground" />
+                        Category
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Select
+                        onValueChange={(value) =>
+                          editSetValue("category", value)
+                        }
+                      >
+                        <SelectTrigger className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border-border">
+                          {categoriesData?.content.map((cat) => (
+                            <SelectItem
+                              key={cat.uuid}
+                              value={cat.uuid}
+                              className="text-foreground"
+                            >
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.categoryUuid && (
+                        <div className="flex items-center gap-1.5 text-destructive text-sm">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>{errors.categoryUuid.message}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Categories */}
-                <div>
-                  <Label className="text-sm font-medium my-2">Category *</Label>
-                  <Select
-                    onValueChange={(value) => editSetValue("category", value)}
-                  >
-                    <SelectTrigger className="bg-gray-800 border border-gray-700 text-white focus:ring-2 focus:ring-blue-500">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-900 text-white border border-gray-700">
-                      {categoriesData?.content.map((cat) => (
-                        <SelectItem key={cat.uuid} value={cat.uuid}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.categoryUuid && (
-                    <p className="text-red-400 text-sm mt-1">
-                      {errors.categoryUuid.message}
-                    </p>
-                  )}
+                {/* File Uploads Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2">
+                    <div className="h-px flex-1 bg-border"></div>
+                    <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                      Update Files
+                    </h3>
+                    <div className="h-px flex-1 bg-border"></div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        PDF Document
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        type="file"
+                        accept=".pdf,.docx,.txt,image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setTimeout(
+                              () =>
+                                editSetValue(
+                                  "fileUrl",
+                                  file as unknown as string
+                                ),
+                              0
+                            );
+                            setFilePreview(file.name);
+                          }
+                        }}
+                        className="bg-background border-input text-foreground focus:border-ring focus:ring-ring file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer transition-colors"
+                      />
+                      {filePreview && (
+                        <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                          <span className="text-sm text-foreground truncate flex-1">
+                            {filePreview}
+                          </span>
+                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                        </div>
+                      )}
+                      {editErrors.fileUrl && (
+                        <div className="flex items-center gap-1.5 text-destructive text-sm">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>{editErrors.fileUrl.message}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        Thumbnail Image
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setTimeout(
+                              () => editSetValue("thumbnailUrl", file as File),
+                              0
+                            );
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setThumbnailPreview(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="bg-background border-input text-foreground focus:border-ring focus:ring-ring file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer transition-colors"
+                      />
+                      {thumbnailPreview && (
+                        <div className="mt-3 flex justify-center">
+                          <div className="relative rounded-xl overflow-hidden border-2 border-border shadow-md">
+                            <Image
+                              unoptimized
+                              width={200}
+                              height={200}
+                              src={thumbnailPreview}
+                              alt="Thumbnail preview"
+                              className="w-48 h-48 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setThumbnailPreview("");
+                                editSetValue(
+                                  "thumbnailUrl",
+                                  "" as unknown as File
+                                );
+                              }}
+                              className="absolute top-2 right-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full w-7 h-7 flex items-center justify-center shadow-lg transition-colors"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {errors.thumbnail && (
+                        <div className="flex items-center gap-1.5 text-destructive text-sm">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>{errors.thumbnail.message}</span>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5" />
+                        Recommended: 400x400px, JPG or PNG format
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Footer */}
-                <DialogFooter className="flex justify-end gap-3 pt-4 border-t border-gray-700 mt-4">
+                <DialogFooter className="pt-6 border-t border-border gap-3">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleClose}
-                    className="bg-gray-700 hover:bg-gray-600 text-white border-none"
+                    className="min-w-[120px] border-input hover:bg-accent transition-colors"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
+                    className="min-w-[120px] bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white transition-colors"
                   >
-                    <Edit className="w-4 h-4 mr-2" /> Save Changes
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Save Changes
+                    </span>
                   </Button>
                 </DialogFooter>
               </form>
