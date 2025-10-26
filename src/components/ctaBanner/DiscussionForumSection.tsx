@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const DiscussionForumSection: React.FC = () => {
   return (
-    <section className="bg-gray-100 py-8 sm:py-10 md:py-12 w-full items-center px-4 sm:px-6 md:px-10 lg:px-20 flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-12 mx-auto">
+    <section className="bg-background transition-colors py-8 sm:py-10 md:py-12 w-full items-center px-4 sm:px-6 md:px-10 lg:px-20 flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-12 mx-auto">
       {/* Left side: Image container with blue blob */}
       <div className="relative w-48 h-[320px] sm:w-56 sm:h-[380px] md:w-64 md:h-[460px] flex-shrink-0">
         {/* Blue blob background with blur */}
@@ -25,17 +25,17 @@ const DiscussionForumSection: React.FC = () => {
       {/* Right side: Text and stats */}
       <div className="max-w-xl flex flex-col gap-4 sm:gap-5 md:gap-6 text-center md:text-left">
         {/* Label */}
-        <p className="text-xs sm:text-sm text-blue-600 font-semibold uppercase tracking-widest">
+        <p className="text-xs sm:text-sm text-secondary font-semibold uppercase tracking-widest transition-colors">
           DOCUHUB DISCUSSION FORUM
         </p>
 
         {/* Main heading */}
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground leading-tight transition-colors">
           Connect, Share, and Learn Together
         </h2>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm sm:text-base md:text-md leading-relaxed">
+        <p className="text-muted-foreground text-sm sm:text-base md:text-md leading-relaxed transition-colors">
           Join DocuHub&apos;s Discussion Forum—a vibrant space for exchanging
           ideas, sharing research insights, and supporting fellow learners.
           Collaborate with a global academic community and expand your knowledge
@@ -45,29 +45,29 @@ const DiscussionForumSection: React.FC = () => {
         {/* Stats container */}
         <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 md:mt-4">
           {/* Stat Item */}
-          <div className="bg-white rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-20 sm:w-22 md:w-24">
-            <span className="text-blue-600 font-bold text-2xl sm:text-2xl md:text-3xl">
+          <div className="bg-card rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-20 sm:w-22 md:w-24 transition-colors border border-border">
+            <span className="text-secondary font-bold text-2xl sm:text-2xl md:text-3xl transition-colors">
               12k
             </span>
-            <span className="font-semibold text-gray-800 mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm">
+            <span className="font-semibold text-foreground mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm transition-colors">
               Members
             </span>
           </div>
 
-          <div className="bg-white rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-24 sm:w-26 md:w-28">
-            <span className="text-blue-600 font-bold text-2xl sm:text-2xl md:text-3xl">
+          <div className="bg-card rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-24 sm:w-26 md:w-28 transition-colors border border-border">
+            <span className="text-secondary font-bold text-2xl sm:text-2xl md:text-3xl transition-colors">
               98+
             </span>
-            <span className="font-semibold text-gray-800 mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm text-center">
+            <span className="font-semibold text-foreground mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm text-center transition-colors">
               Discussions
             </span>
           </div>
 
-          <div className="bg-white rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-20 sm:w-22 md:w-28">
-            <span className="text-blue-600 font-bold text-2xl sm:text-2xl md:text-3xl">
+          <div className="bg-card rounded-xl px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 flex flex-col items-center shadow-md w-20 sm:w-22 md:w-28 transition-colors border border-border">
+            <span className="text-secondary font-bold text-2xl sm:text-2xl md:text-3xl transition-colors">
               10+
             </span>
-            <span className="font-semibold text-gray-800 mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm">
+            <span className="font-semibold text-foreground mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm transition-colors">
               Advisers
             </span>
           </div>

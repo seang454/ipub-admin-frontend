@@ -95,9 +95,9 @@ const WorksCardGrid: React.FC = () => {
   ] as const;
 
   return (
-    <section className="min-h-screen items-center justify-center bg-background flex flex-col items-center justify-start p-3 sm:p-4 md:p-6 mt-12 sm:mt-16 md:mt-20">
+    <section className="min-h-screen bg-muted/60 transition-colors flex flex-col items-center justify-start p-3 sm:p-4 md:p-6 mt-12 sm:mt-16 md:mt-20">
       {/* Top Section: User Icons */}
-      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12 sm:mb-16 md:mb-20">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-foreground mb-12 sm:mb-16 md:mb-20">
         {t("how_it_works")}
       </h2>
       <div className="flex flex-wrap justify-center gap-6 sm:gap-8 md:gap-10">
@@ -110,15 +110,15 @@ const WorksCardGrid: React.FC = () => {
             }`}
           >
             <div
-              className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 flex items-center justify-center text-2xl sm:text-2xl md:text-3xl mb-2 ${
+              className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full border-2 flex items-center justify-center text-2xl sm:text-2xl md:text-3xl mb-2 transition-colors ${
                 selectedUser === user.type
                   ? "border-secondary text-secondary"
-                  : "border-text-dark text-text-dark"
+                  : "border-muted-foreground text-muted-foreground"
               }`}
             >
               {user.icon}
             </div>
-            <span className="text-gray-700 font-medium text-sm sm:text-base text-center">
+            <span className="text-foreground font-medium text-sm sm:text-base text-center transition-colors">
               {t(user.type)}
             </span>
           </div>

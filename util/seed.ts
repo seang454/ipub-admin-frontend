@@ -127,7 +127,6 @@ async function seed() {
     console.log("✅ Seeded all tables with 3 rows each.");
     process.exit(0);
   } catch (err) {
-    console.error(err);
     process.exit(1);
   }
 }

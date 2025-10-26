@@ -47,6 +47,7 @@ interface PendingStudent {
   yearsOfStudy: number;
   isStudent: boolean;
   userUuid: string;
+  createdAt?: string;
 }
 
 interface NotificationMessage {
@@ -108,7 +109,7 @@ export default function NotificationPage() {
         );
         return student || null;
       }
-    } catch (error) {
+    } catch {
       toast.error("Error fetching student data", {
         position: "top-right",
         autoClose: 2000,
@@ -288,7 +289,7 @@ export default function NotificationPage() {
           refetch();
         });
       },
-      onStompError: (frame) => {
+      onStompError: () => {
         toast.error("Connection error. Please refresh the page.", {
           position: "top-right",
           autoClose: 3000,
@@ -311,19 +312,36 @@ export default function NotificationPage() {
   useEffect(() => {
     if (!getPendingStudents?.content) return;
 
-    const studentNotifications: Notification[] = getPendingStudents.content.map(
+    // Sort pending students by createdAt (newest first)
+    const sortedPendingStudents = [...getPendingStudents.content].sort(
+      (a: PendingStudent, b: PendingStudent) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; // Descending order (newest first)
+      }
+    );
+
+    console.log("Original pending students:", getPendingStudents.content);
+    console.log(
+      "Sorted pending students (by createdAt):",
+      sortedPendingStudents
+    );
+
+    const studentNotifications: Notification[] = sortedPendingStudents.map(
       (student: PendingStudent) => ({
         id: student.uuid,
         type: "warning" as NotificationType,
         title: "Pending Student Verification",
         message: `${student.university} - ${student.major} (Year ${student.yearsOfStudy})`,
-        time: "Pending",
+        time: student.createdAt
+          ? formatTimestamp(student.createdAt)
+          : "Pending",
         read: false,
         category: "student-verification",
         senderId: student.userUuid,
         data: student,
         isLoading: false,
-        timestamp: new Date(0).toISOString(), // Old timestamp for initial pending students
+        timestamp: student.createdAt || new Date(0).toISOString(),
       })
     );
 
@@ -332,8 +350,13 @@ export default function NotificationPage() {
       const newNotifs = studentNotifications.filter(
         (n) => !existingIds.has(n.id)
       );
-      // Add initial notifications at the end, so real-time ones stay on top
-      return [...prev, ...newNotifs];
+      // Merge and sort all notifications by timestamp (newest first)
+      const merged = [...prev, ...newNotifs];
+      return merged.sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA; // Descending order (newest first)
+      });
     });
   }, [getPendingStudents]);
 
@@ -407,8 +430,8 @@ export default function NotificationPage() {
         theme: "colored",
       });
       refetch();
-    } catch (error) {
-      toast.error("Erro approved student!", {
+    } catch {
+      toast.error("Error approving student!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",

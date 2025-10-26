@@ -51,6 +51,7 @@ import {
   Download,
   AlertTriangle,
   Edit,
+  Loader2,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -82,6 +83,7 @@ import {
   useCreatePaperMutation,
   useDeletePaperMutation,
   useUpdateAdminPaperMutation,
+  useGetPaperQuery,
 } from "@/lib/api/paperAdminSlice";
 import PDFViewer from "../pdf/pdfView";
 
@@ -157,7 +159,6 @@ export default function PaperManagement({
 }) {
   console.log("allPapers :>> ", allPapers);
   // const { theme, toggleTheme } = useContext(ThemeContext)
-  const [papers, setPapers] = useState<Paper[]>(allPapers.papers.content || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [statusFilter, setStatusFilter] =
@@ -173,6 +174,18 @@ export default function PaperManagement({
 
   const { data: session } = useSession();
   const token = session?.accessToken as string | undefined;
+
+  // Use RTK Query to fetch papers with auto-refetch on mutations
+  const { data: fetchedPapers } = useGetPaperQuery(
+    { token: token ?? "", page: 0, size: 100 },
+    { skip: !token }
+  );
+
+  // Use fetched papers if available, fallback to prop
+  const papers = useMemo(
+    () => fetchedPapers?.papers.content || allPapers.papers.content || [],
+    [fetchedPapers, allPapers.papers.content]
+  );
 
   const { data: categoriesData } = useGetAllCategoriesQuery(
     { page: 0, size: 50, token: token ?? "" },
@@ -255,7 +268,7 @@ export default function PaperManagement({
 
   // Filtered papers
   const filteredPapers = useMemo(() => {
-    return allPapers.papers.content?.filter((paper) => {
+    return papers?.filter((paper) => {
       const matchesSearch =
         paper.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
         paper.abstractText
@@ -265,7 +278,7 @@ export default function PaperManagement({
         statusFilter === "All" || paper.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [allPapers.papers.content, debouncedSearchTerm, statusFilter]);
+  }, [papers, debouncedSearchTerm, statusFilter]);
 
   // Column definitions
   const columns = useMemo<ColumnDef<Paper, unknown>[]>(
@@ -274,8 +287,8 @@ export default function PaperManagement({
         accessorKey: "title",
         header: "Paper",
         cell: (info) => (
-          <div className="flex items-center gap-3 min-w-0">
-            <Avatar className="h-10 w-10 rounded-lg border-2 border-blue-100 dark:border-blue-800">
+          <div className="flex items-center gap-3 min-w-0 max-w-[300px] sm:max-w-md lg:max-w-lg">
+            <Avatar className="h-10 w-10 rounded-lg border-2 border-blue-100 dark:border-blue-800 flex-shrink-0">
               <AvatarImage
                 src={info.row.original.thumbnailUrl || "/placeholder.svg"}
                 alt={`Thumbnail for ${info.getValue<string>()}`}
@@ -285,7 +298,7 @@ export default function PaperManagement({
                 <FileText className="h-4 w-4" />
               </AvatarFallback>
             </Avatar>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <p className="font-semibold text-foreground truncate text-sm">
                 {info.getValue<string>()}
               </p>
@@ -410,6 +423,10 @@ export default function PaperManagement({
                     thumbnailUrl: row.original.thumbnailUrl,
                     category: row.original.categoryNames,
                   });
+                  // Pre-populate form fields
+                  editSetValue("title", row.original.title);
+                  editSetValue("abstractText", row.original.abstractText);
+                  // Note: fileUrl and thumbnailUrl will be set when user uploads new files
                   setEditOpen(true);
                 }}
                 className="cursor-pointer  hover:bg-accent text-xs text-foreground"
@@ -429,6 +446,7 @@ export default function PaperManagement({
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedPaper(row.original);
+                  setCurrentUuid(row.original.uuid);
                   setDeleteOpen(true);
                 }}
                 className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900 text-xs"
@@ -441,12 +459,17 @@ export default function PaperManagement({
         ),
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
-  const [createPaper] = useCreatePaperMutation();
-  const [updatePaper] = useUpdateAdminPaperMutation();
-  const [uploadMedia] = useCreateMediaMutation();
-  const [deletePaper] = useDeletePaperMutation();
+  const [createPaper, { isLoading: creating }] = useCreatePaperMutation();
+  const [updatePaper, { isLoading: updating }] = useUpdateAdminPaperMutation();
+  const [uploadMedia, { isLoading: uploading }] = useCreateMediaMutation();
+  const [deletePaper, { isLoading: deleting }] = useDeletePaperMutation();
+
+  // Track overall loading state for add/edit paper (includes file uploads + creation/update)
+  const [isAddingPaper, setIsAddingPaper] = useState(false);
+  const [isEditingPaper, setIsEditingPaper] = useState(false);
 
   const {
     register,
@@ -459,6 +482,7 @@ export default function PaperManagement({
 
   const handleAddPaper = async (data: PaperFormData) => {
     console.log("data in add paper :>> ", data);
+    setIsAddingPaper(true);
     try {
       // Upload file
       const formData = new FormData();
@@ -485,26 +509,28 @@ export default function PaperManagement({
         categoryNames: convertedCategoryNames,
       };
       console.log("payload :>> ", payload);
-      const response = await createPaper({
+      await createPaper({
         token: token ?? "",
         paperData: payload,
       }).unwrap();
-      console.log("response :>> ", response);
       console.log("Final payload:", payload);
 
-      // TODO: call your paperApi.createPaper mutation here
       toast.success("Paper inserted successfully!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
       setAddOpen(false);
+      setFilePreview("");
+      setThumbnailPreview("");
     } catch (err) {
       toast.error("Failed to add paper", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
+    } finally {
+      setIsAddingPaper(false);
     }
   };
 
@@ -544,6 +570,7 @@ export default function PaperManagement({
     console.log("currentUuid :>> ", currentUuid);
     console.log("data :>> ", data.thumbnailUrl);
 
+    setIsEditingPaper(true);
     try {
       // Upload file
       const formData = new FormData();
@@ -572,30 +599,29 @@ export default function PaperManagement({
         category: convertedCategoryNames,
       };
 
-      const response = await updatePaper({
+      await updatePaper({
         token: token ?? "",
         paperUuid: currentUuid,
         paperData: payload,
       }).unwrap();
       console.log("Final payload in edit:", payload);
 
-      // TODO: call your paperApi.createPaper mutation here
       toast.success("Paper edited successfully!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
-      setAddOpen(false);
+      setFormErrors({});
+      setEditOpen(false);
     } catch (err) {
-      toast.error("Failed to add paper", {
+      toast.error("Failed to update paper", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
+    } finally {
+      setIsEditingPaper(false);
     }
-
-    setFormErrors({});
-    setEditOpen(false);
   };
 
   const handleClose = () => {
@@ -605,23 +631,22 @@ export default function PaperManagement({
 
   const handleDeletePaper = async () => {
     if (!selectedPaper) return;
-    setPapers(papers.filter((paper) => paper.uuid !== selectedPaper.uuid));
+
+    console.log("Deleting paper with UUID:", currentUuid);
 
     try {
-      // Upload file
-      const response = await deletePaper({
+      await deletePaper({
         token: token || "",
         uuid: currentUuid,
-      });
+      }).unwrap();
       setDeleteOpen(false);
-      // TODO: call your paperApi.createPaper mutation here
       toast.success("Deleted paper successfully!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
     } catch (err) {
-      toast.error("Failed to add paper", {
+      toast.error("Failed to delete paper", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
@@ -710,9 +735,9 @@ export default function PaperManagement({
   };
 
   return (
-    <div className="border-0">
+    <div className="w-full max-w-full overflow-x-hidden">
       <ToastContainer />
-      <div className=" mx-auto p-4">
+      <div className="w-full overflow-x-hidden">
         <div className="bg-card rounded-xl shadow-sm border-0 overflow-hidden">
           <div className="bg-card p-6">
             <div className="flex items-center gap-3 mb-6">
@@ -729,18 +754,18 @@ export default function PaperManagement({
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="relative flex-1 max-w-md w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="relative flex-1 w-full sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search papers by title or abstract..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-input focus:border-ring focus:ring-ring bg-background text-foreground shadow-sm transition-all"
+                  className="pl-10 w-full border-input focus:border-ring focus:ring-ring bg-background text-foreground shadow-sm transition-all"
                   aria-label="Search papers"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -1011,11 +1036,19 @@ export default function PaperManagement({
                         <Button
                           type="submit"
                           className="min-w-[120px] bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-colors"
+                          disabled={isAddingPaper}
                         >
-                          <span className="flex items-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            Add Paper
-                          </span>
+                          {isAddingPaper ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Adding...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <Plus className="w-4 h-4" />
+                              Add Paper
+                            </span>
+                          )}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -1026,7 +1059,7 @@ export default function PaperManagement({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[700px] lg:min-w-full">
               <thead className="bg-muted/50 border-b border-border">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
@@ -1034,7 +1067,7 @@ export default function PaperManagement({
                       <th
                         key={header.id}
                         colSpan={header.colSpan}
-                        className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted/80 transition-colors"
+                        className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:bg-muted/80 transition-colors"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         <div className="flex items-center gap-2">
@@ -1066,7 +1099,7 @@ export default function PaperManagement({
                     }`}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                      <td key={cell.id} className="px-4 lg:px-6 py-4">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -1079,14 +1112,14 @@ export default function PaperManagement({
             </table>
           </div>
 
-          <div className="bg-muted/30 border-t border-border px-6 py-4 sm:flex flex-col items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+          <div className="bg-muted/30 border-t border-border px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto justify-center">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="border-border hover:bg-muted hover:text-muted-foreground"
+                className="border-border hover:bg-muted hover:text-muted-foreground flex-shrink-0"
                 aria-label="Go to first page"
               >
                 First
@@ -1096,7 +1129,7 @@ export default function PaperManagement({
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="border-border hover:bg-muted hover:text-muted-foreground"
+                className="border-border hover:bg-muted hover:text-muted-foreground flex-shrink-0"
                 aria-label="Go to previous page"
               >
                 Previous
@@ -1106,7 +1139,7 @@ export default function PaperManagement({
                 size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="border-border hover:bg-muted hover:text-muted-foreground"
+                className="border-border hover:bg-muted hover:text-muted-foreground flex-shrink-0"
                 aria-label="Go to next page"
               >
                 Next
@@ -1116,14 +1149,14 @@ export default function PaperManagement({
                 size="sm"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="border-border hover:bg-muted hover:text-muted-foreground"
+                className="border-border hover:bg-muted hover:text-muted-foreground flex-shrink-0"
                 aria-label="Go to last page"
               >
                 Last
               </Button>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <span className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left whitespace-nowrap">
                 Showing{" "}
                 {table.getState().pagination.pageIndex *
                   table.getState().pagination.pageSize +
@@ -1140,7 +1173,7 @@ export default function PaperManagement({
                 value={table.getState().pagination.pageSize.toString()}
                 onValueChange={(value) => table.setPageSize(Number(value))}
               >
-                <SelectTrigger className="w-32 h-8 border-border bg-card text-foreground">
+                <SelectTrigger className="w-full sm:w-32 h-8 border-border bg-card text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -1600,11 +1633,19 @@ export default function PaperManagement({
                   <Button
                     type="submit"
                     className="min-w-[120px] bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white transition-colors"
+                    disabled={isEditingPaper}
                   >
-                    <span className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Save Changes
-                    </span>
+                    {isEditingPaper ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Save Changes
+                      </span>
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -1705,10 +1746,20 @@ export default function PaperManagement({
                 </Button>
                 <Button
                   onClick={handleDeletePaper}
+                  disabled={deleting}
                   className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white shadow-lg flex-1 sm:flex-none"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Paper
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Paper
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>

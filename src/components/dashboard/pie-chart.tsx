@@ -90,6 +90,7 @@ export function DashboardPieChart({
 }) {
   const id = "pie-interactive";
   const [mounted, setMounted] = React.useState(false);
+  console.log("papers", papers);
 
   // Ensure we're mounted to avoid hydration mismatch
   React.useEffect(() => {
@@ -132,17 +133,26 @@ export function DashboardPieChart({
     const year = new Date().getFullYear();
     const data = [];
 
+    // Sort papers by createdAt (newest first)
+    const sortedPapers = [...papers.papers.content].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    });
+
+    console.log("papers.papers.content (sorted by createdAt)", sortedPapers);
+
     for (let i = 0; i < 12; i += 2) {
       if (!months[i + 1]) break;
       const monthLabel = `${months[i]}-${months[i + 1]}`;
       const month1Str = (i + 1).toString().padStart(2, "0");
       const month2Str = (i + 2).toString().padStart(2, "0");
 
-      const papersInMonth1 = papers.papers.content.filter((p) =>
-        p.publishedAt?.startsWith(`${year}-${month1Str}-`)
+      const papersInMonth1 = sortedPapers.filter((p) =>
+        p.createdAt?.startsWith(`${year}-${month1Str}-`)
       );
-      const papersInMonth2 = papers.papers.content.filter((p) =>
-        p.publishedAt?.startsWith(`${year}-${month2Str}-`)
+      const papersInMonth2 = sortedPapers.filter((p) =>
+        p.createdAt?.startsWith(`${year}-${month2Str}-`)
       );
 
       const totalPapers = papersInMonth1.length + papersInMonth2.length;
@@ -157,12 +167,26 @@ export function DashboardPieChart({
         month2: months[i + 1],
       });
     }
+
+    console.log("Pie Chart - Sorted Papers data:", sortedPapers);
+    console.log("Pie Chart - Desktop data:", data);
+    console.log("Pie Chart - Year:", year);
+
     return data;
-  }, [papers, getMonthColor, months]);
+  }, [papers?.papers.content, getMonthColor, months]);
+  console.log("desktopData", desktopData);
 
   const [activeMonth, setActiveMonth] = React.useState(
-    desktopData[0]?.month ?? ""
+    desktopData[0]?.month ?? "January-February"
   );
+
+  // Update activeMonth when desktopData changes
+  React.useEffect(() => {
+    if (desktopData.length > 0 && !activeMonth) {
+      setActiveMonth(desktopData[0].month);
+    }
+  }, [desktopData, activeMonth]);
+
   const activeIndex = React.useMemo(
     () => desktopData.findIndex((item) => item.month === activeMonth),
     [activeMonth, desktopData]
@@ -181,6 +205,33 @@ export function DashboardPieChart({
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[320px]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if there's any data to display
+  const hasData =
+    desktopData.length > 0 && desktopData.some((item) => item.desktop > 0);
+
+  if (!hasData) {
+    return (
+      <Card className="relative overflow-hidden border border-border shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold text-foreground">
+            Interactive Pie Chart - Total Papers
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            January - December {new Date().getFullYear()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center h-[320px] text-center">
+          <div className="text-muted-foreground text-lg mb-2">
+            No Data Available
+          </div>
+          <p className="text-sm text-muted-foreground">
+            No papers have been created in {new Date().getFullYear()} yet.
+          </p>
         </CardContent>
       </Card>
     );
@@ -293,7 +344,7 @@ export function DashboardPieChart({
               nameKey="month"
               innerRadius={70}
               strokeWidth={2}
-              activeIndex={activeIndex}
+              activeIndex={activeIndex >= 0 ? activeIndex : 0}
               activeShape={({
                 outerRadius = 0,
                 ...props
@@ -316,6 +367,7 @@ export function DashboardPieChart({
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    const validIndex = activeIndex >= 0 ? activeIndex : 0;
                     return (
                       <text
                         x={viewBox.cx}
@@ -328,9 +380,8 @@ export function DashboardPieChart({
                           y={viewBox.cy}
                           className="fill-foreground text-4xl font-bold"
                         >
-                          {desktopData[
-                            activeIndex
-                          ]?.desktop?.toLocaleString() || 0}
+                          {desktopData[validIndex]?.desktop?.toLocaleString() ||
+                            0}
                         </tspan>
                         <tspan
                           x={viewBox.cx}

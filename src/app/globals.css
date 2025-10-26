@@ -60,7 +60,7 @@
 }
 
 .dark {
-  --button: var(--primary);
+  --button: var(--secondary);
   --background: var(--background-dark);
   --foreground: var(--text-white);
   --background-root: var(--primary);

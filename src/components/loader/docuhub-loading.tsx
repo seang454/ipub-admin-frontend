@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
 const DocuhubLoader = () => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[9999]">
       <div className="flex flex-col items-center gap-6">
         <div className="relative h-24 w-24">
           <svg className="animate-spin" viewBox="0 0 50 50">
-            <circle className="stroke-accent/20" cx="25" cy="25" r="20" fill="none" strokeWidth="4" />
+            <circle
+              className="stroke-accent/20"
+              cx="25"
+              cy="25"
+              r="20"
+              fill="none"
+              strokeWidth="4"
+            />
             <circle
               className="stroke-accent animate-dash"
               cx="25"
@@ -52,7 +59,8 @@ const DocuhubLoader = () => {
         }
 
         @keyframes gradient {
-          0%, 100% {
+          0%,
+          100% {
             background-position: 0% 50%;
           }
           50% {
@@ -71,7 +79,7 @@ const DocuhubLoader = () => {
         }
       `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default DocuhubLoader
+export default DocuhubLoader;

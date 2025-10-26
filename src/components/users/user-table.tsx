@@ -50,6 +50,7 @@ import {
   Trash2,
   UserCog,
   Eye,
+  Loader2,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -105,10 +106,8 @@ export interface UpdateUserData {
 }
 
 export function UserTable({ allUsers }: { allUsers: User[] }) {
-  const [users, setUsers] = useState<User[]>([]);
-  useEffect(() => {
-    setUsers(allUsers);
-  }, [allUsers]);
+  // Use prop directly as source of truth
+  const users = allUsers;
   console.log("users :>> ", users);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -371,7 +370,9 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
     []
   );
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "createDate", desc: true }, // Sort by newest first
+  ]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [token, setToken] = useState<string>("");
 
@@ -439,7 +440,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
       });
 
       console.log("✅ User created successfully:", response);
-    } catch (error) {
+    } catch {
       toast.error("Error creating user!", {
         position: "top-left",
         autoClose: 3000,
@@ -543,24 +544,52 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         theme: "colored",
       });
       setEditOpen(false);
-    } catch (error) {
-      toast.error("Error updating user!", {
-        position: "top-left",
-        autoClose: 3000,
-        theme: "colored",
-      });
+    } catch (error: unknown) {
+      // Check if it's a duplicate contact number error
+      const errorData = error as {
+        data?: { detail?: string };
+        message?: string;
+      };
+      const errorMessage = errorData?.data?.detail || errorData?.message || "";
+      const isDuplicateContactNumber =
+        errorMessage.includes("duplicate key") &&
+        errorMessage.includes("contact_number");
+
+      if (isDuplicateContactNumber) {
+        // Extract the contact number from the error message if possible
+        const contactMatch = errorMessage.match(
+          /\(contact_number\)=\(([^)]+)\)/
+        );
+        const contactNumber = contactMatch
+          ? contactMatch[1]
+          : updateUserPayload.contactNumber;
+
+        toast.error(
+          `Contact number "${contactNumber}" is already in use by another user. Please use a different contact number.`,
+          {
+            position: "top-left",
+            autoClose: 5000,
+            theme: "colored",
+          }
+        );
+      } else {
+        toast.error("Error updating user! Please try again.", {
+          position: "top-left",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      }
     }
   };
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     console.log("selectedUser :>> ", selectedUser);
-    setUsers(users.filter((u) => u.uuid !== selectedUser.uuid));
 
     try {
       await deletedUser({ uuid: selectedUser.uuid, token: token }); // unwrap() throws if error
 
-      toast.success("User updated successfully!", {
+      toast.success("User deleted successfully!", {
         position: "top-left",
         autoClose: 3000,
         hideProgressBar: false,
@@ -570,8 +599,8 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
         theme: "colored",
       });
       setDeleteOpen(false);
-    } catch (error) {
-      toast.error("Error updating user!", {
+    } catch {
+      toast.error("Error deleting user!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
@@ -584,17 +613,11 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
     value: boolean
   ) => {
     if (!selectedUser) return;
-    setUsers(
-      users.map((u) =>
-        u.uuid === selectedUser.uuid
-          ? {
-              ...u,
-              [roleType]: value,
-              updateDate: new Date().toISOString().split("T")[0],
-            }
-          : u
-      )
-    );
+    // Note: This function updates local UI state optimistically
+    // In a full implementation, this should call an API mutation
+    // For now, we just close the dialog
+    // TODO: Implement role update API mutation
+    setPromoteOpen(false);
   };
 
   //checking with session
@@ -871,7 +894,7 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                     >
                       {isLoading ? (
                         <>
-                          <span className="animate-spin mr-2">⏳</span>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Adding...
                         </>
                       ) : (
@@ -1347,9 +1370,19 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
                 <Button
                   type="submit"
                   className="min-w-[120px] h-11 bg-secondary hover:bg-secondary/90"
+                  disabled={updateIsLoading}
                 >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Save Changes
+                  {updateIsLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -1381,14 +1414,26 @@ export function UserTable({ allUsers }: { allUsers: User[] }) {
               variant="outline"
               onClick={() => setDeleteOpen(false)}
               className="border-border hover:bg-muted"
+              disabled={deleteIsLoading}
             >
               Cancel
             </Button>
             <Button
               onClick={handleDeleteUser}
               className="hover:bg-destructive/90 bg-red-500"
+              disabled={deleteIsLoading}
             >
-              Delete
+              {deleteIsLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

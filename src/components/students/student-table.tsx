@@ -51,6 +51,7 @@ import {
   Info,
   MessageCircle,
   FileText,
+  Loader2,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -393,6 +394,32 @@ export function StudentTable({
                     telegramId: row.original.telegramId || "",
                     isActive: row.original.isActive,
                   });
+
+                  // Pre-populate form fields using react-hook-form setValue
+                  // Check if student has additional student-specific data
+                  const studentData = row.original as User & {
+                    studentCardUrl?: string;
+                    university?: string;
+                    major?: string;
+                    yearsOfStudy?: number;
+                  };
+                  if (studentData.studentCardUrl) {
+                    editSetValue("studentCardUrl", studentData.studentCardUrl);
+                    setUploadedImage(studentData.studentCardUrl);
+                  }
+                  if (studentData.university) {
+                    editSetValue("university", studentData.university);
+                  }
+                  if (studentData.major) {
+                    editSetValue("major", studentData.major);
+                  }
+                  if (studentData.yearsOfStudy) {
+                    editSetValue(
+                      "yearsOfStudy",
+                      String(studentData.yearsOfStudy)
+                    );
+                  }
+
                   setEditOpen(true);
                 }}
               >
@@ -429,7 +456,9 @@ export function StudentTable({
     []
   );
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "createDate", desc: true }, // Sort by newest first
+  ]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   const table = useReactTable({
@@ -955,7 +984,7 @@ export function StudentTable({
                       >
                         {createIsLoading ? (
                           <span className="flex items-center gap-2">
-                            <span className="animate-spin">⏳</span>
+                            <Loader2 className="w-4 h-4 animate-spin" />
                             Adding...
                           </span>
                         ) : (
@@ -1451,8 +1480,8 @@ export function StudentTable({
           <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader className="space-y-3 pb-6 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-purple-500/10 dark:bg-purple-400/10">
-                  <Edit className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="p-2.5 rounded-lg bg-[#1951cc]/10 dark:bg-[#1951cc]/20">
+                  <Edit className="w-6 h-6 text-[#1951cc] dark:text-[#2563eb]" />
                 </div>
                 <div>
                   <DialogTitle className="text-2xl font-bold text-foreground">
@@ -1633,11 +1662,11 @@ export function StudentTable({
                 <Button
                   type="submit"
                   disabled={updateIsLoading}
-                  className="min-w-[120px] bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white transition-colors"
+                  className="min-w-[120px] bg-[#1951cc] hover:bg-[#1648b3] dark:bg-[#2563eb] dark:hover:bg-[#1d4ed8] text-white transition-colors"
                 >
                   {updateIsLoading ? (
                     <span className="flex items-center gap-2">
-                      <span className="animate-spin">⏳</span>
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Saving...
                     </span>
                   ) : (
@@ -1707,14 +1736,26 @@ export function StudentTable({
                 variant="outline"
                 onClick={() => setDeleteOpen(false)}
                 className="border-slate-300"
+                disabled={deleteIsLoading}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteStudent}
                 className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleteIsLoading}
               >
-                Delete User
+                {deleteIsLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Delete User
+                  </span>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

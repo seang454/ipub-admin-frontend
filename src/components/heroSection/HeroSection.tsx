@@ -15,12 +15,12 @@ const HeroSection: FC = () => {
   };
 
   return (
-    <section className="min-h-[500px] sm:min-h-[600px] lg:min-h-[710px] bg-card px-4 sm:px-6 md:px-10 lg:px-16 py-6 sm:py-8 md:py-12 flex flex-col lg:flex-row items-center justify-between">
+    <section className="min-h-[500px] sm:min-h-[600px] lg:min-h-[710px] bg-muted/60 transition-colors px-4 sm:px-6 md:px-10 lg:px-16 py-6 sm:py-8 md:py-12 flex flex-col lg:flex-row items-center justify-between">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-20">
         <select
           onChange={(e) => changeLanguage(e.target.value)}
-          className="bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm md:text-base"
+          className="bg-secondary text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm md:text-base transition-colors"
           aria-label={t("select_language", { defaultValue: "Select Language" })}
         >
           <option value="en">

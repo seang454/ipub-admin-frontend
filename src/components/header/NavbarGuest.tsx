@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Moon, Sun, LayoutDashboard } from "lucide-react";
+import { Moon, Sun, LayoutDashboard, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { toast } from "react-toastify";
+import DocuhubLoader from "../loader/docuhub-loading";
 
 export default function NavbarGuest() {
   const pathname = usePathname();
@@ -20,6 +21,8 @@ export default function NavbarGuest() {
   const [mounted, setMounted] = useState(false);
   const [currentLang, setCurrentLang] = useState<"en" | "kh">("en");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -45,114 +48,58 @@ export default function NavbarGuest() {
     }
   };
 
+  const handleSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      await signIn("keycloak");
+    } catch {
+      toast.error("Failed to sign in", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch {
+      toast.error("Failed to sign out", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   if (!mounted) return null;
 
   const navLinks = [{ path: "/", name: t("home") }];
 
   return (
-    <nav className="fixed top-14 left-0 w-full z-40 border-b bg-background border-border py-2 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
-        <Link href="/" className="inline-block">
-          <Image
-            src="/logo/Docohub.png"
-            alt="DocuHub Logo"
-            width={120}
-            height={40}
-            className="transition-all"
-            priority
-          />
-        </Link>
-
-        {/* Desktop nav */}
-        <div className="hidden md:flex space-x-6">
-          {navLinks.map((link, idx) => (
-            <Link
-              key={idx}
-              href={link.path}
-              className={`transition ${
-                pathname === link.path
-                  ? "text-accent font-semibold"
-                  : "text-foreground hover:text-accent"
-              }`}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </div>
-
-        {/* Desktop actions */}
-        <div className="hidden md:flex items-center space-x-4">
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-muted transition"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5 text-secondary" />
-            ) : (
-              <Moon className="h-5 w-5 text-secondary" />
-            )}
-          </button>
-
-          <div
-            className="flex items-center space-x-2 cursor-pointer"
-            onClick={toggleLanguage}
-          >
+    <>
+      {(isSigningIn || isSigningOut) && <DocuhubLoader />}
+      <nav className="fixed top-14 left-0 w-full z-40 border-b bg-background border-border py-2 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+          <Link href="/" className="inline-block">
             <Image
-              src={currentLang === "en" ? "/flag-UK.svg" : "/flag-Cam.svg"}
-              alt="flag"
-              width={45}
-              height={25}
-              className="rounded-[8px]"
+              src="/logo/Docohub.png"
+              alt="DocuHub Logo"
+              width={120}
+              height={40}
+              className="transition-all"
+              priority
             />
-            <span className="text-foreground font-medium">
-              {currentLang.toUpperCase()}
-            </span>
-          </div>
-          {!data?.accessToken ? (
-            <Button
-              asChild
-              className="bg-accent text-white hover:bg-accent/90 font-semibold"
-            >
-              <button onClick={() => signIn("keycloak")}>{t("signup")}</button>
-            </Button>
-          ) : (
-            <>
-              <Button
-                asChild
-                variant="outline"
-                className="border-accent text-accent hover:bg-accent/10 font-semibold"
-              >
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  Go to Dashboard
-                </Link>
-              </Button>
-              <Button
-                asChild
-                className="bg-accent text-white hover:bg-accent/90 font-semibold"
-              >
-                <button onClick={() => signOut()}>{t("Sign Out")}</button>
-              </Button>
-            </>
-          )}
-        </div>
+          </Link>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2 rounded-lg border border-border text-foreground"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Toggle navigation"
-        >
-          <span className="block w-5 h-0.5 bg-foreground mb-1" />
-          <span className="block w-5 h-0.5 bg-foreground mb-1" />
-          <span className="block w-5 h-0.5 bg-foreground" />
-        </button>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <div className="px-4 py-3 flex flex-col gap-3">
+          {/* Desktop nav */}
+          <div className="hidden md:flex space-x-6">
             {navLinks.map((link, idx) => (
               <Link
                 key={idx}
@@ -162,76 +109,197 @@ export default function NavbarGuest() {
                     ? "text-accent font-semibold"
                     : "text-foreground hover:text-accent"
                 }`}
-                onClick={() => setMobileOpen(false)}
               >
                 {link.name}
               </Link>
             ))}
-            <div className="flex items-center justify-between">
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-full hover:bg-muted transition"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5 text-secondary" />
-                ) : (
-                  <Moon className="h-5 w-5 text-secondary" />
-                )}
-              </button>
-              <div
-                className="flex items-center space-x-2 cursor-pointer"
-                onClick={toggleLanguage}
-              >
-                <Image
-                  src={currentLang === "en" ? "/flag-UK.svg" : "/flag-Cam.svg"}
-                  alt="flag"
-                  width={32}
-                  height={20}
-                  className="rounded-[6px]"
-                />
-                <span className="text-foreground font-medium">
-                  {currentLang.toUpperCase()}
-                </span>
-              </div>
-            </div>
-            {/* Mobile action buttons */}
-            <div className="flex flex-col gap-3 mt-3">
-              {data?.accessToken ? (
-                <>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="border-accent text-accent hover:bg-accent/10 font-semibold w-full"
-                  >
-                    <Link
-                      href="/dashboard"
-                      className="flex items-center gap-2 justify-center"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Go to Dashboard
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    className="bg-accent text-white hover:bg-accent/90 font-semibold w-full"
-                  >
-                    <button onClick={() => signOut()}>{t("Sign Out")}</button>
-                  </Button>
-                </>
+          </div>
+
+          {/* Desktop actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full hover:bg-muted transition"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 text-secondary" />
               ) : (
+                <Moon className="h-5 w-5 text-secondary" />
+              )}
+            </button>
+
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={toggleLanguage}
+            >
+              <Image
+                src={currentLang === "en" ? "/flag-UK.svg" : "/flag-Cam.svg"}
+                alt="flag"
+                width={45}
+                height={25}
+                className="rounded-[8px]"
+              />
+              <span className="text-foreground font-medium">
+                {currentLang.toUpperCase()}
+              </span>
+            </div>
+            {!data?.accessToken ? (
+              <Button
+                onClick={handleSignIn}
+                disabled={isSigningIn}
+                className="bg-accent text-white hover:bg-accent/90 font-semibold"
+              >
+                {isSigningIn ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  t("signup")
+                )}
+              </Button>
+            ) : (
+              <>
                 <Button
                   asChild
-                  className="bg-accent text-white hover:bg-accent/90 font-semibold w-full"
+                  variant="outline"
+                  className="border-accent text-accent hover:bg-accent/10 font-semibold"
                 >
-                  <button onClick={() => signIn("keycloak")}>
-                    {t("signup")}
-                  </button>
+                  <Link href="/dashboard" className="flex items-center gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Go to Dashboard
+                  </Link>
                 </Button>
-              )}
+                <Button
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  className="bg-accent text-white hover:bg-accent/90 font-semibold"
+                >
+                  {isSigningOut ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing out...
+                    </>
+                  ) : (
+                    t("Sign Out")
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden p-2 rounded-lg border border-border text-foreground"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Toggle navigation"
+          >
+            <span className="block w-5 h-0.5 bg-foreground mb-1" />
+            <span className="block w-5 h-0.5 bg-foreground mb-1" />
+            <span className="block w-5 h-0.5 bg-foreground" />
+          </button>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-border bg-background">
+            <div className="px-4 py-3 flex flex-col gap-3">
+              {navLinks.map((link, idx) => (
+                <Link
+                  key={idx}
+                  href={link.path}
+                  className={`transition ${
+                    pathname === link.path
+                      ? "text-accent font-semibold"
+                      : "text-foreground hover:text-accent"
+                  }`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={toggleDarkMode}
+                  className="p-2 rounded-full hover:bg-muted transition"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-5 w-5 text-secondary" />
+                  ) : (
+                    <Moon className="h-5 w-5 text-secondary" />
+                  )}
+                </button>
+                <div
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={toggleLanguage}
+                >
+                  <Image
+                    src={
+                      currentLang === "en" ? "/flag-UK.svg" : "/flag-Cam.svg"
+                    }
+                    alt="flag"
+                    width={32}
+                    height={20}
+                    className="rounded-[6px]"
+                  />
+                  <span className="text-foreground font-medium">
+                    {currentLang.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              {/* Mobile action buttons */}
+              <div className="flex flex-col gap-3 mt-3">
+                {data?.accessToken ? (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-accent text-accent hover:bg-accent/10 font-semibold w-full"
+                    >
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2 justify-center"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Go to Dashboard
+                      </Link>
+                    </Button>
+                    <Button
+                      onClick={handleSignOut}
+                      disabled={isSigningOut}
+                      className="bg-accent text-white hover:bg-accent/90 font-semibold w-full"
+                    >
+                      {isSigningOut ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Signing out...
+                        </>
+                      ) : (
+                        t("Sign Out")
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={handleSignIn}
+                    disabled={isSigningIn}
+                    className="bg-accent text-white hover:bg-accent/90 font-semibold w-full"
+                  >
+                    {isSigningIn ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      t("signup")
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </nav>
+        )}
+      </nav>
+    </>
   );
 }

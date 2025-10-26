@@ -51,6 +51,7 @@ import {
   MapPin,
   MessageCircle,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import {
   type ColumnDef,
@@ -153,20 +154,21 @@ export function AdviserTable({
   // mutations (advisor API)
   const [createNewAdvisor, { isLoading: creating }] =
     useCreateNewAdvisorMutation();
-  const [updateAdvisor] = useUpdateAdvisorMutation();
-  const [deleteAdvisor] = useDeleteAdvisorMutation();
+  const [updateAdvisor, { isLoading: updating }] = useUpdateAdvisorMutation();
+  const [deleteAdvisor, { isLoading: deleting }] = useDeleteAdvisorMutation();
   // media upload mutation
   const [createMedia] = useCreateMediaMutation();
 
-  // keep local Advisor state for UI editing, but populate from fetched users when available
-  const [Advisor, setAdvisor] = useState<User[]>(advisers?.content || []);
-  // sync advisers from fetched users
+  // Use fetched advisors as source of truth, fallback to prop
+  const Advisor = fetchedAdvisors?.content || advisers?.content || [];
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Active" | "Inactive"
   >("All");
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "createDate", desc: true }, // Sort by newest first
+  ]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
@@ -400,6 +402,13 @@ export function AdviserTable({
                   const userWithFields = row.original as UserWithAdviserFields;
                   setSelectedStudent(row.original as unknown as User);
                   setCurrentId(row.original.uuid);
+
+                  const expYears = userWithFields.experienceYears ?? "";
+                  const linkedin = userWithFields.linkedinUrl ?? "";
+                  const officeVal = userWithFields.office ?? "";
+                  const socialLinksVal = userWithFields.socialLinks ?? "";
+                  const statusVal = row.original.isActive ?? false;
+
                   setEditFormData({
                     userName: row.original.userName,
                     gender: row.original.gender || "",
@@ -411,14 +420,12 @@ export function AdviserTable({
                       }`.trim(),
                     firstName: row.original.firstName ?? "",
                     lastName: row.original.lastName ?? "",
-                    status: row.original.isActive ?? false,
+                    status: statusVal,
                     // new fields: try to read from user object if present
-                    experienceYears: String(
-                      userWithFields.experienceYears ?? ""
-                    ),
-                    linkedinUrl: userWithFields.linkedinUrl ?? "",
-                    office: userWithFields.office ?? "",
-                    socialLinks: userWithFields.socialLinks ?? "",
+                    experienceYears: String(expYears),
+                    linkedinUrl: linkedin,
+                    office: officeVal,
+                    socialLinks: socialLinksVal,
                     imageFile: null,
                     imagePreview: userWithFields.imageUrl ?? "",
                     bio: row.original.bio || "",
@@ -430,6 +437,17 @@ export function AdviserTable({
                       ? "Adviser"
                       : row.original.role) as "Student" | "User" | "Adviser",
                   });
+
+                  // Pre-populate form fields using react-hook-form setValue
+                  setValue(
+                    "experienceYears",
+                    expYears ? String(expYears) : "0"
+                  );
+                  setValue("linkedinUrl", linkedin);
+                  setValue("office", officeVal);
+                  setValue("socialLinks", socialLinksVal);
+                  setValue("status", statusVal ? "ACTIVE" : "INACTIVE");
+
                   setEditOpen(true);
                 }}
               >
@@ -1320,8 +1338,8 @@ export function AdviserTable({
           <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader className="space-y-3 pb-6 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-indigo-500/10 dark:bg-indigo-400/10">
-                  <Edit className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                <div className="p-2.5 rounded-lg bg-[#1951cc]/10 dark:bg-[#1951cc]/20">
+                  <Edit className="w-6 h-6 text-[#1951cc] dark:text-[#2563eb]" />
                 </div>
                 <div>
                   <DialogTitle className="text-2xl font-bold text-foreground">
@@ -1375,13 +1393,6 @@ export function AdviserTable({
                     </Label>
                     <Input
                       {...register("office")}
-                      value={editFormData.office}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          office: e.target.value,
-                        })
-                      }
                       placeholder="e.g., Room 301, Building A"
                       className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
                     />
@@ -1460,13 +1471,6 @@ export function AdviserTable({
                     </Label>
                     <Input
                       {...register("socialLinks")}
-                      value={editFormData.socialLinks}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          socialLinks: e.target.value,
-                        })
-                      }
                       placeholder="https://twitter.com/username or other social media"
                       className="bg-background border-input text-foreground focus:border-ring focus:ring-ring transition-colors"
                     />
@@ -1496,12 +1500,20 @@ export function AdviserTable({
                 </Button>
                 <Button
                   type="submit"
-                  className="min-w-[120px] bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white transition-colors"
+                  className="min-w-[120px] bg-[#1951cc] hover:bg-[#1648b3] dark:bg-[#2563eb] dark:hover:bg-[#1d4ed8] text-white transition-colors"
+                  disabled={updating}
                 >
-                  <span className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    Save Changes
-                  </span>
+                  {updating ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Save Changes
+                    </span>
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -1556,14 +1568,26 @@ export function AdviserTable({
                 variant="outline"
                 onClick={() => setDeleteOpen(false)}
                 className="border-slate-300"
+                disabled={deleting}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteStudent}
                 className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleting}
               >
-                Delete Adviser
+                {deleting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Delete Adviser
+                  </span>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
