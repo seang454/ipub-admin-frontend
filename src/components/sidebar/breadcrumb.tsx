@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { ChevronRight, Home } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ChevronRight, Home } from "lucide-react";
 
 const data = {
   user: {
@@ -11,11 +11,11 @@ const data = {
     email: "admin@company.com",
     avatar: "/placeholder.svg?height=32&width=32",
   },
-}
+};
 
 export default function Breadcrumb() {
-  const pathname = usePathname()
-  const segments = pathname.split("/").filter(Boolean)
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
 
   return (
     <header className="flex items-center justify-between p-4 bg-card border-b border-border/50 backdrop-blur-sm sticky top-0 z-20">
@@ -34,9 +34,11 @@ export default function Breadcrumb() {
 
           {/* Dynamic breadcrumb segments */}
           {segments.map((segment, idx) => {
-            const href = "/" + segments.slice(0, idx + 1).join("/")
-            const isLast = idx === segments.length - 1
-            const displayName = segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ")
+            const href = "/" + segments.slice(0, idx + 1).join("/");
+            const isLast = idx === segments.length - 1;
+            const displayName =
+              segment.charAt(0).toUpperCase() +
+              segment.slice(1).replace(/-/g, " ");
 
             return (
               <div key={idx} className="flex items-center space-x-1">
@@ -52,7 +54,7 @@ export default function Breadcrumb() {
                   {displayName}
                 </Link>
               </div>
-            )
+            );
           })}
         </nav>
       </div>
@@ -68,5 +70,5 @@ export default function Breadcrumb() {
         </div>
       </div>
     </header>
-  )
+  );
 }
