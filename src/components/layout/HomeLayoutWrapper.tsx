@@ -6,12 +6,17 @@ import LayoutWraper from "./LayoutWrapper";
 import HomeWrapper from "../home/HomeWrapper";
 import NotificationPage from "@/app/(admin)/notification/page";
 import NotificationDetailPage from "@/app/(admin)/notification/[id]/page";
+import { useTokenRefresh } from "@/hooks/useTokenRefresh";
+
 export default function HomeLayoutWrapper({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const pathName = usePathname();
+
+  // Automatically refresh tokens before they expire
+  useTokenRefresh();
   const hiddenPaths = [
     "/dashboard",
     "/users",

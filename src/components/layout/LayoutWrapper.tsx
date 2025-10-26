@@ -15,11 +15,11 @@ const LayoutWraper = ({
   return pathname === "/login" || pathname === "/unauthorized" ? (
     children
   ) : (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-h-screen">
         <Breadcrumb />
-        <main>
+        <main className="flex-1 overflow-auto p-4">
           <ReduxProvider>{children}</ReduxProvider>
         </main>
       </SidebarInset>

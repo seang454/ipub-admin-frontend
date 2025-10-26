@@ -46,45 +46,25 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      collapsible="icon"
+      collapsible="offcanvas"
       {...props}
       className="
-        bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm
+        bg-card border-border shadow-lg backdrop-blur-sm
       "
     >
       {/* Header */}
-      <SidebarHeader>
-        <div
-          className="
-            flex items-center justify-between 
-            px-2 sm:px-3 md:px-4 
-            py-2 sm:py-3 md:py-4 
-            mx-1 sm:mx-2 
-            mt-1 sm:mt-2
-            bg-secondary
-            rounded-lg shadow-md
-          "
-        >
+      <SidebarHeader className="border-b border-border/50">
+        <div className="flex items-center justify-between px-4 py-4 bg-gradient-to-r from-secondary/10 to-secondary/5 rounded-lg mx-2 my-2">
           {/* Logo */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div
-              className="
-                flex 
-                h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 
-                items-center justify-center 
-                rounded-lg sm:rounded-xl 
-                bg-secondary
-                text-white shadow-lg
-                flex-shrink-0
-              "
-            >
-              <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-white shadow-lg">
+              <Shield className="h-5 w-5 text-white" />
             </div>
             <div className="grid flex-1 text-left leading-tight min-w-0">
-              <span className="truncate font-bold text-sm sm:text-base md:text-lg text-white">
+              <span className="truncate font-bold text-base text-foreground">
                 Admin Panel
               </span>
-              <span className="truncate text-xs sm:text-sm text-white/90">
+              <span className="truncate text-xs text-muted-foreground">
                 Management System
               </span>
             </div>
@@ -93,50 +73,25 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           {/* Theme Toggle Button */}
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="
-              p-1.5 sm:p-2 
-              rounded-md sm:rounded-lg 
-              hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20 
-              transition-colors
-              flex-shrink-0
-            "
+            className="p-2 rounded-lg hover:bg-secondary/20 transition-colors flex-shrink-0"
             aria-label="Toggle theme"
           >
             {theme === "dark" ? (
-              <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
+              <Sun className="h-5 w-5 text-yellow-500" />
             ) : (
-              <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+              <Moon className="h-5 w-5 text-foreground" />
             )}
           </button>
         </div>
       </SidebarHeader>
 
       {/* Main Navigation */}
-      <SidebarContent className="px-1 sm:px-2 mt-1 sm:mt-2">
-        <NavMain
-          items={data.navMain.map((item) => ({
-            ...item,
-            className: `
-              flex items-center 
-              gap-2 sm:gap-3 
-              px-2 sm:px-3 
-              py-1.5 sm:py-2 
-              rounded-md sm:rounded-lg
-              text-sm sm:text-base
-              transition-colors duration-200
-              hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20
-              ${
-                item.isActive
-                  ? "bg-indigo-500/10 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400"
-                  : ""
-              }
-            `,
-          }))}
-        />
+      <SidebarContent className="px-3 py-2">
+        <NavMain items={data.navMain} />
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="px-1 sm:px-2 pb-2 sm:pb-4">
+      <SidebarFooter className="px-3 py-3 border-t border-border/50">
         <NavUser user={data.user} />
       </SidebarFooter>
 
