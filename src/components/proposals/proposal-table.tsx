@@ -16,6 +16,10 @@ import {
   Calendar,
   Tag,
   FileCheck,
+  RefreshCw,
+  XCircle,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,7 +43,13 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useGetPaperQuery } from "@/lib/api/paperSlice";
 import { useGetAllAdvisorsQuery } from "@/lib/api/advisorSlice";
-import { useAssignAdviserMutation } from "@/lib/api/assignMentor";
+import {
+  useAssignAdviserMutation,
+  useReAssignAdviserMutation,
+  useRejectPaperMutation,
+  useGetAllAssignmentsQuery,
+  AdvisorAssignmentResponse,
+} from "@/lib/api/assignMentor";
 import { Paper } from "@/types/paperType/paperType";
 import { User } from "@/types/userType/userType";
 import { toast, ToastContainer } from "react-toastify";
@@ -58,6 +68,11 @@ export function EnhancedProposals() {
   const [deadline, setDeadline] = useState<string>("");
   const [assignError, setAssignError] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"details" | "pdf">("details");
+  const [isReassigning, setIsReassigning] = useState(false);
+  const [isManaging, setIsManaging] = useState(false); // For managing multiple advisers
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectingPaper, setRejectingPaper] = useState<Paper | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const advisorsPerPage = 4;
   const papersPerPage = 3;
 
@@ -100,7 +115,7 @@ export function EnhancedProposals() {
         autoClose: 2000,
         theme: "colored",
       });
-    } catch (error) {
+    } catch {
       toast.warning("Could not download directly. Opening in new tab...", {
         position: "top-right",
         autoClose: 3000,
@@ -140,6 +155,58 @@ export function EnhancedProposals() {
 
   const [assignAdviser, { isLoading: isAssigning }] =
     useAssignAdviserMutation();
+  const [reassignAdviser, { isLoading: isReassigningAdviser }] =
+    useReAssignAdviserMutation();
+  const [rejectPaper, { isLoading: isRejecting }] = useRejectPaperMutation();
+
+  // Fetch all assignments to check status
+  const { data: assignmentsData, refetch: refetchAssignments } =
+    useGetAllAssignmentsQuery(
+      { token: accessToken ?? "" },
+      { skip: !accessToken }
+    );
+
+  // Helper function to get ALL assignments for a paper
+  const getAllAssignmentsForPaper = (
+    paperUuid: string
+  ): AdvisorAssignmentResponse[] => {
+    return (
+      assignmentsData?.filter(
+        (assignment) => assignment.paperUuid === paperUuid
+      ) || []
+    );
+  };
+
+  // Helper function to check if paper is assigned
+  const isPaperAssigned = (paperUuid: string): boolean => {
+    const assignments = getAllAssignmentsForPaper(paperUuid);
+    const isAssigned = assignments.length > 0;
+
+    // Optional: Uncomment for debugging
+    // console.log(`📋 Checking paper ${paperUuid.substring(0, 8)}...`);
+    // console.log(`   Assignments found:`, assignments.length);
+    // if (isAssigned) {
+    //   assignments.forEach((assignment, idx) => {
+    //     console.log(`   Adviser ${idx + 1}:`, getAdviserName(assignment.adviserUuid));
+    //     console.log(`   Status:`, assignment.status);
+    //   });
+    // }
+
+    return isAssigned;
+  };
+
+  // Helper function to get all adviser UUIDs for a paper
+  const getAdviserUuidsForPaper = (paperUuid: string): string[] => {
+    return getAllAssignmentsForPaper(paperUuid).map((a) => a.adviserUuid);
+  };
+
+  // Helper function to get adviser name by UUID
+  const getAdviserName = (adviserUuid: string): string => {
+    const adviser = (advisersData?.content || []).find(
+      (adv: User) => adv.uuid === adviserUuid
+    );
+    return adviser?.fullName || "Unknown Adviser";
+  };
 
   // Get unique categories from papers
   const availableCategories = Array.from(
@@ -201,26 +268,63 @@ export function EnhancedProposals() {
       setAssignError("Please select a deadline before assigning.");
       return;
     }
-    console.log("datel :>> ", deadline);
-    console.log("advisor :>> ", advisor);
-    console.log("Papers :>> ", assigningPaper);
 
-    try {
-      await assignAdviser({
-        token: accessToken,
-        assignMent: {
-          paperUuid: assigningPaper.uuid,
-          adviserUuid: advisor.uuid,
-          deadline: deadline,
-        },
-      }).unwrap();
-
-      toast.success("Assigned advisor successfully!", {
-        position: "top-left",
+    // Check if advisor is already assigned to this paper
+    const currentlyAssignedUuids = getAdviserUuidsForPaper(assigningPaper.uuid);
+    if (currentlyAssignedUuids.includes(advisor.uuid)) {
+      const adviserName = getAdviserName(advisor.uuid);
+      toast.warning(`${adviserName} is already assigned to this paper!`, {
+        position: "top-center",
         autoClose: 3000,
         theme: "colored",
       });
-      // Refresh students list after successful creation
+      return;
+    }
+
+    try {
+      if (isReassigning && !isManaging) {
+        // Reassign existing assignment (only for single adviser papers)
+        await reassignAdviser({
+          token: accessToken,
+          assignMent: {
+            paperUuid: assigningPaper.uuid,
+            newAdviserUuid: advisor.uuid,
+            adminUuid: session?.user?.id || "",
+            deadline: deadline,
+            reason: "Adviser reassignment requested by admin",
+          },
+        }).unwrap();
+
+        toast.success("Adviser reassigned successfully!", {
+          position: "top-left",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      } else {
+        // New assignment OR managing (adding another adviser)
+        await assignAdviser({
+          token: accessToken,
+          assignMent: {
+            paperUuid: assigningPaper.uuid,
+            adviserUuid: advisor.uuid,
+            deadline: deadline,
+          },
+        }).unwrap();
+
+        const successMessage = isManaging
+          ? "Additional adviser assigned successfully!"
+          : "Adviser assigned successfully!";
+
+        toast.success(successMessage, {
+          position: "top-left",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      }
+
+      // Refetch assignments to update the UI with latest data
+      await refetchAssignments();
+
       // Reset modal state
       setShowAssignModal(false);
       setAssigningPaper(null);
@@ -228,15 +332,95 @@ export function EnhancedProposals() {
       setAdvisorSearch("");
       setDeadline("");
       setAssignError("");
+      setIsReassigning(false);
+      setIsManaging(false);
     } catch (error: unknown) {
-      // setAssignError(
-      //   error?.data?.message || "Failed to assign advisor. Please try again."
-      // );
-      // toast.error(assignError, {
-      //   position: "top-left",
-      //   autoClose: 3000,
-      //   theme: "colored",
-      // });
+      // Check for duplicate assignment error
+      const errorDetail =
+        (error as { data?: { detail?: string } })?.data?.detail || "";
+      const errorMessage =
+        (error as { data?: { message?: string } })?.data?.message || "";
+
+      // Detect duplicate key constraint violation
+      if (
+        errorDetail.includes("duplicate key value") ||
+        errorDetail.includes("ukjfmcok2jndca1qp1byw5phpkt")
+      ) {
+        const adviserName = getAdviserName(advisor.uuid);
+        const duplicateMessage = `${adviserName} is already assigned to this paper. Please refresh and try again.`;
+        setAssignError(duplicateMessage);
+        toast.error(duplicateMessage, {
+          position: "top-center",
+          autoClose: 4000,
+          theme: "colored",
+        });
+        // Refetch to get latest data
+        await refetchAssignments();
+      } else {
+        const fallbackMessage =
+          errorMessage ||
+          `Failed to ${
+            isReassigning ? "reassign" : "assign"
+          } adviser. Please try again.`;
+        setAssignError(fallbackMessage);
+        toast.error(fallbackMessage, {
+          position: "top-left",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      }
+    }
+  };
+
+  const handleRejectPaper = async () => {
+    if (!rejectingPaper || !rejectReason.trim() || !accessToken) {
+      toast.warning("Please provide a reason for rejection", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+      return;
+    }
+
+    if (rejectReason.length > 500) {
+      toast.warning("Reason must not exceed 500 characters", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+      return;
+    }
+
+    try {
+      await rejectPaper({
+        token: accessToken,
+        rejectRequest: {
+          paperUuid: rejectingPaper.uuid,
+          reason: rejectReason.trim(),
+        },
+      }).unwrap();
+
+      toast.success("Paper rejected successfully!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+
+      // Refetch assignments to update the UI
+      await refetchAssignments();
+
+      setShowRejectModal(false);
+      setRejectingPaper(null);
+      setRejectReason("");
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { data?: { message?: string } })?.data?.message ||
+        "Failed to reject paper";
+      toast.error(errorMessage, {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
     }
   };
 
@@ -382,13 +566,26 @@ export function EnhancedProposals() {
                         <h3 className="text-xl sm:text-2xl font-bold text-dynamic2 leading-tight">
                           {proposal.title}
                         </h3>
-                        <Badge
-                          variant="secondary"
-                          className="bg-amber-100 text-amber-700 self-start"
-                        >
-                          <Clock className="w-3 h-3 mr-1 text-dynamic2" />
-                          {proposal.status}
-                        </Badge>
+                        <div className="flex gap-2 items-center flex-wrap">
+                          <Badge
+                            variant="secondary"
+                            className="bg-amber-100 text-amber-700"
+                          >
+                            <Clock className="w-3 h-3 mr-1 text-dynamic2" />
+                            {proposal.status}
+                          </Badge>
+                          {isPaperAssigned(proposal.uuid) ? (
+                            <Badge className="bg-green-100 text-green-700 border-green-200">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Assigned
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-slate-100 text-slate-700 border-slate-200">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              Not Assigned
+                            </Badge>
+                          )}
+                        </div>
                       </div>
 
                       <div className="text-sm text-dynamic2 mb-4 space-y-1">
@@ -410,6 +607,64 @@ export function EnhancedProposals() {
                           </span>{" "}
                           {proposal.downloads}
                         </p>
+                        {(() => {
+                          const assignments = getAllAssignmentsForPaper(
+                            proposal.uuid
+                          );
+                          if (assignments.length === 0) return null;
+
+                          return (
+                            <>
+                              <div className="text-sm text-muted-foreground">
+                                <span className="font-medium text-dynamic2">
+                                  {assignments.length > 1
+                                    ? "Advisers:"
+                                    : "Adviser:"}
+                                </span>{" "}
+                                {assignments.length === 1 ? (
+                                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                                    {getAdviserName(assignments[0].adviserUuid)}
+                                  </span>
+                                ) : (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {assignments.map((assignment) => (
+                                      <Badge
+                                        key={assignment.uuid}
+                                        className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                                      >
+                                        {getAdviserName(assignment.adviserUuid)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <p>
+                                <span className="font-medium text-dynamic2">
+                                  Status:
+                                </span>{" "}
+                                {assignments.map((assignment) => (
+                                  <Badge
+                                    key={assignment.uuid}
+                                    variant="outline"
+                                    className="ml-1"
+                                  >
+                                    {assignment.status}
+                                  </Badge>
+                                ))}
+                              </p>
+                              <p>
+                                <span className="font-medium text-dynamic2">
+                                  Deadline{assignments.length > 1 ? "s" : ""}:
+                                </span>{" "}
+                                {assignments
+                                  .map((a) =>
+                                    new Date(a.deadline).toLocaleDateString()
+                                  )
+                                  .join(", ")}
+                              </p>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       <div className="mb-6">
@@ -421,15 +676,15 @@ export function EnhancedProposals() {
                         </p>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                        <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                           <Button
                             variant="outline"
                             onClick={() => setSelectedPaper(proposal)}
-                            className="border-slate-300 hover:border-blue-500 hover:text-blue-500"
+                            className="border-slate-300 hover:border-blue-500 hover:text-blue-500 w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
                           >
-                            <Eye className="w-4 h-4 mr-2 text-dynamic2" />
-                            View Details
+                            <Eye className="w-4 h-4 mr-1 sm:mr-2 text-dynamic2 flex-shrink-0" />
+                            <span className="truncate">View Details</span>
                           </Button>
                           <Button
                             variant="outline"
@@ -439,23 +694,72 @@ export function EnhancedProposals() {
                                 `${proposal.title}.pdf`
                               )
                             }
-                            className="border-slate-300 hover:border-slate-400"
+                            className="border-slate-300 hover:border-slate-400 w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
                           >
-                            <FileText className="w-4 h-4 mr-2 text-dynamic2" />
-                            Download PDF
+                            <FileText className="w-4 h-4 mr-1 sm:mr-2 text-dynamic2 flex-shrink-0" />
+                            <span className="truncate">Download PDF</span>
                           </Button>
                         </div>
-                        <Button
-                          onClick={() => {
-                            setAssigningPaper(proposal);
-                            setShowAssignModal(true);
-                            setAssignError("");
-                          }}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                        >
-                          <UserCheck className="w-4 h-4 mr-2" />
-                          Assign Advisor
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          {isPaperAssigned(proposal.uuid) ? (
+                            <>
+                              <Button
+                                onClick={() => {
+                                  setAssigningPaper(proposal);
+                                  setShowAssignModal(true);
+                                  setIsManaging(true);
+                                  setIsReassigning(true); // Keep for UI display
+                                  setAssignError("");
+                                }}
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white w-full sm:w-auto text-xs sm:text-sm"
+                              >
+                                <UserCheck className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                                <span className="truncate">
+                                  Manage Advisers
+                                </span>
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  setAssigningPaper(proposal);
+                                  setShowAssignModal(true);
+                                  setIsReassigning(true);
+                                  setIsManaging(false);
+                                  setAssignError("");
+                                }}
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white w-full sm:w-auto text-xs sm:text-sm"
+                              >
+                                <RefreshCw className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                                <span className="truncate">
+                                  Reassign Adviser
+                                </span>
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={() => {
+                                  setRejectingPaper(proposal);
+                                  setShowRejectModal(true);
+                                }}
+                                className="w-full sm:w-auto text-xs sm:text-sm"
+                              >
+                                <XCircle className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                                <span className="truncate">Reject</span>
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              onClick={() => {
+                                setAssigningPaper(proposal);
+                                setShowAssignModal(true);
+                                setIsReassigning(false);
+                                setAssignError("");
+                              }}
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                            >
+                              <UserCheck className="w-4 h-4 mr-2" />
+                              Assign Advisor
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -514,18 +818,51 @@ export function EnhancedProposals() {
               setDeadline("");
               setAdvisorSearch("");
               setCurrentAdvisorPage(1);
+              setIsReassigning(false);
+              setIsManaging(false);
             }
           }}
         >
-          <DialogContent className="max-h-[90vh] flex flex-col p-0 bg-card border-border shadow-sm overflow-hidden">
+          <DialogContent className="max-w-3xl w-[90vw] max-h-[90vh] flex flex-col p-0 bg-card border-border shadow-sm overflow-hidden">
             <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200/50 flex-shrink-0">
               <DialogTitle className="text-2xl font-bold text-blue-700">
-                Assign Advisor
+                {isManaging
+                  ? "Manage Advisers"
+                  : isReassigning
+                  ? "Reassign Adviser"
+                  : "Assign Adviser"}
               </DialogTitle>
               <p className="text-muted-foreground mt-1 text-sm">
-                Select an advisor for:{" "}
+                {isManaging
+                  ? "Assign additional adviser to:"
+                  : isReassigning
+                  ? "Select a new adviser to replace existing adviser for:"
+                  : "Select an adviser for:"}{" "}
                 <span className="font-semibold">{assigningPaper?.title}</span>
               </p>
+              {isReassigning && assigningPaper && (
+                <div className="mt-2 text-sm">
+                  <span className="font-medium text-dynamic2">
+                    Current Adviser
+                    {getAllAssignmentsForPaper(assigningPaper.uuid).length > 1
+                      ? "s"
+                      : ""}
+                    :
+                  </span>{" "}
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {getAllAssignmentsForPaper(assigningPaper.uuid).map(
+                      (assignment) => (
+                        <Badge
+                          key={assignment.uuid}
+                          className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                        >
+                          {getAdviserName(assignment.adviserUuid)}
+                        </Badge>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -569,53 +906,91 @@ export function EnhancedProposals() {
 
                 <div className="space-y-3 max-h-[45vh] overflow-y-auto pr-2">
                   {paginatedAdvisors.length > 0 ? (
-                    paginatedAdvisors.map((advisor: User) => (
-                      <Card
-                        key={advisor.uuid}
-                        className="border rounded-xl bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm"
-                      >
-                        <CardContent className="p-5">
-                          <div className="flex items-center gap-5">
-                            <Avatar className="w-16 h-16 ring-2 ring-blue-500/30">
-                              <AvatarImage
-                                src={advisor.imageUrl || undefined}
-                              />
-                              <AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-200 text-blue-700 font-semibold">
-                                {advisor.firstName[0]}
-                                {advisor.lastName[0]}
-                              </AvatarFallback>
-                            </Avatar>
+                    paginatedAdvisors.map((advisor: User) => {
+                      // Check if this adviser is currently assigned to this paper
+                      const currentAdviserUuids = assigningPaper
+                        ? getAdviserUuidsForPaper(assigningPaper.uuid)
+                        : [];
+                      const isCurrentlyAssigned =
+                        isReassigning &&
+                        currentAdviserUuids.includes(advisor.uuid);
 
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <h4 className="font-bold text-dynamic2 text-xl truncate">
-                                {advisor.fullName}
-                              </h4>
-                              <div className="flex items-center gap-2 text-sm text-dynamic2">
-                                <Mail className="w-4 h-4 text-blue-500" />
-                                <span className="truncate">
-                                  {advisor.email}
-                                </span>
+                      return (
+                        <Card
+                          key={advisor.uuid}
+                          className={`border rounded-xl bg-card border-border shadow-sm transition-all duration-200 ${
+                            isCurrentlyAssigned
+                              ? "opacity-60 bg-slate-100 dark:bg-slate-800"
+                              : "hover:shadow-md hover:bg-card/80 backdrop-blur-sm"
+                          }`}
+                        >
+                          <CardContent className="p-5">
+                            <div className="flex items-center gap-6">
+                              <Avatar className="w-20 h-20 ring-2 ring-blue-500/30 flex-shrink-0">
+                                <AvatarImage
+                                  src={advisor.imageUrl || undefined}
+                                />
+                                <AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-200 text-blue-700 font-semibold text-xl">
+                                  {advisor.firstName[0]}
+                                  {advisor.lastName[0]}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="flex-1 min-w-0 space-y-2.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-bold text-dynamic2 text-xl">
+                                    {advisor.fullName}
+                                  </h4>
+                                  {isCurrentlyAssigned && (
+                                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 flex-shrink-0">
+                                      Current
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-dynamic2">
+                                  <Mail className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {advisor.email}
+                                  </span>
+                                </div>
+                                {advisor.contactNumber &&
+                                  advisor.contactNumber !== "null" && (
+                                    <div className="flex items-center gap-2 text-sm text-dynamic2">
+                                      <Phone className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                      <span>{advisor.contactNumber}</span>
+                                    </div>
+                                  )}
                               </div>
-                              {advisor.contactNumber &&
-                                advisor.contactNumber !== "null" && (
-                                  <div className="flex items-center gap-2 text-sm text-dynamic2">
-                                    <Phone className="w-4 h-4 text-blue-500" />
-                                    <span>{advisor.contactNumber}</span>
-                                  </div>
-                                )}
-                            </div>
 
-                            <Button
-                              onClick={() => handleAssignAdvisor(advisor)}
-                              // disabled={isAssigning || !deadline}
-                              className=" bg-secondary text-dynamic2 "
-                            >
-                              {isAssigning ? "Assigning..." : "Assign"}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                              <Button
+                                onClick={() => handleAssignAdvisor(advisor)}
+                                disabled={
+                                  isAssigning ||
+                                  isReassigningAdviser ||
+                                  !deadline ||
+                                  isCurrentlyAssigned
+                                }
+                                className="bg-secondary text-dynamic2 min-w-[140px] flex-shrink-0"
+                              >
+                                {isCurrentlyAssigned
+                                  ? "Current Adviser"
+                                  : isAssigning || isReassigningAdviser
+                                  ? isManaging
+                                    ? "Adding..."
+                                    : isReassigning
+                                    ? "Reassigning..."
+                                    : "Assigning..."
+                                  : isManaging
+                                  ? "Assign"
+                                  : isReassigning
+                                  ? "Reassign"
+                                  : "Assign"}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
                       <Users className="w-12 h-12 mb-2 opacity-50" />
@@ -668,6 +1043,99 @@ export function EnhancedProposals() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Reject Paper Modal */}
+        <Dialog
+          open={showRejectModal}
+          onOpenChange={(open) => {
+            setShowRejectModal(open);
+            if (!open) {
+              setRejectingPaper(null);
+              setRejectReason("");
+            }
+          }}
+        >
+          <DialogContent className="max-w-2xl w-[90vw] bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-red-600 dark:text-red-500">
+                Reject Paper
+              </DialogTitle>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Are you sure you want to reject:{" "}
+                <span className="font-semibold">{rejectingPaper?.title}</span>
+              </p>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div>
+                <label
+                  htmlFor="rejectReason"
+                  className="block text-sm font-medium text-foreground mb-2"
+                >
+                  Reason for Rejection <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="rejectReason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Please provide a detailed reason for rejection (max 500 characters)..."
+                  maxLength={500}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-background text-foreground resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {rejectReason.length}/500 characters
+                </p>
+              </div>
+
+              {rejectReason.trim() && rejectReason.length < 10 && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-amber-800 dark:text-amber-400">
+                    Please provide a more detailed reason (at least 10
+                    characters)
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-end border-t border-border pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectingPaper(null);
+                  setRejectReason("");
+                }}
+                disabled={isRejecting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleRejectPaper}
+                disabled={
+                  isRejecting ||
+                  !rejectReason.trim() ||
+                  rejectReason.length < 10
+                }
+              >
+                {isRejecting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject Paper
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog
           open={!!selectedPaper}
           onOpenChange={() => {
@@ -954,34 +1422,90 @@ export function EnhancedProposals() {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="border-t border-border bg-card p-5 flex gap-4 flex-shrink-0 shadow-lg">
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      handleDownloadPDF(
-                        selectedPaper.fileUrl,
-                        `${selectedPaper.title}.pdf`
-                      )
-                    }
-                    className="flex-1 h-12 font-semibold border-border hover:bg-muted hover:border-muted-foreground transition-all duration-200"
-                  >
-                    <Download className="w-5 h-5 mr-2" />
-                    Download PDF
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setAssigningPaper(selectedPaper);
-                      setSelectedPaper(null);
-                      setShowAssignModal(true);
-                      setAssignError("");
-                      setActiveTab("details");
-                    }}
-                    variant="default"
-                    className="flex-1 h-12 font-semibold bg-gradient-to-r from-secondary to-secondary-hover hover:from-secondary-hover hover:to-secondary shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    <UserCheck className="w-5 h-5 mr-2" />
-                    Assign Advisor
-                  </Button>
+                <div className="border-t border-border bg-card p-3 sm:p-4 md:p-5 flex-shrink-0 shadow-lg">
+                  <div className="flex flex-col gap-2 sm:gap-3">
+                    {/* First Row - Download Button */}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        handleDownloadPDF(
+                          selectedPaper.fileUrl,
+                          `${selectedPaper.title}.pdf`
+                        )
+                      }
+                      className="w-full h-10 sm:h-11 md:h-12 font-semibold text-xs sm:text-sm border-border hover:bg-muted hover:border-muted-foreground transition-all duration-200"
+                    >
+                      <Download className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">Download PDF</span>
+                    </Button>
+
+                    {/* Second Row - Action Buttons */}
+                    {isPaperAssigned(selectedPaper.uuid) ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                        <Button
+                          onClick={() => {
+                            setAssigningPaper(selectedPaper);
+                            setSelectedPaper(null);
+                            setShowAssignModal(true);
+                            setIsManaging(true);
+                            setIsReassigning(true);
+                            setAssignError("");
+                            setActiveTab("details");
+                          }}
+                          variant="default"
+                          className="w-full h-10 sm:h-11 md:h-12 font-semibold text-xs sm:text-sm bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                        >
+                          <UserCheck className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                          <span className="truncate">Manage</span>
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setAssigningPaper(selectedPaper);
+                            setSelectedPaper(null);
+                            setShowAssignModal(true);
+                            setIsReassigning(true);
+                            setIsManaging(false);
+                            setAssignError("");
+                            setActiveTab("details");
+                          }}
+                          variant="default"
+                          className="w-full h-10 sm:h-11 md:h-12 font-semibold text-xs sm:text-sm bg-gradient-to-r from-secondary to-secondary-hover hover:from-secondary-hover hover:to-secondary shadow-md hover:shadow-lg transition-all duration-200"
+                        >
+                          <RefreshCw className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                          <span className="truncate">Reassign</span>
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => {
+                            setRejectingPaper(selectedPaper);
+                            setSelectedPaper(null);
+                            setShowRejectModal(true);
+                            setActiveTab("details");
+                          }}
+                          className="w-full h-10 sm:h-11 md:h-12 font-semibold text-xs sm:text-sm"
+                        >
+                          <XCircle className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                          <span className="truncate">Reject</span>
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          setAssigningPaper(selectedPaper);
+                          setSelectedPaper(null);
+                          setShowAssignModal(true);
+                          setIsReassigning(false);
+                          setAssignError("");
+                          setActiveTab("details");
+                        }}
+                        variant="default"
+                        className="w-full h-10 sm:h-11 md:h-12 font-semibold text-xs sm:text-sm bg-gradient-to-r from-secondary to-secondary-hover hover:from-secondary-hover hover:to-secondary shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        <UserCheck className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        <span className="truncate">Assign Adviser</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

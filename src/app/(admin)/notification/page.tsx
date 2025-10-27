@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import {
   useApproveStudentMutation,
   useGetAllPendingStudentQuery,
+  useRejectToStudentMutation,
 } from "@/lib/api/paperAdminSlice";
 import {
   Bell,
@@ -16,6 +17,8 @@ import {
   Search,
   X,
   ArrowLeft,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -66,6 +69,7 @@ export default function NotificationPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const searchParams = useSearchParams();
   const highlightId = searchParams?.get("highlight");
+  const [showDebug, setShowDebug] = useState(false);
 
   // Use the global WebSocket connection
   const { subscribe, unsubscribe, publish, isConnected } = useWebSocket();
@@ -84,10 +88,17 @@ export default function NotificationPage() {
     page: 0,
     size: 100,
   });
+  console.log("getPendingStudents", getPendingStudents);
 
   const [filter, setFilter] = useState("all");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<{
+    userUuid: string;
+    name?: string;
+  } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   // Fetch individual student data by userUuid
   const fetchStudentData = async (
@@ -97,7 +108,7 @@ export default function NotificationPage() {
 
     try {
       const res = await fetch(
-        `https://api.docuhub.me/api/v1/paper-admin/pending-students?page=0&size=100`,
+        `https://api.docuhub.me/api/v1/admin/student/pending?page=0&size=100`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -204,95 +215,146 @@ export default function NotificationPage() {
 
   // Subscribe to notification topics using the global WebSocket
   useEffect(() => {
-    if (!currentUserId || !isConnected) {
-      console.log("Waiting for WebSocket connection or user authentication...");
+    if (!currentUserId) {
+      console.log("⏳ Notification: Waiting for user authentication...");
       return;
     }
 
-    console.log("Subscribing to notification topics...");
+    if (!isConnected) {
+      console.log("⏳ Notification: Waiting for WebSocket connection...");
+      return;
+    }
+
+    console.log("🔔 Notification: Starting subscriptions...");
+
+    // Handler for user-specific notifications
+    const handleUserNotification = async (msg: IMessage) => {
+      try {
+        const payload: NotificationMessage = JSON.parse(msg.body);
+        console.log("📩 Received user notification:", payload);
+
+        const newNotification = await convertToNotification(payload);
+        console.log("✅ Converted notification:", newNotification);
+
+        setNotifications((prev) => {
+          // Check for duplicates
+          if (
+            newNotification.id &&
+            prev.some((n) => n.id === newNotification.id)
+          ) {
+            console.log(
+              "⚠️ Duplicate notification, skipping:",
+              newNotification.id
+            );
+            return prev;
+          }
+          // Add new notification at the beginning (latest first)
+          const updated = [newNotification, ...prev];
+          // Sort by timestamp to ensure latest is always first
+          return updated.sort((a, b) => {
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return timeB - timeA; // Descending order (newest first)
+          });
+        });
+
+        // If student data is still loading, try to fetch it
+        if (newNotification.isLoading) {
+          updateNotificationWithStudentData(
+            newNotification.id,
+            payload.senderId
+          );
+        }
+
+        // Refetch pending students list to keep it updated
+        refetch();
+      } catch (error) {
+        console.error("❌ Error processing user notification:", error);
+      }
+    };
+
+    // Handler for admin notifications
+    const handleAdminNotification = async (msg: IMessage) => {
+      try {
+        const payload: NotificationMessage = JSON.parse(msg.body);
+        console.log("📩 Received admin notification:", payload);
+
+        const newNotification = await convertToNotification(payload);
+        console.log("✅ Converted admin notification:", newNotification);
+
+        setNotifications((prev) => {
+          // Check for duplicates
+          if (
+            newNotification.id &&
+            prev.some((n) => n.id === newNotification.id)
+          ) {
+            console.log(
+              "⚠️ Duplicate notification, skipping:",
+              newNotification.id
+            );
+            return prev;
+          }
+          // Add new notification at the beginning (latest first)
+          const updated = [newNotification, ...prev];
+          // Sort by timestamp to ensure latest is always first
+          return updated.sort((a, b) => {
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return timeB - timeA; // Descending order (newest first)
+          });
+        });
+
+        // If student data is still loading, try to fetch it
+        if (newNotification.isLoading) {
+          updateNotificationWithStudentData(
+            newNotification.id,
+            payload.senderId
+          );
+        }
+
+        // Refetch pending students list to keep it updated
+        refetch();
+      } catch (error) {
+        console.error("❌ Error processing admin notification:", error);
+      }
+    };
 
     // Subscribe to user-specific topic
     const myTopic = `/topic/user.${currentUserId}`;
-    const userSubscription = subscribe(myTopic, async (msg: IMessage) => {
-      const payload: NotificationMessage = JSON.parse(msg.body);
-      const newNotification = await convertToNotification(payload);
-      console.log("newNotification :>> ", newNotification);
-
-      setNotifications((prev) => {
-        // Check for duplicates
-        if (
-          newNotification.id &&
-          prev.some((n) => n.id === newNotification.id)
-        ) {
-          return prev;
-        }
-        // Add new notification at the beginning (latest first)
-        const updated = [newNotification, ...prev];
-        // Sort by timestamp to ensure latest is always first
-        return updated.sort((a, b) => {
-          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-          return timeB - timeA; // Descending order (newest first)
-        });
-      });
-
-      // If student data is still loading, try to fetch it
-      if (newNotification.isLoading) {
-        updateNotificationWithStudentData(newNotification.id, payload.senderId);
-      }
-
-      // Refetch pending students list to keep it updated
-      refetch();
-    });
+    console.log(`🔌 Attempting to subscribe to: ${myTopic}`);
+    const userSubscription = subscribe(myTopic, handleUserNotification);
 
     if (userSubscription) {
+      console.log(`✅ Successfully subscribed to: ${myTopic}`);
       subscriptionRef.current = userSubscription;
+    } else {
+      console.error(`❌ Failed to subscribe to: ${myTopic}`);
     }
 
     // Subscribe to admin notifications topic
     const adminTopic = `/topic/admin-notifications`;
-    const adminSubscription = subscribe(adminTopic, async (msg: IMessage) => {
-      const payload: NotificationMessage = JSON.parse(msg.body);
-      const newNotification = await convertToNotification(payload);
-
-      setNotifications((prev) => {
-        // Check for duplicates
-        if (
-          newNotification.id &&
-          prev.some((n) => n.id === newNotification.id)
-        ) {
-          return prev;
-        }
-        // Add new notification at the beginning (latest first)
-        const updated = [newNotification, ...prev];
-        // Sort by timestamp to ensure latest is always first
-        return updated.sort((a, b) => {
-          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-          return timeB - timeA; // Descending order (newest first)
-        });
-      });
-
-      // If student data is still loading, try to fetch it
-      if (newNotification.isLoading) {
-        updateNotificationWithStudentData(newNotification.id, payload.senderId);
-      }
-
-      // Refetch pending students list to keep it updated
-      refetch();
-    });
+    console.log(`🔌 Attempting to subscribe to: ${adminTopic}`);
+    const adminSubscription = subscribe(adminTopic, handleAdminNotification);
 
     if (adminSubscription) {
+      console.log(`✅ Successfully subscribed to: ${adminTopic}`);
       adminSubscriptionRef.current = adminSubscription;
+    } else {
+      console.error(`❌ Failed to subscribe to: ${adminTopic}`);
     }
 
     return () => {
+      console.log("🧹 Notification: Cleaning up subscriptions...");
       // Unsubscribe when component unmounts
       if (subscriptionRef.current) {
+        console.log(`🔌 Unsubscribing from: ${myTopic}`);
         unsubscribe(subscriptionRef.current);
+        subscriptionRef.current = null;
       }
       if (adminSubscriptionRef.current) {
+        console.log(`🔌 Unsubscribing from: ${adminTopic}`);
         unsubscribe(adminSubscriptionRef.current);
+        adminSubscriptionRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -405,24 +467,87 @@ export default function NotificationPage() {
   };
 
   const [approvedStudent] = useApproveStudentMutation();
+  const [rejectStudent, { isLoading: isRejecting }] =
+    useRejectToStudentMutation();
+
   const handleVerifyStudent = async (userUuid: string) => {
     try {
       await approvedStudent({
         token: session?.accessToken || "",
         uuid: userUuid,
       });
-      toast.success("Paper inserted successfully!", {
+      toast.success("Student verified successfully!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
       refetch();
+
+      // Remove notification from list
+      setNotifications((prev) =>
+        prev.filter((n) => n.data?.userUuid !== userUuid)
+      );
     } catch {
       toast.error("Error approving student!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
+    }
+  };
+
+  const handleOpenRejectModal = (userUuid: string, name?: string) => {
+    setSelectedStudent({ userUuid, name });
+    setRejectModalOpen(true);
+    setRejectReason("");
+  };
+
+  const handleCloseRejectModal = () => {
+    setRejectModalOpen(false);
+    setSelectedStudent(null);
+    setRejectReason("");
+  };
+
+  const handleRejectStudent = async () => {
+    if (!selectedStudent || !rejectReason.trim()) {
+      toast.warning("Please provide a reason for rejection", {
+        position: "top-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+      return;
+    }
+
+    try {
+      await rejectStudent({
+        body: {
+          userUuid: selectedStudent.userUuid,
+          reason: rejectReason.trim(),
+          status: "ADMIN_REJECTED",
+        },
+        token: session?.accessToken || "",
+      }).unwrap();
+
+      toast.success("Student verification rejected!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+
+      refetch();
+      handleCloseRejectModal();
+
+      // Remove notification from list
+      setNotifications((prev) =>
+        prev.filter((n) => n.data?.userUuid !== selectedStudent.userUuid)
+      );
+    } catch (error) {
+      toast.error("Error rejecting student!", {
+        position: "top-left",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      console.error("Rejection error:", error);
     }
   };
 
@@ -513,10 +638,146 @@ export default function NotificationPage() {
                 </p>
               </div>
             </div>
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <Settings className="w-5 h-5 text-slate-600" />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* WebSocket Connection Status */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isConnected ? "bg-green-500 animate-pulse" : "bg-red-500"
+                  }`}
+                />
+                <span className="text-xs font-medium text-slate-600">
+                  {isConnected ? "Connected" : "Disconnected"}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowDebug(!showDebug)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Toggle Debug Info"
+              >
+                <Settings className="w-5 h-5 text-slate-600" />
+              </button>
+            </div>
           </div>
+
+          {/* Debug Panel */}
+          {showDebug && (
+            <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">
+                🔍 Debug Information
+              </h3>
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600">
+                    WebSocket Status:
+                  </span>
+                  <span
+                    className={isConnected ? "text-green-600" : "text-red-600"}
+                  >
+                    {isConnected ? "✅ Connected" : "❌ Disconnected"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600">User ID:</span>
+                  <span className="text-slate-800">
+                    {currentUserId || "Not available"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600">
+                    User Subscription:
+                  </span>
+                  <span className="text-slate-800">
+                    {subscriptionRef.current
+                      ? "✅ Active"
+                      : "❌ Not subscribed"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600">
+                    Admin Subscription:
+                  </span>
+                  <span className="text-slate-800">
+                    {adminSubscriptionRef.current
+                      ? "✅ Active"
+                      : "❌ Not subscribed"}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1 mt-2">
+                  <span className="font-semibold text-slate-600">
+                    Subscribed Topics:
+                  </span>
+                  <span className="text-slate-800 pl-2">
+                    • /topic/user.{currentUserId}
+                  </span>
+                  <span className="text-slate-800 pl-2">
+                    • /topic/admin-notifications
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="font-semibold text-slate-600">
+                    Total Notifications:
+                  </span>
+                  <span className="text-slate-800">{notifications.length}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600">
+                    Pending Students:
+                  </span>
+                  <span className="text-slate-800">
+                    {getPendingStudents?.content?.length || 0}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 text-xs text-slate-600">
+                <p className="font-semibold mb-1">
+                  📌 What to check on sender side:
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>
+                    Backend should publish to: /topic/user.{currentUserId}
+                  </li>
+                  <li>Or publish to: /topic/admin-notifications</li>
+                  <li>
+                    Sender must be connected to: wss://api.docuhub.me/ws-chat
+                  </li>
+                  <li>Check browser console for incoming messages</li>
+                </ul>
+              </div>
+              <div className="mt-3 pt-3 border-t border-slate-200">
+                <p className="text-xs font-semibold text-slate-600 mb-2">
+                  🧪 Test Connection:
+                </p>
+                <button
+                  onClick={() => {
+                    const testMessage = {
+                      senderId: "test-sender",
+                      receiverId: currentUserId,
+                      message: "Test notification from debug panel",
+                      createdAt: new Date().toISOString(),
+                    };
+                    console.log("🧪 Sending test message:", testMessage);
+                    publish(
+                      "/app/test-notification",
+                      JSON.stringify(testMessage)
+                    );
+                    toast.info(
+                      "Test message sent! Check console for details.",
+                      {
+                        position: "top-right",
+                        autoClose: 2000,
+                        theme: "colored",
+                      }
+                    );
+                  }}
+                  disabled={!isConnected}
+                  className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  Send Test Message
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="border-t border-slate-200 pt-4 pb-4">
@@ -693,15 +954,31 @@ export default function NotificationPage() {
                         {notification.category === "student-verification" &&
                           notification.data &&
                           !notification.isLoading && (
-                            <button
-                              onClick={() =>
-                                handleVerifyStudent(notification.data!.userUuid)
-                              }
-                              className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
-                            >
-                              <Check className="w-3 h-3" />
-                              Verify Student
-                            </button>
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleVerifyStudent(
+                                    notification.data!.userUuid
+                                  )
+                                }
+                                className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3" />
+                                Verify Student
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleOpenRejectModal(
+                                    notification.data!.userUuid,
+                                    `${notification.data!.university} student`
+                                  )
+                                }
+                                className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+                              >
+                                <XCircle className="w-3 h-3" />
+                                Reject
+                              </button>
+                            </>
                           )}
                         <button
                           onClick={() => deleteNotification(notification.id)}
@@ -719,57 +996,239 @@ export default function NotificationPage() {
           )}
         </div>
 
-        {/* Pagination */}
-        {filteredNotifications.length > 0 && totalPages > 1 && (
-          <div className="rounded-2xl border p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600">
-                Showing {startIndex + 1} to{" "}
-                {Math.min(endIndex, filteredNotifications.length)} of{" "}
-                {filteredNotifications.length} notifications
+        {/* Reject Student Modal */}
+        {rejectModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4 backdrop-blur-sm">
+            <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-border">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
+                    <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-dynamic2">
+                      Reject Student Verification
+                    </h2>
+                    {selectedStudent?.name && (
+                      <p className="text-sm text-muted-foreground">
+                        {selectedStudent.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={handleCloseRejectModal}
+                  className="p-2 hover:bg-accent rounded-lg transition-colors"
+                  disabled={isRejecting}
+                >
+                  <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Modal Body */}
+              <div className="p-6 bg-card">
+                <label
+                  htmlFor="reject-reason"
+                  className="block text-sm font-medium text-dynamic2 mb-2"
+                >
+                  Reason for Rejection{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <textarea
+                  id="reject-reason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Please provide a detailed reason for rejecting this student's verification (e.g., incomplete profile information, invalid student card, etc.)"
+                  rows={6}
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-transparent bg-background text-dynamic placeholder:text-muted-foreground resize-none transition-colors"
+                  disabled={isRejecting}
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  This reason will be sent to the student.
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-accent/50 rounded-b-2xl">
+                <button
+                  onClick={handleCloseRejectModal}
+                  className="px-4 py-2 text-dynamic2 hover:bg-accent rounded-lg font-medium transition-colors"
+                  disabled={isRejecting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRejectStudent}
+                  disabled={!rejectReason.trim() || isRejecting}
+                  className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg font-medium hover:bg-red-700 dark:hover:bg-red-800 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {isRejecting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Rejecting...
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-4 h-4" />
+                      Reject Student
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredNotifications.length > 0 && totalPages > 1 && (
+          <div className="rounded-2xl border p-4 sm:p-6 bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 hover:bg-card/80 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Pagination Info */}
+              <div className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, filteredNotifications.length)} of{" "}
+                {filteredNotifications.length}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
+                {/* Previous Button */}
                 <button
                   onClick={handlePreviousPage}
                   disabled={currentPage === 0}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                     currentPage === 0
-                      ? "text-slate-300 cursor-not-allowed"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? "text-muted cursor-not-allowed"
+                      : "text-dynamic2 hover:bg-accent"
                   }`}
+                  aria-label="Previous page"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
-                <div className="flex gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i).map(
-                    (page) => (
+                {/* Page Numbers */}
+                <div className="flex gap-0.5 sm:gap-1">
+                  {(() => {
+                    const maxVisiblePages = 5; // Show max 5 pages on mobile
+                    const pages = [];
+
+                    if (totalPages <= maxVisiblePages) {
+                      // Show all pages if total is less than max
+                      return Array.from(
+                        { length: totalPages },
+                        (_, i) => i
+                      ).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`min-w-[32px] sm:min-w-[36px] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? "bg-blue-500 dark:bg-blue-600 text-white"
+                              : "text-dynamic2 hover:bg-accent"
+                          }`}
+                        >
+                          {page + 1}
+                        </button>
+                      ));
+                    }
+
+                    // Smart pagination: show first, last, current, and nearby pages
+                    const showLeftEllipsis = currentPage > 2;
+                    const showRightEllipsis = currentPage < totalPages - 3;
+
+                    // Always show first page
+                    pages.push(
                       <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === page
-                            ? "bg-blue-500 text-white"
-                            : "text-slate-600 hover:bg-slate-100"
+                        key={0}
+                        onClick={() => handlePageChange(0)}
+                        className={`min-w-[32px] sm:min-w-[36px] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                          currentPage === 0
+                            ? "bg-blue-500 dark:bg-blue-600 text-white"
+                            : "text-dynamic2 hover:bg-accent"
                         }`}
                       >
-                        {page + 1}
+                        1
                       </button>
-                    )
-                  )}
+                    );
+
+                    // Left ellipsis
+                    if (showLeftEllipsis) {
+                      pages.push(
+                        <span
+                          key="ellipsis-left"
+                          className="px-1 sm:px-2 py-1 text-muted-foreground text-xs sm:text-sm"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    // Show current page and neighbors
+                    const start = Math.max(1, currentPage - 1);
+                    const end = Math.min(totalPages - 2, currentPage + 1);
+
+                    for (let i = start; i <= end; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i)}
+                          className={`min-w-[32px] sm:min-w-[36px] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                            currentPage === i
+                              ? "bg-blue-500 dark:bg-blue-600 text-white"
+                              : "text-dynamic2 hover:bg-accent"
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      );
+                    }
+
+                    // Right ellipsis
+                    if (showRightEllipsis) {
+                      pages.push(
+                        <span
+                          key="ellipsis-right"
+                          className="px-1 sm:px-2 py-1 text-muted-foreground text-xs sm:text-sm"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    // Always show last page
+                    if (totalPages > 1) {
+                      pages.push(
+                        <button
+                          key={totalPages - 1}
+                          onClick={() => handlePageChange(totalPages - 1)}
+                          className={`min-w-[32px] sm:min-w-[36px] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                            currentPage === totalPages - 1
+                              ? "bg-blue-500 dark:bg-blue-600 text-white"
+                              : "text-dynamic2 hover:bg-accent"
+                          }`}
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
                 </div>
 
+                {/* Next Button */}
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages - 1}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                     currentPage === totalPages - 1
-                      ? "text-slate-300 cursor-not-allowed"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? "text-muted cursor-not-allowed"
+                      : "text-dynamic2 hover:bg-accent"
                   }`}
+                  aria-label="Next page"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>

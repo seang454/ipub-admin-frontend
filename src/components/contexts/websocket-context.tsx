@@ -57,10 +57,16 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       reconnectDelay: 3000,
       onConnect: () => {
         console.log("✅ WebSocket: Connected successfully");
+        console.log(
+          `🔌 WebSocket: Connection established for user: ${currentUserId}`
+        );
         setIsConnected(true);
       },
       onDisconnect: () => {
         console.log("❌ WebSocket: Disconnected");
+        console.log(
+          "🔄 WebSocket: Auto-reconnect will attempt in 3 seconds..."
+        );
         setIsConnected(false);
       },
       onStompError: (frame) => {
@@ -100,15 +106,38 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     topic: string,
     callback: (message: IMessage) => void
   ): StompSubscription | null => {
-    if (!stompClientRef.current || !isConnected) {
-      console.warn(`WebSocket: Cannot subscribe to ${topic} - not connected`);
+    if (!stompClientRef.current) {
+      console.warn(
+        `WebSocket: Cannot subscribe to ${topic} - client not initialized`
+      );
       return null;
     }
 
-    console.log(`WebSocket: Subscribing to ${topic}`);
-    const subscription = stompClientRef.current.subscribe(topic, callback);
-    subscriptionsRef.current.set(topic, subscription);
-    return subscription;
+    if (!isConnected) {
+      console.warn(
+        `WebSocket: Cannot subscribe to ${topic} - not connected yet`
+      );
+      return null;
+    }
+
+    // Check if client is active
+    if (!stompClientRef.current.active) {
+      console.warn(
+        `WebSocket: Cannot subscribe to ${topic} - client not active`
+      );
+      return null;
+    }
+
+    console.log(`✅ WebSocket: Subscribing to ${topic}`);
+    try {
+      const subscription = stompClientRef.current.subscribe(topic, callback);
+      subscriptionsRef.current.set(topic, subscription);
+      console.log(`✅ WebSocket: Successfully subscribed to ${topic}`);
+      return subscription;
+    } catch (error) {
+      console.error(`❌ WebSocket: Error subscribing to ${topic}:`, error);
+      return null;
+    }
   };
 
   // Unsubscribe from a topic
@@ -124,15 +153,33 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   // Publish a message
   const publish = (destination: string, body: string) => {
-    if (!stompClientRef.current || !isConnected) {
-      console.warn("WebSocket: Cannot publish - not connected");
+    if (!stompClientRef.current) {
+      console.warn("❌ WebSocket: Cannot publish - client not initialized");
       return;
     }
 
-    stompClientRef.current.publish({
-      destination,
-      body,
-    });
+    if (!isConnected) {
+      console.warn("❌ WebSocket: Cannot publish - not connected");
+      return;
+    }
+
+    if (!stompClientRef.current.active) {
+      console.warn("❌ WebSocket: Cannot publish - client not active");
+      return;
+    }
+
+    console.log(`📤 WebSocket: Publishing to ${destination}`);
+    console.log(`📦 WebSocket: Message body:`, body);
+
+    try {
+      stompClientRef.current.publish({
+        destination,
+        body,
+      });
+      console.log(`✅ WebSocket: Message published successfully`);
+    } catch (error) {
+      console.error(`❌ WebSocket: Error publishing message:`, error);
+    }
   };
 
   const value: WebSocketContextType = {

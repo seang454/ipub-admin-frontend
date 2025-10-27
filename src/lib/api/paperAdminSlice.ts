@@ -1,13 +1,11 @@
 // store/paperApi.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { PapersResponse } from "@/types/paperType/paperType";
-import { text } from "stream/consumers";
 import { EditFormData } from "@/components/papers/paper-table";
 import {
   PaginatedStudentsResponse,
   Student,
 } from "@/types/studentType/studentType";
-import { query } from "../../../util/db";
 export type PaperData = {
   title: string;
   abstractText: string;
@@ -113,8 +111,26 @@ export const paperAdminApi = createApi({
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        responseHandler:"text"
+        responseHandler: "text",
       }),
+    }),
+    rejectToStudent: builder.mutation<
+      { message: string },
+      {
+        body: { userUuid: string; reason: string; status: string };
+        token: string;
+      }
+    >({
+      query: ({ body, token }) => ({
+        url: `/admin/student/reject-student-detail`,
+        method: "POST",
+        body: body,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseHandler: "text",
+      }),
+      invalidatesTags: ["AdminPaper"],
     }),
   }),
 });
@@ -127,5 +143,6 @@ export const {
   useDeletePaperMutation,
   useGetAllPendingStudentQuery,
   useGetAStudentByUuidQuery,
-  useApproveStudentMutation
+  useApproveStudentMutation,
+  useRejectToStudentMutation,
 } = paperAdminApi;
