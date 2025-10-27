@@ -35,7 +35,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel className="font-semibold text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
+      <SidebarGroupLabel className="font-semibold text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2">
         Navigation
       </SidebarGroupLabel>
       <SidebarMenu>
@@ -50,17 +50,17 @@ export function NavMain({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip={item.title} asChild>
                   {item.items ? (
-                    <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base">
+                    <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-sm md:text-base py-1.5 sm:py-2">
                       {item.icon && (
                         <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                       )}
                       <span className="truncate">{item.title}</span>
-                      <ChevronRight className="ml-auto w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 flex-shrink-0" />
+                      <ChevronRight className="ml-auto w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 flex-shrink-0" />
                     </div>
                   ) : (
                     <Link
                       href={item.url}
-                      className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base w-full"
+                      className="flex items-center gap-2 sm:gap-3 text-sm sm:text-sm md:text-base w-full py-1.5 sm:py-2"
                     >
                       {item.icon && (
                         <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -78,7 +78,7 @@ export function NavMain({
                         <SidebarMenuSubButton asChild>
                           <Link
                             href={subItem.url}
-                            className="text-xs sm:text-sm"
+                            className="text-xs sm:text-sm py-1.5"
                           >
                             <span className="truncate">{subItem.title}</span>
                           </Link>

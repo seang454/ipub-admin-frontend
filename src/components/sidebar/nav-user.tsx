@@ -66,17 +66,19 @@ export function NavUser({
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground py-2 sm:py-3"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground py-2 sm:py-2.5"
               >
-                <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
                   <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback className="text-xs sm:text-sm">
+                  <AvatarFallback className="text-[10px] sm:text-xs">
                     CN
                   </AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-xs sm:text-sm leading-tight min-w-0">
+                <div className="grid flex-1 text-left text-[11px] sm:text-sm leading-tight min-w-0">
                   <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate text-[10px] sm:text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
                 </div>
                 <ChevronsUpDown className="ml-auto size-3 sm:size-4 flex-shrink-0" />
               </SidebarMenuButton>
