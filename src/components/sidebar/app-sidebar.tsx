@@ -23,6 +23,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useTheme } from "next-themes";
+import { WebSocketStatusDot } from "@/components/websocket/ConnectionStatus";
 
 const data = {
   user: {
@@ -70,18 +71,26 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             </div>
           </div>
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-lg hover:bg-secondary/20 transition-colors flex-shrink-0"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5 text-yellow-500" />
-            ) : (
-              <Moon className="h-5 w-5 text-foreground" />
-            )}
-          </button>
+          {/* Status and Theme Toggle */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* WebSocket Status Dot - Very subtle */}
+            <div className="px-2">
+              <WebSocketStatusDot />
+            </div>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-lg hover:bg-secondary/20 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-foreground" />
+              )}
+            </button>
+          </div>
         </div>
       </SidebarHeader>
 

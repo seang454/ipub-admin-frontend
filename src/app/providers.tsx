@@ -27,9 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ReduxProvider>
       <I18nextProvider i18n={i18n} defaultNS="common">
-          <AuthProvider>
-            <NotificationProvider>{children}</NotificationProvider>
-          </AuthProvider>
+        <AuthProvider>
+          <NotificationProvider>{children}</NotificationProvider>
+        </AuthProvider>
       </I18nextProvider>
     </ReduxProvider>
   );

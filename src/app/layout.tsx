@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import AuthProvider from "@/lib/auth-provider";
+import { WebSocketProvider } from "@/components/contexts/websocket-context";
 import HomeLayoutWrapper from "@/components/layout/HomeLayoutWrapper";
 import { ThemeProvider } from "next-themes";
 // import AuthDebug from "@/components/debug/AuthDebug";
@@ -161,8 +162,10 @@ export default function RootLayout({
         >
           <Providers>
             <AuthProvider>
-              <HomeLayoutWrapper>{children}</HomeLayoutWrapper>
-              {/* <AuthDebug /> */}
+              <WebSocketProvider>
+                <HomeLayoutWrapper>{children}</HomeLayoutWrapper>
+                {/* <AuthDebug /> */}
+              </WebSocketProvider>
             </AuthProvider>
           </Providers>
         </ThemeProvider>

@@ -108,7 +108,7 @@ export const paperAdminApi = createApi({
       { uuid: string; token: string }
     >({
       query: ({ uuid, token }) => ({
-        url: `/admin/student/promote/${uuid}`,
+        url: `/admin/student/approve-student-detail/${uuid}`,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

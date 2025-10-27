@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { Mail, Phone } from "lucide-react";
+import { WebSocketStatusDot } from "@/components/websocket/ConnectionStatus";
 
 export default function StickyBanner() {
   const pathname = usePathname();
@@ -46,6 +47,11 @@ export default function StickyBanner() {
 
         {/* Right Section - Social Media */}
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* WebSocket Status Indicator */}
+          <div className="flex items-center">
+            <WebSocketStatusDot />
+          </div>
+
           <span className="hidden text-white sm:inline text-sm font-medium">
             Follow Us:
           </span>

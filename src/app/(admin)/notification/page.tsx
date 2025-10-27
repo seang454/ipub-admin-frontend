@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import SockJS from "sockjs-client";
-import { Client, IMessage, StompSubscription } from "@stomp/stompjs";
+import { IMessage, StompSubscription } from "@stomp/stompjs";
 import { useSession } from "next-auth/react";
 import {
   useApproveStudentMutation,
@@ -22,6 +21,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
+import { useWebSocket } from "@/components/contexts/websocket-context";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -67,8 +67,11 @@ export default function NotificationPage() {
   const searchParams = useSearchParams();
   const highlightId = searchParams?.get("highlight");
 
-  const stompClientRef = useRef<Client | null>(null);
+  // Use the global WebSocket connection
+  const { subscribe, unsubscribe, publish, isConnected } = useWebSocket();
+
   const subscriptionRef = useRef<StompSubscription | null>(null);
+  const adminSubscriptionRef = useRef<StompSubscription | null>(null);
   const notificationRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Fetch all pending students with refetch capability
@@ -199,114 +202,101 @@ export default function NotificationPage() {
     }
   };
 
-  // Connect WebSocket and subscribe to notification topics
+  // Subscribe to notification topics using the global WebSocket
   useEffect(() => {
-    if (!currentUserId || !token) return;
+    if (!currentUserId || !isConnected) {
+      console.log("Waiting for WebSocket connection or user authentication...");
+      return;
+    }
 
-    const socket = new SockJS("https://api.docuhub.me/ws-chat");
-    const stompClient = new Client({
-      webSocketFactory: () => socket,
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-      reconnectDelay: 3000,
-      onConnect: () => {
-        console.log("Connected to WebSocket for notifications");
+    console.log("Subscribing to notification topics...");
 
-        // Subscribe to user-specific topic
-        const myTopic = `/topic/user.${currentUserId}`;
-        subscriptionRef.current = stompClient.subscribe(
-          myTopic,
-          async (msg: IMessage) => {
-            const payload: NotificationMessage = JSON.parse(msg.body);
-            const newNotification = await convertToNotification(payload);
-            console.log("newNotification :>> ", newNotification);
+    // Subscribe to user-specific topic
+    const myTopic = `/topic/user.${currentUserId}`;
+    const userSubscription = subscribe(myTopic, async (msg: IMessage) => {
+      const payload: NotificationMessage = JSON.parse(msg.body);
+      const newNotification = await convertToNotification(payload);
+      console.log("newNotification :>> ", newNotification);
 
-            setNotifications((prev) => {
-              // Check for duplicates
-              if (
-                newNotification.id &&
-                prev.some((n) => n.id === newNotification.id)
-              ) {
-                return prev;
-              }
-              // Add new notification at the beginning (latest first)
-              const updated = [newNotification, ...prev];
-              // Sort by timestamp to ensure latest is always first
-              return updated.sort((a, b) => {
-                const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-                const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-                return timeB - timeA; // Descending order (newest first)
-              });
-            });
-
-            // If student data is still loading, try to fetch it
-            if (newNotification.isLoading) {
-              updateNotificationWithStudentData(
-                newNotification.id,
-                payload.senderId
-              );
-            }
-
-            // Refetch pending students list to keep it updated
-            refetch();
-          }
-        );
-
-        // Subscribe to admin notifications topic
-        const adminTopic = `/topic/admin-notifications`;
-        stompClient.subscribe(adminTopic, async (msg: IMessage) => {
-          const payload: NotificationMessage = JSON.parse(msg.body);
-          const newNotification = await convertToNotification(payload);
-
-          setNotifications((prev) => {
-            // Check for duplicates
-            if (
-              newNotification.id &&
-              prev.some((n) => n.id === newNotification.id)
-            ) {
-              return prev;
-            }
-            // Add new notification at the beginning (latest first)
-            const updated = [newNotification, ...prev];
-            // Sort by timestamp to ensure latest is always first
-            return updated.sort((a, b) => {
-              const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-              const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-              return timeB - timeA; // Descending order (newest first)
-            });
-          });
-
-          // If student data is still loading, try to fetch it
-          if (newNotification.isLoading) {
-            updateNotificationWithStudentData(
-              newNotification.id,
-              payload.senderId
-            );
-          }
-
-          // Refetch pending students list to keep it updated
-          refetch();
+      setNotifications((prev) => {
+        // Check for duplicates
+        if (
+          newNotification.id &&
+          prev.some((n) => n.id === newNotification.id)
+        ) {
+          return prev;
+        }
+        // Add new notification at the beginning (latest first)
+        const updated = [newNotification, ...prev];
+        // Sort by timestamp to ensure latest is always first
+        return updated.sort((a, b) => {
+          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return timeB - timeA; // Descending order (newest first)
         });
-      },
-      onStompError: () => {
-        toast.error("Connection error. Please refresh the page.", {
-          position: "top-right",
-          autoClose: 3000,
-          theme: "colored",
-        });
-      },
+      });
+
+      // If student data is still loading, try to fetch it
+      if (newNotification.isLoading) {
+        updateNotificationWithStudentData(newNotification.id, payload.senderId);
+      }
+
+      // Refetch pending students list to keep it updated
+      refetch();
     });
 
-    stompClient.activate();
-    stompClientRef.current = stompClient;
+    if (userSubscription) {
+      subscriptionRef.current = userSubscription;
+    }
+
+    // Subscribe to admin notifications topic
+    const adminTopic = `/topic/admin-notifications`;
+    const adminSubscription = subscribe(adminTopic, async (msg: IMessage) => {
+      const payload: NotificationMessage = JSON.parse(msg.body);
+      const newNotification = await convertToNotification(payload);
+
+      setNotifications((prev) => {
+        // Check for duplicates
+        if (
+          newNotification.id &&
+          prev.some((n) => n.id === newNotification.id)
+        ) {
+          return prev;
+        }
+        // Add new notification at the beginning (latest first)
+        const updated = [newNotification, ...prev];
+        // Sort by timestamp to ensure latest is always first
+        return updated.sort((a, b) => {
+          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return timeB - timeA; // Descending order (newest first)
+        });
+      });
+
+      // If student data is still loading, try to fetch it
+      if (newNotification.isLoading) {
+        updateNotificationWithStudentData(newNotification.id, payload.senderId);
+      }
+
+      // Refetch pending students list to keep it updated
+      refetch();
+    });
+
+    if (adminSubscription) {
+      adminSubscriptionRef.current = adminSubscription;
+    }
 
     return () => {
-      subscriptionRef.current?.unsubscribe();
-      stompClient.deactivate();
+      // Unsubscribe when component unmounts
+      if (subscriptionRef.current) {
+        unsubscribe(subscriptionRef.current);
+      }
+      if (adminSubscriptionRef.current) {
+        unsubscribe(adminSubscriptionRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserId, token]);
+  }, [currentUserId, isConnected]);
 
   // Load pending students as initial notifications
   useEffect(() => {
@@ -384,8 +374,8 @@ export default function NotificationPage() {
   };
 
   const markAsRead = (senderUuid: string) => {
-    if (!stompClientRef.current || !stompClientRef.current.connected) {
-      console.warn("STOMP client is not connected.");
+    if (!isConnected) {
+      console.warn("WebSocket is not connected.");
       return;
     }
     if (!session?.user.id) {
@@ -399,10 +389,7 @@ export default function NotificationPage() {
 
     console.log("payload :>> ", payload);
 
-    stompClientRef.current.publish({
-      destination: "/app/update-read",
-      body: JSON.stringify(payload),
-    });
+    publish("/app/update-read", JSON.stringify(payload));
 
     setNotifications((prev) =>
       prev.map((n) => (n.senderId === senderUuid ? { ...n, read: true } : n))
