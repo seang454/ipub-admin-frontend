@@ -101,7 +101,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     };
   }, [token, currentUserId]);
 
-  // Subscribe to a topic
+  // Subscribe to a topic with retry mechanism
   const subscribe = (
     topic: string,
     callback: (message: IMessage) => void
@@ -115,7 +115,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
     if (!isConnected) {
       console.warn(
-        `WebSocket: Cannot subscribe to ${topic} - not connected yet`
+        `WebSocket: Cannot subscribe to ${topic} - not connected yet. Will retry when connected.`
       );
       return null;
     }
@@ -123,16 +123,35 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     // Check if client is active
     if (!stompClientRef.current.active) {
       console.warn(
-        `WebSocket: Cannot subscribe to ${topic} - client not active`
+        `WebSocket: Cannot subscribe to ${topic} - client not active. Waiting for activation...`
       );
       return null;
     }
 
-    console.log(`✅ WebSocket: Subscribing to ${topic}`);
+    // Check if already subscribed
+    if (subscriptionsRef.current.has(topic)) {
+      console.log(`⚠️ WebSocket: Already subscribed to ${topic}, skipping...`);
+      return subscriptionsRef.current.get(topic) || null;
+    }
+
+    console.log(`🔌 WebSocket: Subscribing to ${topic}`);
     try {
-      const subscription = stompClientRef.current.subscribe(topic, callback);
+      const subscription = stompClientRef.current.subscribe(
+        topic,
+        (message) => {
+          console.log(
+            `📨 WebSocket: Message received on ${topic}:`,
+            message.body
+          );
+          callback(message);
+        }
+      );
       subscriptionsRef.current.set(topic, subscription);
       console.log(`✅ WebSocket: Successfully subscribed to ${topic}`);
+      console.log(
+        `📋 WebSocket: Active subscriptions:`,
+        Array.from(subscriptionsRef.current.keys())
+      );
       return subscription;
     } catch (error) {
       console.error(`❌ WebSocket: Error subscribing to ${topic}:`, error);

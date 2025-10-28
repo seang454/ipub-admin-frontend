@@ -78,6 +78,42 @@ export default function NotificationPage() {
   const adminSubscriptionRef = useRef<StompSubscription | null>(null);
   const notificationRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
+  // Request browser notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        console.log("📢 Browser notification permission:", permission);
+      });
+    }
+  }, []);
+
+  // Helper function to show browser notification
+  const showBrowserNotification = (title: string, message: string) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        const notification = new Notification(title, {
+          body: message,
+          icon: "/logo/SmallLogo.png", // Your app logo
+          badge: "/logo/SmallLogo.png",
+          tag: "student-verification", // Groups similar notifications
+          requireInteraction: false,
+          silent: false,
+        });
+
+        // Auto-close after 5 seconds
+        setTimeout(() => notification.close(), 5000);
+
+        // Click handler - focus the notification page
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      } catch (error) {
+        console.error("❌ Failed to show browser notification:", error);
+      }
+    }
+  };
+
   // Fetch all pending students with refetch capability
   const {
     data: getPendingStudents,
@@ -90,6 +126,26 @@ export default function NotificationPage() {
   });
   console.log("getPendingStudents", getPendingStudents);
 
+  // Auto-refresh data every 30 seconds to ensure we have latest information
+  useEffect(() => {
+    if (!token) return;
+
+    console.log(
+      "🔄 Setting up auto-refresh: will refetch data every 30 seconds"
+    );
+
+    const refreshInterval = setInterval(() => {
+      console.log("🔄 Auto-refresh: Fetching latest data...");
+      refetch();
+      setLastRefreshTime(new Date());
+    }, 30000); // 30 seconds
+
+    return () => {
+      console.log("🧹 Cleaning up auto-refresh interval");
+      clearInterval(refreshInterval);
+    };
+  }, [token, refetch]);
+
   const [filter, setFilter] = useState("all");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,6 +155,7 @@ export default function NotificationPage() {
     name?: string;
   } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
 
   // Fetch individual student data by userUuid
   const fetchStudentData = async (
@@ -160,58 +217,9 @@ export default function NotificationPage() {
     return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
   };
 
-  // Convert notification message to Notification with student data
-  const convertToNotification = async (
-    msg: NotificationMessage
-  ): Promise<Notification> => {
-    // First try to find in existing data
-    let studentData = findStudentBySenderId(msg.senderId);
-
-    // If not found, fetch fresh data
-    if (!studentData) {
-      studentData = (await fetchStudentData(msg.senderId)) || undefined;
-    }
-
-    return {
-      id: msg.id || `notif-${Date.now()}-${msg.senderId}`,
-      type: "info",
-      title: "Student Verification Request",
-      message: studentData
-        ? `${studentData.university} - ${studentData.major} (Year ${studentData.yearsOfStudy})`
-        : msg.message || "New student verification request",
-      time: formatTimestamp(msg.createdAt),
-      read: msg.isRead || false,
-      category: "student-verification",
-      timestamp: msg.createdAt,
-      senderId: msg.senderId,
-      data: studentData,
-      isLoading: !studentData,
-    };
-  };
-
-  // Update notification with fetched student data
-  const updateNotificationWithStudentData = async (
-    notificationId: string,
-    senderId: string
-  ) => {
-    const studentData = await fetchStudentData(senderId);
-
-    if (studentData) {
-      setNotifications((prev) =>
-        prev.map((n) => {
-          if (n.id === notificationId) {
-            return {
-              ...n,
-              data: studentData,
-              message: `${studentData.university} - ${studentData.major} (Year ${studentData.yearsOfStudy})`,
-              isLoading: false,
-            };
-          }
-          return n;
-        })
-      );
-    }
-  };
+  // Note: Removed convertToNotification and updateNotificationWithStudentData
+  // Now using instant display approach - notification appears immediately with basic info,
+  // then enriched with student data in the background
 
   // Subscribe to notification topics using the global WebSocket
   useEffect(() => {
@@ -221,35 +229,81 @@ export default function NotificationPage() {
     }
 
     if (!isConnected) {
-      console.log("⏳ Notification: Waiting for WebSocket connection...");
+      console.log("⏳ Notification: WebSocket not connected. Waiting...");
+      // Clear any existing subscriptions if connection is lost
+      if (subscriptionRef.current) {
+        subscriptionRef.current = null;
+      }
+      if (adminSubscriptionRef.current) {
+        adminSubscriptionRef.current = null;
+      }
       return;
     }
 
-    console.log("🔔 Notification: Starting subscriptions...");
+    console.log(
+      "🔔 Notification: WebSocket connected! Starting subscriptions..."
+    );
+    console.log(`👤 Current User ID: ${currentUserId}`);
 
-    // Handler for user-specific notifications
+    // Handler for user-specific notifications - OPTIMIZED FOR INSTANT DISPLAY
     const handleUserNotification = async (msg: IMessage) => {
       try {
+        console.log("📨 RAW message received on user topic:", msg);
         const payload: NotificationMessage = JSON.parse(msg.body);
-        console.log("📩 Received user notification:", payload);
+        console.log("📩 Parsed user notification:", payload);
 
-        const newNotification = await convertToNotification(payload);
-        console.log("✅ Converted notification:", newNotification);
+        // Show toast IMMEDIATELY with the actual message from sender
+        toast.info(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold">🔔 New Notification!</div>
+            <div className="text-sm">
+              {payload.message || "New student verification request"}
+            </div>
+          </div>,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            theme: "colored",
+            closeButton: true,
+          }
+        );
 
+        // Show BROWSER NOTIFICATION (system-level alert) with sender's message
+        showBrowserNotification(
+          "🔔 New Notification Received",
+          payload.message || "New student verification request"
+        );
+
+        // Create notification ID immediately
+        const notificationId =
+          payload.id || `notif-${Date.now()}-${payload.senderId}`;
+
+        // STEP 1: Display notification IMMEDIATELY with basic info
+        const quickNotification: Notification = {
+          id: notificationId,
+          type: "info",
+          title: "Student Verification Request",
+          message: payload.message || "New student verification request",
+          time: formatTimestamp(payload.createdAt),
+          read: payload.isRead || false,
+          category: "student-verification",
+          timestamp: payload.createdAt,
+          senderId: payload.senderId,
+          data: undefined,
+          isLoading: true, // Mark as loading to show we're fetching details
+        };
+
+        console.log("⚡ INSTANTLY displaying notification:", quickNotification);
+
+        // Add to state IMMEDIATELY (no await, no delay)
         setNotifications((prev) => {
           // Check for duplicates
-          if (
-            newNotification.id &&
-            prev.some((n) => n.id === newNotification.id)
-          ) {
-            console.log(
-              "⚠️ Duplicate notification, skipping:",
-              newNotification.id
-            );
+          if (prev.some((n) => n.id === notificationId)) {
+            console.log("⚠️ Duplicate notification, skipping:", notificationId);
             return prev;
           }
           // Add new notification at the beginning (latest first)
-          const updated = [newNotification, ...prev];
+          const updated = [quickNotification, ...prev];
           // Sort by timestamp to ensure latest is always first
           return updated.sort((a, b) => {
             const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
@@ -258,44 +312,137 @@ export default function NotificationPage() {
           });
         });
 
-        // If student data is still loading, try to fetch it
-        if (newNotification.isLoading) {
-          updateNotificationWithStudentData(
-            newNotification.id,
-            payload.senderId
-          );
-        }
+        // STEP 2: Fetch detailed student data in the background (async, no blocking)
+        (async () => {
+          try {
+            // Try to find in existing data first (fast)
+            let studentData = findStudentBySenderId(payload.senderId);
 
-        // Refetch pending students list to keep it updated
+            // If not found, fetch from API (slower)
+            if (!studentData) {
+              studentData =
+                (await fetchStudentData(payload.senderId)) || undefined;
+            }
+
+            // Update notification with detailed student data
+            if (studentData) {
+              console.log(
+                "✅ Enriching notification with student data:",
+                studentData
+              );
+              const enrichedData = studentData; // Type guard
+              setNotifications((prev) =>
+                prev.map((n) => {
+                  if (n.id === notificationId) {
+                    return {
+                      ...n,
+                      data: enrichedData,
+                      message: `${enrichedData.university} - ${enrichedData.major} (Year ${enrichedData.yearsOfStudy})`,
+                      isLoading: false,
+                    };
+                  }
+                  return n;
+                })
+              );
+            } else {
+              // No student data found, just mark as not loading
+              setNotifications((prev) =>
+                prev.map((n) => {
+                  if (n.id === notificationId) {
+                    return { ...n, isLoading: false };
+                  }
+                  return n;
+                })
+              );
+            }
+          } catch (error) {
+            console.error("❌ Error fetching student details:", error);
+            // Mark as not loading even if fetch failed
+            setNotifications((prev) =>
+              prev.map((n) => {
+                if (n.id === notificationId) {
+                  return { ...n, isLoading: false };
+                }
+                return n;
+              })
+            );
+          }
+        })();
+
+        // Refetch pending students list to keep it updated (async, non-blocking)
         refetch();
       } catch (error) {
         console.error("❌ Error processing user notification:", error);
+        toast.error("Error processing notification", {
+          position: "top-right",
+          autoClose: 2000,
+          theme: "colored",
+        });
       }
     };
 
-    // Handler for admin notifications
+    // Handler for admin notifications - OPTIMIZED FOR INSTANT DISPLAY
     const handleAdminNotification = async (msg: IMessage) => {
       try {
+        console.log("📨 RAW message received on admin topic:", msg);
         const payload: NotificationMessage = JSON.parse(msg.body);
-        console.log("📩 Received admin notification:", payload);
+        console.log("📩 Parsed admin notification:", payload);
 
-        const newNotification = await convertToNotification(payload);
-        console.log("✅ Converted admin notification:", newNotification);
+        // Show toast IMMEDIATELY with the actual message from sender
+        toast.info(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold">🔔 Admin Notification!</div>
+            <div className="text-sm">
+              {payload.message || "New student verification request"}
+            </div>
+          </div>,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            theme: "colored",
+            closeButton: true,
+          }
+        );
 
+        // Show BROWSER NOTIFICATION (system-level alert) with sender's message
+        showBrowserNotification(
+          "🔔 Admin Notification Received",
+          payload.message || "New student verification request"
+        );
+
+        // Create notification ID immediately
+        const notificationId =
+          payload.id || `notif-${Date.now()}-${payload.senderId}`;
+
+        // STEP 1: Display notification IMMEDIATELY with basic info
+        const quickNotification: Notification = {
+          id: notificationId,
+          type: "info",
+          title: "Student Verification Request",
+          message: payload.message || "New student verification request",
+          time: formatTimestamp(payload.createdAt),
+          read: payload.isRead || false,
+          category: "student-verification",
+          timestamp: payload.createdAt,
+          senderId: payload.senderId,
+          data: undefined,
+          isLoading: true, // Mark as loading to show we're fetching details
+        };
+
+        console.log(
+          "⚡ INSTANTLY displaying admin notification:",
+          quickNotification
+        );
+
+        // Add to state IMMEDIATELY (no await, no delay)
         setNotifications((prev) => {
           // Check for duplicates
-          if (
-            newNotification.id &&
-            prev.some((n) => n.id === newNotification.id)
-          ) {
-            console.log(
-              "⚠️ Duplicate notification, skipping:",
-              newNotification.id
-            );
+          if (prev.some((n) => n.id === notificationId)) {
+            console.log("⚠️ Duplicate notification, skipping:", notificationId);
             return prev;
           }
           // Add new notification at the beginning (latest first)
-          const updated = [newNotification, ...prev];
+          const updated = [quickNotification, ...prev];
           // Sort by timestamp to ensure latest is always first
           return updated.sort((a, b) => {
             const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
@@ -304,55 +451,128 @@ export default function NotificationPage() {
           });
         });
 
-        // If student data is still loading, try to fetch it
-        if (newNotification.isLoading) {
-          updateNotificationWithStudentData(
-            newNotification.id,
-            payload.senderId
-          );
-        }
+        // STEP 2: Fetch detailed student data in the background (async, no blocking)
+        (async () => {
+          try {
+            // Try to find in existing data first (fast)
+            let studentData = findStudentBySenderId(payload.senderId);
 
-        // Refetch pending students list to keep it updated
+            // If not found, fetch from API (slower)
+            if (!studentData) {
+              studentData =
+                (await fetchStudentData(payload.senderId)) || undefined;
+            }
+
+            // Update notification with detailed student data
+            if (studentData) {
+              console.log(
+                "✅ Enriching admin notification with student data:",
+                studentData
+              );
+              const enrichedData = studentData; // Type guard
+              setNotifications((prev) =>
+                prev.map((n) => {
+                  if (n.id === notificationId) {
+                    return {
+                      ...n,
+                      data: enrichedData,
+                      message: `${enrichedData.university} - ${enrichedData.major} (Year ${enrichedData.yearsOfStudy})`,
+                      isLoading: false,
+                    };
+                  }
+                  return n;
+                })
+              );
+            } else {
+              // No student data found, just mark as not loading
+              setNotifications((prev) =>
+                prev.map((n) => {
+                  if (n.id === notificationId) {
+                    return { ...n, isLoading: false };
+                  }
+                  return n;
+                })
+              );
+            }
+          } catch (error) {
+            console.error("❌ Error fetching student details:", error);
+            // Mark as not loading even if fetch failed
+            setNotifications((prev) =>
+              prev.map((n) => {
+                if (n.id === notificationId) {
+                  return { ...n, isLoading: false };
+                }
+                return n;
+              })
+            );
+          }
+        })();
+
+        // Refetch pending students list to keep it updated (async, non-blocking)
         refetch();
       } catch (error) {
         console.error("❌ Error processing admin notification:", error);
+        toast.error("Error processing admin notification", {
+          position: "top-right",
+          autoClose: 2000,
+          theme: "colored",
+        });
       }
     };
 
-    // Subscribe to user-specific topic
-    const myTopic = `/topic/user.${currentUserId}`;
-    console.log(`🔌 Attempting to subscribe to: ${myTopic}`);
-    const userSubscription = subscribe(myTopic, handleUserNotification);
+    // Add a small delay to ensure WebSocket is fully ready
+    const subscribeTimer = setTimeout(() => {
+      // Subscribe to user-specific topic
+      const myTopic = `/topic/user.${currentUserId}`;
+      console.log(`🔌 Attempting to subscribe to: ${myTopic}`);
+      const userSubscription = subscribe(myTopic, handleUserNotification);
 
-    if (userSubscription) {
-      console.log(`✅ Successfully subscribed to: ${myTopic}`);
-      subscriptionRef.current = userSubscription;
-    } else {
-      console.error(`❌ Failed to subscribe to: ${myTopic}`);
-    }
+      if (userSubscription) {
+        console.log(`✅ Successfully subscribed to: ${myTopic}`);
+        subscriptionRef.current = userSubscription;
+      } else {
+        console.error(`❌ Failed to subscribe to: ${myTopic}`);
+        console.error(`   This could mean:`);
+        console.error(`   1. WebSocket not fully connected`);
+        console.error(`   2. Topic format is incorrect`);
+        console.error(`   3. Authentication issue`);
+      }
 
-    // Subscribe to admin notifications topic
-    const adminTopic = `/topic/admin-notifications`;
-    console.log(`🔌 Attempting to subscribe to: ${adminTopic}`);
-    const adminSubscription = subscribe(adminTopic, handleAdminNotification);
+      // Subscribe to admin notifications topic
+      const adminTopic = `/topic/admin-notifications`;
+      console.log(`🔌 Attempting to subscribe to: ${adminTopic}`);
+      const adminSubscription = subscribe(adminTopic, handleAdminNotification);
 
-    if (adminSubscription) {
-      console.log(`✅ Successfully subscribed to: ${adminTopic}`);
-      adminSubscriptionRef.current = adminSubscription;
-    } else {
-      console.error(`❌ Failed to subscribe to: ${adminTopic}`);
-    }
+      if (adminSubscription) {
+        console.log(`✅ Successfully subscribed to: ${adminTopic}`);
+        adminSubscriptionRef.current = adminSubscription;
+      } else {
+        console.error(`❌ Failed to subscribe to: ${adminTopic}`);
+      }
+
+      // Log subscription summary
+      console.log("📊 Subscription Summary:");
+      console.log(
+        `   User Topic (${myTopic}):`,
+        userSubscription ? "✅ Active" : "❌ Failed"
+      );
+      console.log(
+        `   Admin Topic (${adminTopic}):`,
+        adminSubscription ? "✅ Active" : "❌ Failed"
+      );
+    }, 100); // Small delay to ensure connection is stable
 
     return () => {
+      clearTimeout(subscribeTimer);
       console.log("🧹 Notification: Cleaning up subscriptions...");
       // Unsubscribe when component unmounts
       if (subscriptionRef.current) {
-        console.log(`🔌 Unsubscribing from: ${myTopic}`);
+        console.log(`🔌 Unsubscribing from user topic`);
         unsubscribe(subscriptionRef.current);
         subscriptionRef.current = null;
       }
       if (adminSubscriptionRef.current) {
-        console.log(`🔌 Unsubscribing from: ${adminTopic}`);
+        console.log(`🔌 Unsubscribing from admin topic`);
         unsubscribe(adminSubscriptionRef.current);
         adminSubscriptionRef.current = null;
       }
@@ -726,6 +946,26 @@ export default function NotificationPage() {
                   </span>
                   <span className="text-slate-800">
                     {getPendingStudents?.content?.length || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="font-semibold text-slate-600">
+                    Auto-Refresh:
+                  </span>
+                  <span className="text-green-600 flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    Active (every 30s)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600">
+                    Last Refresh:
+                  </span>
+                  <span className="text-slate-800">
+                    {lastRefreshTime.toLocaleTimeString()}
                   </span>
                 </div>
               </div>
