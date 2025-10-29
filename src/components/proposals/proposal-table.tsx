@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { IMessage, StompSubscription } from "@stomp/stompjs";
 import {
   ChevronRight,
   Search,
@@ -54,6 +55,7 @@ import { Paper } from "@/types/paperType/paperType";
 import { User } from "@/types/userType/userType";
 import { toast, ToastContainer } from "react-toastify";
 import PDFViewer from "@/components/pdf/pdfView";
+import { useWebSocket } from "@/components/contexts/websocket-context";
 
 export function EnhancedProposals() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -75,6 +77,10 @@ export function EnhancedProposals() {
   const [rejectReason, setRejectReason] = useState("");
   const advisorsPerPage = 4;
   const papersPerPage = 3;
+
+  // WebSocket connection
+  const { publish, isConnected, subscribe, unsubscribe } = useWebSocket();
+  const adminActionSubscriptionRef = useRef<StompSubscription | null>(null);
 
   // Function to handle PDF download
   const handleDownloadPDF = async (fileUrl: string, fileName: string) => {
@@ -115,7 +121,8 @@ export function EnhancedProposals() {
         autoClose: 2000,
         theme: "colored",
       });
-    } catch {
+    } catch (error: unknown) {
+      console.error("Error downloading PDF:", error);
       toast.warning("Could not download directly. Opening in new tab...", {
         position: "top-right",
         autoClose: 3000,
@@ -135,11 +142,13 @@ export function EnhancedProposals() {
 
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
+  const currentUserId = session?.user?.id || "";
 
   const {
     data: papersData,
     isLoading: papersLoading,
     error: papersError,
+    refetch: refetchPapers,
   } = useGetPaperQuery({ token: accessToken ?? "" }, { skip: !accessToken });
 
   console.log("papersData :>> ", papersData);
@@ -165,6 +174,101 @@ export function EnhancedProposals() {
       { token: accessToken ?? "" },
       { skip: !accessToken }
     );
+
+  // Subscribe to admin action notifications for real-time updates
+  useEffect(() => {
+    if (!currentUserId || !isConnected) {
+      console.log("⏳ Proposals: Waiting for WebSocket connection...");
+      return;
+    }
+
+    console.log("🔔 Proposals: Setting up admin action listener...");
+
+    // Handler for admin action notifications (from other admins)
+    const handleAdminActionNotification = async (msg: IMessage) => {
+      try {
+        console.log("📨 Proposals: RAW admin action received:", msg);
+        const payload = JSON.parse(msg.body);
+        console.log("📩 Proposals: Parsed admin action:", payload);
+
+        // Don't process notifications from yourself
+        if (payload.senderId === currentUserId) {
+          console.log("⏭️ Proposals: Skipping own action notification");
+          return;
+        }
+
+        // Handle different action types
+        switch (payload.action) {
+          case "ADVISER_ASSIGNED":
+          case "ADVISER_ADDED":
+          case "ADVISER_REASSIGNED":
+            console.log("📝 Adviser action detected:", payload.action);
+            toast.info(payload.message, {
+              position: "top-right",
+              autoClose: 3000,
+              theme: "colored",
+            });
+
+            // Refetch assignments to show updated adviser information
+            await refetchAssignments();
+            break;
+
+          case "PAPER_REJECTED":
+            console.log(
+              "❌ Paper rejected by another admin:",
+              payload.paperUuid
+            );
+            toast.warning(`Paper rejected: ${payload.paperTitle}`, {
+              position: "top-right",
+              autoClose: 3000,
+              theme: "colored",
+            });
+
+            // Refetch both papers and assignments to reflect the rejection
+            await Promise.all([refetchPapers(), refetchAssignments()]);
+            break;
+
+          default:
+            console.log(
+              "ℹ️ Proposals: Unhandled admin action:",
+              payload.action
+            );
+        }
+      } catch (error: unknown) {
+        console.error("❌ Proposals: Error processing admin action:", error);
+      }
+    };
+
+    // Subscribe to admin action notifications
+    const adminActionTopic = `/topic/admin-notifications`;
+    console.log(`🔌 Proposals: Subscribing to: ${adminActionTopic}`);
+    const subscription = subscribe(
+      adminActionTopic,
+      handleAdminActionNotification
+    );
+
+    if (subscription) {
+      console.log(`✅ Proposals: Successfully subscribed to admin actions`);
+      adminActionSubscriptionRef.current = subscription;
+    } else {
+      console.error(`❌ Proposals: Failed to subscribe to admin actions`);
+    }
+
+    return () => {
+      if (adminActionSubscriptionRef.current) {
+        console.log("🧹 Proposals: Cleaning up admin action subscription");
+        unsubscribe(adminActionSubscriptionRef.current);
+        adminActionSubscriptionRef.current = null;
+      }
+    };
+  }, [
+    currentUserId,
+    isConnected,
+    subscribe,
+    unsubscribe,
+    refetchAssignments,
+    refetchPapers,
+  ]);
 
   // Helper function to get ALL assignments for a paper
   const getAllAssignmentsForPaper = (
@@ -300,6 +404,27 @@ export function EnhancedProposals() {
           autoClose: 3000,
           theme: "colored",
         });
+
+        // Publish WebSocket notification for reassignment
+        if (isConnected) {
+          const notificationMessage = {
+            senderId: session?.user?.id || "",
+            receiverId: "all-admins",
+            message: `Adviser has been reassigned for paper: ${assigningPaper.title}`,
+            createdAt: new Date().toISOString(),
+            action: "ADVISER_REASSIGNED",
+            paperUuid: assigningPaper.uuid,
+            paperTitle: assigningPaper.title,
+            adviserUuid: advisor.uuid,
+            adviserName: advisor.fullName,
+            deadline: deadline,
+          };
+          console.log(
+            "📤 Publishing adviser reassignment notification:",
+            notificationMessage
+          );
+          publish("/app/admin-action", JSON.stringify(notificationMessage));
+        }
       } else {
         // New assignment OR managing (adding another adviser)
         await assignAdviser({
@@ -320,6 +445,32 @@ export function EnhancedProposals() {
           autoClose: 3000,
           theme: "colored",
         });
+
+        // Publish WebSocket notification for assignment/management
+        if (isConnected) {
+          const action = isManaging ? "ADVISER_ADDED" : "ADVISER_ASSIGNED";
+          const message = isManaging
+            ? `Additional adviser ${advisor.fullName} has been assigned to paper: ${assigningPaper.title}`
+            : `Adviser ${advisor.fullName} has been assigned to paper: ${assigningPaper.title}`;
+
+          const notificationMessage = {
+            senderId: session?.user?.id || "",
+            receiverId: "all-admins",
+            message: message,
+            createdAt: new Date().toISOString(),
+            action: action,
+            paperUuid: assigningPaper.uuid,
+            paperTitle: assigningPaper.title,
+            adviserUuid: advisor.uuid,
+            adviserName: advisor.fullName,
+            deadline: deadline,
+          };
+          console.log(
+            "📤 Publishing adviser assignment notification:",
+            notificationMessage
+          );
+          publish("/app/admin-action", JSON.stringify(notificationMessage));
+        }
       }
 
       // Refetch assignments to update the UI with latest data
@@ -406,8 +557,31 @@ export function EnhancedProposals() {
         theme: "colored",
       });
 
-      // Refetch assignments to update the UI
-      await refetchAssignments();
+      // Refetch both papers and assignments to update the UI with latest data
+      console.log("🔄 Refetching papers and assignments after rejection...");
+      await Promise.all([refetchPapers(), refetchAssignments()]);
+      console.log("✅ Data refreshed successfully");
+
+      // Publish WebSocket notification for paper rejection
+      if (isConnected) {
+        const notificationMessage = {
+          senderId: session?.user?.id || "",
+          receiverId: "all-admins",
+          message: `Paper "${
+            rejectingPaper.title
+          }" has been rejected. Reason: ${rejectReason.trim()}`,
+          createdAt: new Date().toISOString(),
+          action: "PAPER_REJECTED",
+          paperUuid: rejectingPaper.uuid,
+          paperTitle: rejectingPaper.title,
+          reason: rejectReason.trim(),
+        };
+        console.log(
+          "📤 Publishing paper rejection notification:",
+          notificationMessage
+        );
+        publish("/app/admin-action", JSON.stringify(notificationMessage));
+      }
 
       setShowRejectModal(false);
       setRejectingPaper(null);

@@ -76,6 +76,7 @@ export default function NotificationPage() {
 
   const subscriptionRef = useRef<StompSubscription | null>(null);
   const adminSubscriptionRef = useRef<StompSubscription | null>(null);
+  const adminActionSubscriptionRef = useRef<StompSubscription | null>(null);
   const notificationRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Request browser notification permission on mount
@@ -108,7 +109,7 @@ export default function NotificationPage() {
           window.focus();
           notification.close();
         };
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("❌ Failed to show browser notification:", error);
       }
     }
@@ -180,12 +181,13 @@ export default function NotificationPage() {
         );
         return student || null;
       }
-    } catch {
+    } catch (error: unknown) {
       toast.error("Error fetching student data", {
         position: "top-right",
         autoClose: 2000,
         theme: "colored",
       });
+      console.error("Error fetching student data:", error);
     }
     return null;
   };
@@ -236,6 +238,9 @@ export default function NotificationPage() {
       }
       if (adminSubscriptionRef.current) {
         adminSubscriptionRef.current = null;
+      }
+      if (adminActionSubscriptionRef.current) {
+        adminActionSubscriptionRef.current = null;
       }
       return;
     }
@@ -355,7 +360,7 @@ export default function NotificationPage() {
                 })
               );
             }
-          } catch (error) {
+          } catch (error: unknown) {
             console.error("❌ Error fetching student details:", error);
             // Mark as not loading even if fetch failed
             setNotifications((prev) =>
@@ -371,7 +376,7 @@ export default function NotificationPage() {
 
         // Refetch pending students list to keep it updated (async, non-blocking)
         refetch();
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("❌ Error processing user notification:", error);
         toast.error("Error processing notification", {
           position: "top-right",
@@ -494,7 +499,7 @@ export default function NotificationPage() {
                 })
               );
             }
-          } catch (error) {
+          } catch (error: unknown) {
             console.error("❌ Error fetching student details:", error);
             // Mark as not loading even if fetch failed
             setNotifications((prev) =>
@@ -510,7 +515,7 @@ export default function NotificationPage() {
 
         // Refetch pending students list to keep it updated (async, non-blocking)
         refetch();
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("❌ Error processing admin notification:", error);
         toast.error("Error processing admin notification", {
           position: "top-right",
@@ -550,6 +555,92 @@ export default function NotificationPage() {
         console.error(`❌ Failed to subscribe to: ${adminTopic}`);
       }
 
+      // Handler for admin action notifications (from other admins)
+      const handleAdminActionNotification = async (msg: IMessage) => {
+        try {
+          console.log("📨 RAW admin action received:", msg);
+          const payload = JSON.parse(msg.body);
+          console.log("📩 Parsed admin action:", payload);
+
+          // Don't process notifications from yourself
+          if (payload.senderId === currentUserId) {
+            console.log("⏭️ Skipping own action notification");
+            return;
+          }
+
+          // Handle different action types
+          switch (payload.action) {
+            case "STUDENT_VERIFIED":
+              console.log(
+                "✅ Student verified by another admin:",
+                payload.userUuid
+              );
+              toast.info(payload.message, {
+                position: "top-right",
+                autoClose: 3000,
+                theme: "colored",
+              });
+
+              // Remove the notification for this student
+              setNotifications((prev) =>
+                prev.filter((n) => n.data?.userUuid !== payload.userUuid)
+              );
+
+              // Refetch pending students to get updated list
+              refetch();
+              break;
+
+            case "STUDENT_REJECTED":
+              console.log(
+                "❌ Student rejected by another admin:",
+                payload.userUuid
+              );
+              toast.warning(
+                `Student verification rejected: ${payload.reason}`,
+                {
+                  position: "top-right",
+                  autoClose: 3000,
+                  theme: "colored",
+                }
+              );
+
+              // Remove the notification for this student
+              setNotifications((prev) =>
+                prev.filter((n) => n.data?.userUuid !== payload.userUuid)
+              );
+
+              // Refetch pending students to get updated list
+              refetch();
+              break;
+
+            default:
+              console.log("ℹ️ Unhandled admin action:", payload.action);
+          }
+        } catch (error: unknown) {
+          console.error(
+            "❌ Error processing admin action notification:",
+            error
+          );
+        }
+      };
+
+      // Subscribe to admin action notifications
+      const adminActionTopic = `/topic/admin-notifications`;
+      console.log(
+        `🔌 Attempting to subscribe to: ${adminActionTopic} (for admin actions)`
+      );
+      const adminActionSubscription = subscribe(
+        adminActionTopic,
+        handleAdminActionNotification
+      );
+
+      if (adminActionSubscription) {
+        console.log(`✅ Successfully subscribed to: ${adminActionTopic}`);
+        adminActionSubscriptionRef.current = adminActionSubscription;
+      } else {
+        console.error(`❌ Failed to subscribe to: ${adminActionTopic}`);
+      }
+
       // Log subscription summary
       console.log("📊 Subscription Summary:");
       console.log(
@@ -559,6 +650,10 @@ export default function NotificationPage() {
       console.log(
         `   Admin Topic (${adminTopic}):`,
         adminSubscription ? "✅ Active" : "❌ Failed"
+      );
+      console.log(
+        `   Admin Action Topic (${adminActionTopic}):`,
+        adminActionSubscription ? "✅ Active" : "❌ Failed"
       );
     }, 100); // Small delay to ensure connection is stable
 
@@ -575,6 +670,11 @@ export default function NotificationPage() {
         console.log(`🔌 Unsubscribing from admin topic`);
         unsubscribe(adminSubscriptionRef.current);
         adminSubscriptionRef.current = null;
+      }
+      if (adminActionSubscriptionRef.current) {
+        console.log(`🔌 Unsubscribing from admin action topic`);
+        unsubscribe(adminActionSubscriptionRef.current);
+        adminActionSubscriptionRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -707,12 +807,30 @@ export default function NotificationPage() {
       setNotifications((prev) =>
         prev.filter((n) => n.data?.userUuid !== userUuid)
       );
-    } catch {
+
+      // Publish WebSocket notification to update other clients
+      if (isConnected) {
+        const notificationMessage = {
+          senderId: currentUserId,
+          receiverId: "all-admins",
+          message: "A student has been verified and approved",
+          createdAt: new Date().toISOString(),
+          action: "STUDENT_VERIFIED",
+          userUuid: userUuid,
+        };
+        console.log(
+          "📤 Publishing student verification notification:",
+          notificationMessage
+        );
+        publish("/app/admin-action", JSON.stringify(notificationMessage));
+      }
+    } catch (error: unknown) {
       toast.error("Error approving student!", {
         position: "top-left",
         autoClose: 3000,
         theme: "colored",
       });
+      console.error("Error approving student:", error);
     }
   };
 
@@ -761,7 +879,25 @@ export default function NotificationPage() {
       setNotifications((prev) =>
         prev.filter((n) => n.data?.userUuid !== selectedStudent.userUuid)
       );
-    } catch (error) {
+
+      // Publish WebSocket notification to update other clients
+      if (isConnected) {
+        const notificationMessage = {
+          senderId: currentUserId,
+          receiverId: "all-admins",
+          message: `A student verification has been rejected. Reason: ${rejectReason.trim()}`,
+          createdAt: new Date().toISOString(),
+          action: "STUDENT_REJECTED",
+          userUuid: selectedStudent.userUuid,
+          reason: rejectReason.trim(),
+        };
+        console.log(
+          "📤 Publishing student rejection notification:",
+          notificationMessage
+        );
+        publish("/app/admin-action", JSON.stringify(notificationMessage));
+      }
+    } catch (error: unknown) {
       toast.error("Error rejecting student!", {
         position: "top-left",
         autoClose: 3000,
